@@ -1,0 +1,64 @@
+services:
+  nginx:
+    container_name: nginx
+    build: ./nginx
+    ports:
+      - "80:80"
+    networks:
+      - backend_network
+      - frontend_network
+    depends_on:
+      - backend
+
+  backend:
+    container_name: backend
+    build: ./backend
+    depends_on:
+      database:
+        condition: service_healthy
+
+    environment:
+      - PORT=3000
+      - DB_PORT=5432
+      - DB_HOST=database
+      - DB_DATABASE=${POSTGRES_DB}
+      - DB_NAME=${POSTGRES_USER}
+      - DB_PASS=${POSTGRES_PASSWORD}
+    expose:
+      - 3000
+    networks:
+      - backend_network
+      - db_network
+
+  database:
+    container_name: database
+    build: ./database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d {POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env
+    expose:
+      - 5432
+    networks:
+      - db_network
+
+  frontend:
+    container_name: frontend
+    build: ./frontend
+    expose:
+      - "8080"
+    networks:
+      - frontend_network
+
+
+networks:
+  backend_network:
+  
+  db_network:
+    internal: true
+
+  frontend_network:
+
