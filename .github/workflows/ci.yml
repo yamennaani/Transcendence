@@ -6,6 +6,9 @@ on:
   push:
     branches: [develop]
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   backend:
     name: Backend Tests
@@ -13,8 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build & test backend
-        run: docker-compose build backend
+      - name: Build backend
+        run: docker compose build backend
 
   frontend:
     name: Frontend Build & Tests
@@ -22,5 +25,5 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build & test frontend
-        run: docker-compose build frontend
+      - name: Build frontend
+        run: docker compose build frontend
