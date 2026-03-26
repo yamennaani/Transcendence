@@ -71,7 +71,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: src/frontend
-        run: npm test -- --run
+        run: npm test -- --no-watch
 
       - name: Build frontend image
         run: docker compose -f $COMPOSE_FILE build frontend
