@@ -1,0 +1,21 @@
+include:
+  - database/docker-compose.yml
+  - frontend/docker-compose.yml
+  - nginx/docker-compose.yml
+  - backend/docker-compose.yml
+
+
+volumes:
+  postgres_data:
+
+networks:
+
+  database-network:
+
+  backend-network:
+
+  frontend-network:
+
+secrets:
+  db_password:
+    file: ${HOME}/.secrets/Transcendence/db_password

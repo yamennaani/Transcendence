@@ -1,0 +1,23 @@
+services:
+  database:
+    healthcheck:
+      disable: true
+
+  backend:
+    command: npm run dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      database:
+        condition: service_started
+
+  nginx:
+    depends_on:
+      - backend
+      - frontend
