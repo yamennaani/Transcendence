@@ -1,0 +1,19 @@
+services:
+  frontend:
+
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: frontend
+
+    networks:
+      - frontend-network
+
+    expose:
+      - 8080
+
+
+networks:
+  frontend-network:
+

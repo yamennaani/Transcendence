@@ -1,5 +1,6 @@
 const express = require('express');
 const {Pool} = require('pg');
+const fs = require('fs');
 const app = express();
 const port = process.env.PORT;
 
@@ -10,20 +11,26 @@ const pool = new Pool({
     port: process.env.DB_PORT,
     database: process.env.DB_DATABASE,
     user: process.env.DB_NAME,
-    password: process.env.DB_PASS
+    password: fs.readFileSync('/run/secrets/db_password', 'utf8').trim(),
 });
 
-app.get('/api/', (req, res)=>
+
+app.get('/test', (req, res)=>
+{
+    res.send('this is a test');
+});
+
+app.get('/', (req, res)=>
 {
     res.send('hello world');
 });
 
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
 
-app.get('/api/users', async (req, res) => {
+app.get('/users', async (req, res) => {
   try {
     const { rows } = await pool.query('SELECT id, name, created_at FROM users ORDER BY id');
     res.json(rows);

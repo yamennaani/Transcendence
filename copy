@@ -1,3 +1,7 @@
+include:
+  - database/docker-compose.yml
+  
+
 services:
   nginx:
     container_name: nginx
@@ -30,21 +34,6 @@ services:
       - backend_network
       - db_network
 
-  database:
-    container_name: database
-    build: ./database
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d {POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    env_file:
-      - .env
-    expose:
-      - 5432
-    networks:
-      - db_network
-
   frontend:
     container_name: frontend
     build: ./frontend
@@ -61,4 +50,6 @@ networks:
     internal: true
 
   frontend_network:
+
+  database-network:
 

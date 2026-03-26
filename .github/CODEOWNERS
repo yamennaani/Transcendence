@@ -1,0 +1,13 @@
+                        @yamennaani
+
+# Frontend
+/frontend/               @dev1-username @dev2-username
+
+# Backend
+/backend/                @dev3-username @dev4-username
+
+# Infrastructure — team lead only
+/docker-compose.yml      @yamennaani
+/nginx/                  @yamennaani
+/database/               @yamennaani
+Makefile                 @yamennaani

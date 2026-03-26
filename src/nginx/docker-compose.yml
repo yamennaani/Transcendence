@@ -1,0 +1,28 @@
+services:
+  nginx:
+    container_name: nginx
+
+    image: nginx:alpine
+
+    command: ["nginx", "-g", "daemon off;"]
+
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+
+    networks:
+      - backend-network
+      - frontend-network
+
+    ports:
+      - "80:80"
+    
+    depends_on:
+      - backend
+      - frontend
+
+networks:
+
+  backend-network:
+
+  
+  frontend-network:
