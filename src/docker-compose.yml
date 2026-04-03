@@ -2,7 +2,7 @@ include:
   - database/docker-compose.yml
   - frontend/docker-compose.yml
   - nginx/docker-compose.yml
-  - backend/docker-compose.yml
+  - services/user/docker-compose.yml
 
 
 volumes:
@@ -15,7 +15,3 @@ networks:
   backend-network:
 
   frontend-network:
-
-secrets:
-  db_password:
-    file: ${HOME}/.secrets/Transcendence/db_password
