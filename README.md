@@ -1,9 +1,7 @@
 # Transcendence
-
-A full-stack web application built with Angular, Express, PostgreSQL, and nginx — fully containerized with Docker.
+A peer-to-peer learning platform inspired by 42 School — built with Angular, Express microservices, PostgreSQL, and nginx, fully containerized with Docker.
 
 ## Stack
-
 | Layer | Technology |
 |---|---|
 | Frontend | Angular 17 |
@@ -13,7 +11,6 @@ A full-stack web application built with Angular, Express, PostgreSQL, and nginx 
 | Containerization | Docker + Docker Compose |
 
 ## Requirements
-
 - Docker
 - Docker Compose
 - Make
@@ -42,7 +39,6 @@ Open your browser at **http://localhost**
 ---
 
 ## Commands
-
 | Command | Description |
 |---|---|
 | `make` | Start in dev mode (default) |
@@ -75,9 +71,15 @@ Transcendence/
     ├── packages/
     │   ├── database/            ← shared Prisma client (all models)
     │   ├── logger/              ← shared JSON logger
-    │   └── errors/              ← shared error classes
+    │   ├── errors/              ← shared error classes
+    │   └── utils/               ← shared query helpers (userUtils, classUtils, orgUtils...)
     └── services/
-        └── user/                ← User microservice
+        ├── user/                ← User microservice
+        ├── auth/                ← Auth microservice
+        ├── org/                 ← Organization microservice
+        ├── class/               ← Class + Assignment microservice
+        ├── enroll/              ← Enrollment microservice
+        └── group/               ← Group + Invite microservice
 ```
 
 ## Architecture
@@ -85,41 +87,71 @@ Transcendence/
 internet
     │
   nginx :80
-    ├── /                → frontend
-    ├── /api/user/       → user-service
-    └── /api/user/health → user-service health check
+    ├── /                  → frontend
+    ├── /api/user/         → user-service     :3001
+    ├── /api/auth/         → auth-service     :3002
+    ├── /api/org/          → org-service      :3003
+    ├── /api/class/        → class-service    :3004
+    ├── /api/enroll/       → enroll-service   :3005
+    └── /api/group/        → group-service    :3006
                 │
-             database    (internal network)
+             database      (internal network)
 ```
-
-## Image Sizes
-
-| Image | Size |
-|---|---|
-| `src-frontend` | ~80MB |
-| `src-user_service` | ~331MB |
 
 ---
 
 ## API Endpoints
 
+### User Service `/api/user`
 | Method | Endpoint | Description |
 |---|---|---|
 | GET | `/api/user/` | List all users |
 | GET | `/api/user/:id` | Get user by ID |
-| POST | `/api/user/` | Create a user |
-| GET | `/api/user/health` | Health check |
+| POST | `/api/user/register` | Register a new user |
+| GET | `/api/user/:id/profile` | Get user profile |
+| PATCH | `/api/user/:id/profile` | Update user profile |
+| DELETE | `/api/user/:id` | Delete user |
+
+### Org Service `/api/org`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/org/` | List all organizations |
+| GET | `/api/org/:id` | Get org by ID |
+| POST | `/api/org/` | Create organization |
+| POST | `/api/org/:id/members` | Add or move a member to org |
+| DELETE | `/api/org/:id/members` | Remove member from org |
+
+### Class Service `/api/class`
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/class/` | List all classes |
+| GET | `/api/class/:id` | Get class by ID |
+| POST | `/api/class/` | Create class |
+| GET | `/api/class/:id/assignments` | List assignments for a class |
+| POST | `/api/class/:id/assignments` | Create assignment |
+
+### Enrollment Service `/api/enroll`
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/enroll/` | Enroll a student in a class |
+| PATCH | `/api/enroll/` | Drop a student from a class |
+
+### Group Service `/api/group`
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/group/` | Create a group for an assignment |
+| POST | `/api/group/:id/invite` | Invite a member to a group |
+| PATCH | `/api/group/invite/:id` | Respond to a group invite |
 
 ---
 
 ## Adding a New Service
-
 1. Create `src/services/your-service/`
 2. Copy structure from `services/user/`
 3. Add to `src/docker-compose.yml` includes
 4. Add nginx route in `src/nginx/conf.d/default.conf`
 5. Add models to `src/packages/database/prisma/schema.prisma`
-6. Run `make migrate`
+6. Run `make migrate && make re`
 
 ---
 
@@ -135,7 +167,6 @@ chore/*     → config and infra changes
 See [DEV_DOC.md](./DEV_DOC.md) for the full Git workflow.
 
 ## Contributing
-
 1. Branch from `develop`
 2. Follow the commit convention: `feat(scope): description`
 3. Open a PR targeting `develop`

@@ -31,6 +31,7 @@ Transcendence/
 ├── Makefile                        ← all commands live here
 ├── README.md
 ├── DEV_DOC.md
+├── SPEC.md                         ← platform design decisions
 └── src/
     ├── docker-compose.yml          ← root compose (networks, volumes, includes)
     ├── docker-compose.dev.yml      ← dev overrides (hot reload, no healthcheck)
@@ -55,16 +56,21 @@ Transcendence/
     │   │   └── index.js            ← exports { prisma }
     │   ├── logger/                 ← shared JSON logger
     │   │   └── index.js            ← exports { info, error, warn }
-    │   └── errors/                 ← shared error classes
-    │       └── index.js            ← exports error classes
+    │   ├── errors/                 ← shared error classes
+    │   │   └── index.js            ← exports error classes
+    │   └── utils/                  ← shared query helpers
+    │       ├── index.js            ← exports everything
+    │       └── src/
+    │           ├── userUtils.js    ← getUserById, searchUser, etc.
+    │           ├── classUtils.js   ← getClassById, getAssignmentById, isEnrolledAndActive, etc.
+    │           └── orgUtils.js     ← getOrgById, searchOrg, etc.
     └── services/
-        └── user/                   ← User microservice
-            ├── docker-compose.yml
-            ├── Dockerfile          ← multi-stage build
-            └── src/
-                ├── index.js        ← Express app + central error handler
-                ├── user.routes.js  ← route definitions
-                └── user.service.js ← business logic + Prisma queries
+        ├── user/                   ← User microservice        :3001
+        ├── auth/                   ← Auth microservice        :3002
+        ├── org/                    ← Organization microservice :3003
+        ├── class/                  ← Class + Assignment        :3004
+        ├── enroll/                 ← Enrollment microservice  :3005
+        └── group/                  ← Group + Invite            :3006
 ```
 
 ### Network Architecture
@@ -74,7 +80,11 @@ internet
   nginx :80                  ← only public port
     ├── /                    → frontend  (frontend-network)
     ├── /api/user/           → user-service (backend-network)
-    └── /api/user/health     → user-service health check
+    ├── /api/auth/           → auth-service
+    ├── /api/org/            → org-service
+    ├── /api/class/          → class-service
+    ├── /api/enroll/         → enroll-service
+    └── /api/group/          → group-service
                 │
             database         (database-network — internal only)
 ```
@@ -188,6 +198,15 @@ app.use((err, req, res, next) => {
 })
 ```
 
+### How services require shared packages
+```js
+// always by relative path
+const { prisma } = require('../packages/database')
+const logger = require('../packages/logger')
+const { NotFoundError } = require('../packages/errors')
+const utils = require('../packages/utils')
+```
+
 ---
 
 ## 5. Database & Migrations
@@ -224,7 +243,6 @@ make studio
 ```
 
 ### The `.env` setup
-
 - `src/.env` is the **single source of truth** for all config
 - `src/packages/database/.env` is automatically symlinked to `src/.env` by `make`
 - `DATABASE_URL` is built from `POSTGRES_USER`, `DB_PASSWORD`, `DB_LOCAL_PORT`, `POSTGRES_DB`
@@ -236,15 +254,15 @@ make studio
 
 All shared code lives in `src/packages/`. Never copy logic between services — put it here.
 
-### `@transcendence/database`
+### `packages/database`
 ```js
-const { prisma } = require('@transcendence/database')
+const { prisma } = require('../packages/database')
 const users = await prisma.user.findMany()
 ```
 
-### `@transcendence/logger`
+### `packages/logger`
 ```js
-const logger = require('@transcendence/logger')
+const logger = require('../packages/logger')
 logger.info('user-service', 'User created', { userId: 1 })
 logger.error('user-service', 'Something failed', { error: err.message })
 logger.warn('user-service', 'Slow query detected')
@@ -261,14 +279,11 @@ Output format:
 }
 ```
 
-### `@transcendence/errors`
+### `packages/errors`
 ```js
-const { NotFoundError, ValidationError, UnauthorizedError, ConflictError } = require('@transcendence/errors')
+const { NotFoundError, ValidationError, UnauthorizedError, ConflictError } = require('../packages/errors')
 
-// throw in service
 if (!user) throw new NotFoundError('User not found')
-
-// caught by central handler in index.js automatically
 ```
 
 | Error | Status |
@@ -277,6 +292,36 @@ if (!user) throw new NotFoundError('User not found')
 | `ValidationError` | 400 |
 | `UnauthorizedError` | 401 |
 | `ConflictError` | 409 |
+
+### `packages/utils`
+Read-only query helpers. Use these instead of repeating Prisma queries across services.
+
+```js
+const utils = require('../packages/utils')
+
+// users
+await utils.getUserById(id)
+await utils.searchUser(email, username)
+await utils.getUserProfile(id)
+
+// classes + assignments
+await utils.getClassById(id)
+await utils.getAssignmentById(id)
+await utils.getEnrollment(userId, classId)
+await utils.isEnrolledAndActive(userId, classId) // returns boolean
+
+// orgs
+await utils.getOrgById(id)
+await utils.searchOrg(email, name)
+
+// groups
+await utils.getGroupById(id)
+await utils.getGroupCurrentCount(groupId)
+await utils.existingMembership(userId, assId)
+await utils.isAlreadyInvited(inviteeId, groupId)
+```
+
+> Utils are **read-only**. Never add create/update/delete to utils. Business logic stays in the service.
 
 ---
 
@@ -344,8 +389,10 @@ git push origin feature/your-feature-name
 ✅ Tested locally with make dev
 ✅ New service added to docker-compose and nginx if applicable
 ✅ Schema changes have a migration file in prisma/migrations/
-✅ New service imports from @transcendence/database, logger, errors
+✅ New service uses logger, errors, utils from packages/
 ✅ Health check endpoint added to new service
+✅ No console.log anywhere (use logger)
+✅ No res.status(500).json() directly (use next(err))
 ✅ Requested review from a teammate
 ```
 
@@ -386,7 +433,6 @@ type(scope): short description
 ```
 
 ### Types
-
 | Type | When |
 |---|---|
 | `feat` | New feature |
@@ -397,25 +443,28 @@ type(scope): short description
 | `test` | Adding tests |
 
 ### Scopes
-
 | Scope | When |
 |---|---|
 | `user-service` | Changes in `services/user/` |
+| `auth-service` | Changes in `services/auth/` |
+| `org-service` | Changes in `services/org/` |
+| `class-service` | Changes in `services/class/` |
+| `enroll-service` | Changes in `services/enroll/` |
+| `group-service` | Changes in `services/group/` |
 | `frontend` | Changes in `frontend/` |
 | `database` | Schema or migration changes |
-| `logger` | Changes in `packages/logger/` |
-| `errors` | Changes in `packages/errors/` |
+| `utils` | Changes in `packages/utils/` |
 | `nginx` | Routing changes |
 | `docker` | Compose file changes |
 
 ### Examples
 ```bash
 feat(user-service): add get user by id endpoint
-feat(database): add Game model
-fix(nginx): fix user service routing
-chore(docker): add game service to compose
-refactor(user-service): use central error handler
-docs: update DEV_DOC with migration workflow
+feat(database): add Enrollment model
+fix(nginx): fix org service routing
+chore(docker): add group service to compose
+refactor(class-service): use utils for assignment queries
+docs: update DEV_DOC with utils guide
 ```
 
 ---
@@ -442,8 +491,10 @@ docs: update DEV_DOC with migration workflow
 ❌ Commit generated/ folders
 ❌ Commit node_modules/
 ❌ Copy prisma directly into a service (use packages/database)
-❌ Use console.log (use @transcendence/logger)
-❌ Use res.status(500).json() directly (use @transcendence/errors + next(err))
+❌ Use console.log (use packages/logger)
+❌ Use res.status(500).json() directly (use packages/errors + next(err))
+❌ Add create/update/delete logic to packages/utils (read-only only)
+❌ Require shared packages by package name — always use relative path
 ```
 
 ---
@@ -511,5 +562,5 @@ Schema change:
 
 ---
 
-> Last updated: March 2026
+> Last updated: April 2026
 > Maintained by: @yamennaani

@@ -3,6 +3,11 @@ include:
   - frontend/docker-compose.yml
   - nginx/docker-compose.yml
   - services/user/docker-compose.yml
+  - services/auth/docker-compose.yml
+  - services/org/docker-compose.yml
+  - services/class/docker-compose.yml
+  - services/enroll/docker-compose.yml
+  - services/group/docker-compose.yml
 
 
 volumes:

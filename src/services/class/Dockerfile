@@ -11,10 +11,10 @@ COPY packages/utils    ./packages/utils
 
 RUN cd packages/database && npm install
 
-COPY services/user/package*.json ./
+COPY services/class/package*.json ./
 RUN npm install
 
-COPY services/user/src ./src
+COPY services/class/src ./src
 
 FROM node:20-alpine AS runner
 

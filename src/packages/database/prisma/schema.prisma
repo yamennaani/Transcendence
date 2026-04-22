@@ -19,19 +19,313 @@ model User{
   id  Int @id @default(autoincrement())
   email String @unique
   username String @unique
+  role Role @default(Student)
   created_at DateTime @default(now())
+
+  profile UserProfile?
+
   userAuth UserAuth?
+  refreshToken RefreshToken[]
+  orgId Int?
+  org Organization? @relation(fields: [orgId],references: [id])
+  
+
+  classes Class[]
+  membership GroupMember[]
+  enrollments Enrollment[]
+  
+  evalResponses EvalResponse[]
+  uploadedFiles File[]
+
+  sentInvites     GroupInvite[] @relation("SentInvites")
+  receivedInvites GroupInvite[] @relation("ReceivedInvites")
+
   @@map("user")
+}
+
+model UserProfile{
+  id Int @id @unique @default(autoincrement())
+  bio String 
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  last_update DateTime
+
+  @@map("userProfile")
 }
 
 model UserAuth{
   id Int @id @default(autoincrement())
-  pass_hash String 
+  pass_hash String?
+
+  // 42 OAUTH
+  forty_two_id       String? @unique
+  forty_two_token    String?
 
   // Foreign key
   userId Int @unique
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("user_auth")
+  @@map("userAuth")
 }
 
+model RefreshToken{
+  id  Int @id @default(autoincrement())
+  token String @unique
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  CreatedAt DateTime @default(now())
+
+  @@map("refreshToken")
+}
+
+model Organization{
+  id Int @id @unique @default(autoincrement())
+  email String @unique
+  name String
+  tag String
+
+  profile OrgProfile?
+  created_at DateTime @default(now())
+  users User[]
+  classes Class[]
+
+  @@map("org")
+}
+
+model OrgProfile{
+  id Int @id @unique @default(autoincrement())
+  bio String
+  tel_num String
+  orgid Int @unique
+  org Organization @relation(fields: [orgid], references: [id], onDelete: Cascade)
+  
+  @@map("orgProfile")
+}
+
+model Class{
+  id Int @id @unique @default(autoincrement())
+  name String
+  description String
+
+  created_at DateTime @default(now())
+  assignments Assignment[]
+  enrollments Enrollment[]
+  pass_threshold Float @default(100.0)
+
+  created_by Int
+  org_id Int
+  
+  creator User @relation(fields: [created_by], references: [id])
+  org Organization @relation(fields: [org_id], references: [id], onDelete: Cascade)
+  
+  @@map("class")
+}
+
+model Assignment{
+  id Int @id @unique @default(autoincrement())
+  classid Int
+
+  name String
+  description String
+  groupSize     Int   @default(1) // solo or group 
+
+  req_eval Int @default(3)
+  max_score Int @default(100)
+  pass_threshold Float @default(100.0)
+  evalSheet EvalSheet?
+  requiresStaffReview Boolean @default(false)
+  subtype SubmissionType @default(FILE)
+
+  class Class @relation(fields: [classid], references: [id], onDelete: Cascade)  
+  groups Group[]
+
+  created_at DateTime @default(now())
+  @@map("assignment")
+}
+
+model Enrollment{
+  id Int @id @unique @default(autoincrement())
+  status EnrollmentStatus @default(Active)
+  userId Int 
+  classId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class Class @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  enrollDate DateTime @default(now())
+
+  @@unique([userId, classId])
+  @@map("enrollment")
+}
+
+model GroupMember{
+  id Int @id @unique @default(autoincrement())
+  userId Int
+  groupId Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+  @@map("groupMemeber")
+}
+model Group{
+  id Int @id @unique @default(autoincrement())
+  assId Int
+  name String
+  size Int @default(1)
+  created_at DateTime @default(now())
+
+  leaderId Int
+
+  members GroupMember[]
+  submissions Submission[]
+  invitations GroupInvite[] 
+
+  assignment Assignment @relation(fields: [assId], references: [id], onDelete: Cascade)
+
+  @@unique([assId, name])
+  @@map("group")
+}
+
+model File{
+  id Int @id @unique @default(autoincrement())
+  name String
+  mimiType String
+  size Int
+  url String
+  uploadedBy Int
+  uploader User @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  submission Submission?
+  createdAt DateTime @default(now())
+
+  @@map("file")
+}
+
+model Submission{
+  id Int @id @unique @default(autoincrement())
+  groupId Int
+  fileId Int @unique
+  status SubmissionStatus @default(Open)
+  type SubmissionType @default(FILE)
+
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  closedAt DateTime? @default(now())
+
+  responses EvalResponse[]
+  finalScore Float?
+  passed      Boolean? 
+
+  @@unique([groupId, fileId])
+  @@map("submission")
+}
+
+model EvalSheet{
+  id Int @id @unique @default(autoincrement())
+  assId Int @unique
+
+  sections EvalSection[]
+  assignment Assignment @relation(fields: [assId], references: [id], onDelete: Cascade)
+  @@map("evalSheet")
+}
+
+model EvalSection{
+  id Int @id @unique @default(autoincrement())
+  name String
+  description String
+  marks Int
+  sectionType EvalSectionType @default(Toggle)
+  evalSheetId Int
+  evalSheet EvalSheet @relation(fields: [evalSheetId], references: [id], onDelete: Cascade)
+ scores EvalSectionScore[]
+  @@map("evalSection")
+}
+
+model EvalSectionScore {
+  id         Int         @id @default(autoincrement())
+  responseId Int
+  sectionId  Int
+  score      Int
+  response   EvalResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  section    EvalSection  @relation(fields: [sectionId], references: [id])
+  @@unique([responseId, sectionId])
+  @@map("evalSectionScore")
+}
+
+model EvalResponse{
+  id Int @id @unique @default(autoincrement())
+
+  isStaffReview Boolean @default(false)
+
+  subId Int
+  submission Submission @relation(fields: [subId], references: [id], onDelete: Cascade)
+
+  userId Int
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  givenMarks Int
+
+  comment String
+  reply String?
+
+  rating Int?
+
+  scores EvalSectionScore[]
+
+  @@map("evalResponse")
+  @@unique([id, userId])
+}
+
+model GroupInvite{
+  id Int @unique @id @default(autoincrement())
+  senderId Int
+  reciverId Int
+  targetGroupId Int
+
+  status GroupInviteStatus @default(Pending)
+
+  senderUser User @relation("SentInvites", fields: [senderId], references: [id], onDelete: Cascade)
+  reciverUser User @relation("ReceivedInvites", fields: [reciverId], references: [id], onDelete: Cascade)
+  targetGroup Group @relation(fields: [targetGroupId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("groupInvite")
+}
+
+
+enum Role {
+  Admin
+  Bocal
+  Student
+}
+
+enum EnrollmentStatus {
+  Active
+  Dropped
+}
+
+enum SubmissionStatus {
+  Open
+  Close
+}
+
+enum SubmissionType {
+  FILE
+  IMAGE
+  PDF
+}
+
+enum EvalSectionType {
+  Toggle
+  Slider
+}
+
+enum GroupInviteStatus {
+  Pending
+  Accepted
+  Rejected
+}

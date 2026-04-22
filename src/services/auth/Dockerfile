@@ -7,14 +7,13 @@ WORKDIR /app
 COPY packages/database ./packages/database
 COPY packages/logger   ./packages/logger
 COPY packages/errors   ./packages/errors
-COPY packages/utils    ./packages/utils
 
 RUN cd packages/database && npm install
 
-COPY services/user/package*.json ./
+COPY services/auth/package*.json ./
 RUN npm install
 
-COPY services/user/src ./src
+COPY services/auth/src ./src
 
 FROM node:20-alpine AS runner
 
@@ -24,7 +23,6 @@ WORKDIR /app
 
 COPY packages/logger  ./packages/logger
 COPY packages/errors  ./packages/errors
-COPY packages/utils    ./packages/utils
 
 COPY packages/database/index.js      ./packages/database/index.js
 COPY packages/database/generated     ./packages/database/generated

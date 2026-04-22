@@ -1,0 +1,22 @@
+services:
+  enroll_service:
+    container_name: enroll_service
+    build:
+      context: ../..
+      dockerfile: services/enroll/Dockerfile
+    env_file:
+      - ../../.env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
+    ports:
+      - "3005:3000"
+    depends_on:
+      - database
+    networks:
+      - database-network
+      - backend-network
+
+networks:
+  database-network:
+
+  backend-network:
