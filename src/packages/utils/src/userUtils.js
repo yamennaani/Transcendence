@@ -19,9 +19,9 @@ const getUserById = async (id, select = null, include = null)=>{
 const searchUser = async (email, username, select = null, include = null)=>{
     const filter = []
     if(email)
-        filter.push(email)
+        filter.push({email})
     if(username)
-        filter.push(username)
+        filter.push({username})
 
     if(filter.length === 0) return null
     const options = {where: {OR:filter}}
@@ -29,6 +29,7 @@ const searchUser = async (email, username, select = null, include = null)=>{
         options.select = select
     if(include)
         options.include = include
+    console.log(options)
     return await prisma.user.findFirst(options)
 }
 
