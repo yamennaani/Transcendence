@@ -7,7 +7,11 @@
     "generate": "npx prisma generate",
     "migrate": "npx prisma migrate deploy",
     "migrate:dev": "npx prisma migrate dev",
-    "studio": "npx prisma studio"
+    "studio": "npx prisma studio",
+    "seed": "npx prisma db seed"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
