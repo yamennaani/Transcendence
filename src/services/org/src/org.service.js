@@ -98,6 +98,7 @@ const listOrgMembers = async (orgId) => {
     select: {id: true, email: true, username: true, role: true, created_at: true }})
 }
 
+// create or update org profile:
 const createOrgProfile = async (orgId, { bio, tel_num }) => {
   const id = parseInt(orgId)
 
@@ -115,4 +116,37 @@ const createOrgProfile = async (orgId, { bio, tel_num }) => {
     select: { id: true, bio: true, tel_num: true, orgid: true } })
 }
 
-module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers, createOrgProfile}
+
+const getOrgProfile = async (orgId) => {
+    const id = parseInt(orgId)
+    await getOrg(id)
+  
+    const profile = await prisma.orgProfile.findUnique({
+      where: { orgid: id },
+      select: { id: true, bio: true, tel_num: true, orgid: true } })
+  
+    if (!profile)
+      throw new NotFoundError('Organization profile not found')
+  
+    return profile
+  }
+
+  const deleteOrgProfile = async (orgId)=>{
+    const id = parseInt(orgId)
+    await getOrg(id)
+    
+    const profile = await prisma.orgProfile.findUnique({
+        where: { orgid: id } })
+    
+      if (!profile)
+        throw new NotFoundError('Organization profile not found')
+
+    await prisma.orgProfile.delete({where: {orgid: id}})
+ 
+    return {
+        message: 'Organization profile deleted successfully',
+        orgId: id }
+  }
+
+
+module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers, createOrgProfile, getOrgProfile, deleteOrgProfile}
