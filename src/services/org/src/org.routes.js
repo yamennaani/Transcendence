@@ -45,4 +45,12 @@ router.get('/:id/members', async (req, res, next)=>{
     }catch(err) { next(err) }
 })
 
+
+router.post('/:id/profile', async (req, res, next)=>{
+    try{
+        res.json( await orgService.createOrgProfile(req.params.id, req.body))
+    }catch(err) { next(err) }
+})
+
+
 module.exports = router

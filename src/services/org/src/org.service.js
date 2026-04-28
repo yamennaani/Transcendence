@@ -10,7 +10,7 @@ const getAllOrgs = async ()=>{
 
 const getOrg = async (id)=>{
     const org = await utils.getOrgById(id)
-    if(!org) throw new NotFoundError("Error Org not found")
+    if(!org) throw new NotFoundError("Error Organization not found")
     return org;
 }
 
@@ -31,7 +31,7 @@ const createOrg = async ({email, orgname, tag})=>{
 }
 
 const createMember = async (orgId, {email, username, role}) =>{
-    const targetOrg = await getOrg(orgId);
+    await getOrg(parseInt(orgId));
 
     if(!email || !username || !role)
         throw new ValidationError('email, username and role are required')
@@ -52,20 +52,19 @@ const createMember = async (orgId, {email, username, role}) =>{
         return prisma.user.update({
             where:{ id: user.id },
             data:{orgId:parseInt(orgId), role: role},
-            select: {id: true, username: true, role: true, created_at: true}
-        })
+            select: {id: true, username: true, role: true, created_at: true} })
     }
     else
     {
         return prisma.user.create({
             data: {username, email, role:role, orgId:parseInt(orgId)},
-            select: {id: true, username: true, role: true, created_at: true}
-        })
+            select: {id: true, username: true, role: true, created_at: true} })
     }
 }
 
 const removeMember = async (orgId, {email})=>{
-    const org = await getOrg(orgId)
+    const id = parseInt(orgId)
+    await getOrg(id)
     if(!email)
         throw new ValidationError("email is missing")
 
@@ -82,33 +81,38 @@ const removeMember = async (orgId, {email})=>{
 
 
 const deleteOrg = async (orgId)=>{
-  const org = await getOrg(orgId)
-  await prisma.organization.delete({where: {id: parseInt(orgId)}})
+  const id = parseInt(orgId)
+  await getOrg(id)
+  await prisma.organization.delete({where: {id: id}})
 
   return{
       message: 'Organization deleted successfully',
-      userId: parseInt(orgId)
-  }
+      orgId: id}
 }
 
 const listOrgMembers = async (orgId) => {
   const id = parseInt(orgId)
-
-  const org = await getOrg(id)
-  if (!org) throw new NotFoundError('Organization not found')
-
+  await getOrg(id)
   return await prisma.user.findMany({
     where: {orgId: id},
-    select: {
-      id: true,
-      email: true,
-      username: true,
-      role: true,
-      created_at: true
-    }
-  })
+    select: {id: true, email: true, username: true, role: true, created_at: true }})
 }
 
+const createOrgProfile = async (orgId, { bio, tel_num }) => {
+  const id = parseInt(orgId)
 
+  const org = await getOrg(id)
+  if (!org)
+    throw new NotFoundError('Organization not found')
 
-module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers}
+  if (!bio || !tel_num)
+    throw new ValidationError('bio and tel_num are required')
+
+  return prisma.orgProfile.upsert({
+    where: { orgid: id },
+    update: { bio, tel_num },
+    create: { bio, tel_num, orgid: id },
+    select: { id: true, bio: true, tel_num: true, orgid: true } })
+}
+
+module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers, createOrgProfile}
