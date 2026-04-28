@@ -39,10 +39,18 @@ const createMember = async (orgId, {email, username, role}) =>{
     const validRoles = ["Admin", "Bocal", "Student"]
     if (!validRoles.includes(role)) throw new ValidationError('Invalid role')
     
-    const user = await utils.searchUser(email, username)
+    const existingByEmail = await prisma.user.findUnique({ where: { email } })
+    const existingByUsername = await prisma.user.findUnique({ where: { username } })
+
+    if (existingByEmail && existingByUsername && existingByEmail.id !== existingByUsername.id) {
+    throw new ConflictError('Email and username belong to different users')
+    }
+
+    const user = existingByEmail || existingByUsername
+    //const user = await utils.searchUser(email, username)
     if(user){
         return prisma.user.update({
-            where:{email},
+            where:{ id: user.id },
             data:{orgId:parseInt(orgId), role: role},
             select: {id: true, username: true, role: true, created_at: true}
         })
@@ -72,4 +80,35 @@ const removeMember = async (orgId, {email})=>{
         select: {id: true, username: true, role: true}})
 }
 
-module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember}
+
+const deleteOrg = async (orgId)=>{
+  const org = await getOrg(orgId)
+  await prisma.organization.delete({where: {id: parseInt(orgId)}})
+
+  return{
+      message: 'Organization deleted successfully',
+      userId: parseInt(orgId)
+  }
+}
+
+const listOrgMembers = async (orgId) => {
+  const id = parseInt(orgId)
+
+  const org = await getOrg(id)
+  if (!org) throw new NotFoundError('Organization not found')
+
+  return await prisma.user.findMany({
+    where: {orgId: id},
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      role: true,
+      created_at: true
+    }
+  })
+}
+
+
+
+module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers}
