@@ -8,6 +8,8 @@ const getAllUsers = async (select = null)=>{
 }
 
 const getUserById = async (id, select = null, include = null)=>{
+    if (!id || isNaN(id))
+        throw new Error('Invalid user ID');
     const options = {where: {id: parseInt(id)}}
     if(select)
         options.select = select;
@@ -22,7 +24,6 @@ const searchUser = async (email, username, select = null, include = null)=>{
         filter.push({email})
     if(username)
         filter.push({username})
-
     if(filter.length === 0) return null
     const options = {where: {OR:filter}}
     if(select)
@@ -33,6 +34,8 @@ const searchUser = async (email, username, select = null, include = null)=>{
 }
 
 const getUserProfile = async (id, select = null)=>{
+    if (!id || isNaN(id))
+        throw new Error('Invalid user ID');
     const options = {where: {id: parseInt(id)}}
     if(select)
         options.select = select
@@ -50,6 +53,8 @@ const existingMembership = async (userId, assId, include = null)=>{
 }
 
 const getGroupById = async(id, select = null, include = null)=>{
+    if (!id || isNaN(id))
+        throw new Error('Invalid group ID');
     const options = {where: {id: parseInt(id)}}
     if(select)
         options.select = select;

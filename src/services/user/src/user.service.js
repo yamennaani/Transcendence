@@ -35,6 +35,28 @@ const createUser = async ({ email, username, password }) => {
   return user
 }
 
+//Havent tested it yet
+const getRole = async (id) => {
+  const select = { id: true, role: true }
+  const user = await utils.getUserById(id, select)
+  if (!user) 
+    throw new NotFoundError('User not found')
+  return { role: user.role }
+}
+
+const loginUser = async ({ email, username, password }) => {
+  if (!email && !username) 
+    throw new ValidationError('Email or username required')
+  if (!password) 
+    throw new ValidationError('Password required')
+  const user = await utils.searchUser(email, username)
+  if (!user) 
+    throw new NotFoundError('User not found');
+  if (!await bcrypt.compare(password, user.userAuth.pass_hash)) 
+    throw new ValidationError('Invalid password');
+  return user;
+}
+
 const getProfile = async (id)=>{
   const profile = await utils.getUserProfile(id)
   if(!profile) throw new NotFoundError('Profile not found')
@@ -61,4 +83,4 @@ const deleteUser = async (id)=>{
   }
 }
 
-module.exports = { getAllUsers, getUserById, createUser, getProfile, updateProfile, deleteUser }
+module.exports = { getAllUsers, getUserById, getRole, createUser, getProfile, updateProfile, deleteUser, loginUser }
