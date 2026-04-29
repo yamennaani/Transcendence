@@ -205,12 +205,12 @@ model File{
 model Submission{
   id Int @id @unique @default(autoincrement())
   groupId Int
-  fileId Int @unique
+  fileId Int? @unique
   status SubmissionStatus @default(Open)
   type SubmissionType @default(FILE)
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
-  file File @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  file File? @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   closedAt DateTime? @default(now())
@@ -219,7 +219,6 @@ model Submission{
   finalScore Float?
   passed      Boolean? 
 
-  @@unique([groupId, fileId])
   @@map("submission")
 }
 
