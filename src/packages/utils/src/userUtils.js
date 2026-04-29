@@ -21,10 +21,9 @@ const getUserById = async (id, select = null, include = null)=>{
 const searchUser = async (email, username, select = null, include = null)=>{
     const filter = []
     if(email)
-        filter.push(email)
+        filter.push({email})
     if(username)
-        filter.push(username)
-
+        filter.push({username})
     if(filter.length === 0) return null
     const options = {where: {OR:filter}}
     if(select)
