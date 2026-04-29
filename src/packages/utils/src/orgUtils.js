@@ -22,9 +22,9 @@ const getOrgById = async (id, select = null, include = null)=>{
 const searchOrg = async (email, name, select = null, include = null)=>{
     const filter = []
     if(email)
-        filter.push(email)
+        filter.push({email})
     if(name)
-        filter.push(name)
+        filter.push({name})
     if(filter.length === 0) return null
     const options = {where: {OR:filter}}
     

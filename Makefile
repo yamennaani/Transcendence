@@ -9,7 +9,7 @@ YELLOW = \033[0;33m
 BLUE   = \033[0;34m
 RESET  = \033[0m
 
-.PHONY: setup build up down clean restart run re dev prod check_env studio
+.PHONY: setup build up down clean restart run re dev prod check_env studio populateDB
 
 setup: check_env
 	@echo "$(GREEN)Setup complete.$(RESET)"
@@ -88,3 +88,15 @@ status:
 
 logs:
 	@docker compose -f $(COMPOSE_FILE) logs -f
+
+populateDB:
+	@echo "$(YELLOW)WARNING: This will wipe the current database and populate it with fake/sample data.$(RESET)"
+	@printf "Type 'yes' to continue: "; \
+	read answer; \
+	if [ "$$answer" = "yes" ]; then \
+		echo "$(BLUE)Running seed script...$(RESET)"; \
+		cd src/packages/database && npm run seed; \
+		echo "$(GREEN)Database populated.$(RESET)"; \
+	else \
+		echo "$(RED)Cancelled.$(RESET)"; \
+	fi	

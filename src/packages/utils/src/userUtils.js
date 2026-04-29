@@ -24,12 +24,14 @@ const searchUser = async (email, username, select = null, include = null)=>{
         filter.push({email})
     if(username)
         filter.push({username})
+
     if(filter.length === 0) return null
     const options = {where: {OR:filter}}
     if(select)
         options.select = select
     if(include)
         options.include = include
+    console.log(options)
     return await prisma.user.findFirst(options)
 }
 
