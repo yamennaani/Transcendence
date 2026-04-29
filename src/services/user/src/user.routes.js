@@ -1,5 +1,5 @@
 const express = require('express')
-const { getAllUsers, getUserById, createUser, getProfile, updateProfile, deleteUser } = require('./user.service')
+const { getAllUsers, getUserById, createUser, getProfile, updateProfile, deleteUser, loginUser, getRole } = require('./user.service')
 
 const router = express.Router()
 
@@ -14,6 +14,20 @@ router.get('/:id', async (req, res, next) => {
     res.json(await getUserById(req.params.id))
   } catch (err) { next(err) }
 })
+
+//Havent tested it yet
+router.get('/:id/role', async (req, res, next) => {
+  try {
+    res.json(await getRole(req.params.id))
+  } catch (err) { next(err) }
+})
+
+router.post('/login', async (req, res, next) => {
+  try {
+    res.json(await loginUser(req.body))
+  } catch (err) { next(err) }
+})
+
 
 router.post('/register', async (req, res, next) => {
   try {

@@ -8,6 +8,8 @@ const getClasses = async(select = null)=>{
 }
 
 const getClassById = async(id, select = null, include = null)=>{
+    if (!id || isNaN(id))
+        throw new Error('Invalid class ID');
     const options = {where: {id: parseInt(id)}}
     if(select)
         options.select = select
@@ -17,6 +19,8 @@ const getClassById = async(id, select = null, include = null)=>{
 }
 
 const getAssignments = async(classId, select = null)=>{
+    if (!classId || isNaN(classId))
+        throw new Error('Invalid class ID');
     const options = {where:{classid: parseInt(classId)}}
     if(select)
         options.select = select
@@ -24,6 +28,8 @@ const getAssignments = async(classId, select = null)=>{
 }
 
 const getAssignmentById = async(id, select = null, include = null)=>{
+    if (!id || isNaN(id))
+        throw new Error('Invalid assignment ID');
     const options = {where: {id: parseInt(id)}}
     if(select)
         options.select = select
