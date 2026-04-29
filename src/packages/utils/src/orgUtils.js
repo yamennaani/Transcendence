@@ -9,6 +9,8 @@ const getAllOrgs = async(select = null)=>{
 }
 
 const getOrgById = async (id, select = null, include = null)=>{
+    if (!id || isNaN(id)) 
+        throw new Error('Invalid organization ID');
     const options = {where: {id: parseInt(id)}}
     if(select)
         options.select = select
