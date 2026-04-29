@@ -8,6 +8,8 @@ include:
   - services/class/docker-compose.yml
   - services/enroll/docker-compose.yml
   - services/group/docker-compose.yml
+  - services/submission/docker-compose.yml
+  - minio/docker-compose.yml
 
 
 volumes:
