@@ -1,13 +1,12 @@
 const express = require('express')
-const route = require('./class.routes')
 const logger = require('../packages/logger')
+const route = require('./class.routes')
 
 const app = express();
-
 app.use(express.json())
 
 app.get('/health', async (req, res) => {
-    res.json({status:"ok", service:'org-service'})
+    res.json({status:"ok", service:'class-service'})
 })
 
 app.use('/class', route)

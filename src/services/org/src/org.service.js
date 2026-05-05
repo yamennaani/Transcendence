@@ -149,4 +149,16 @@ const getOrgProfile = async (orgId) => {
   }
 
 
-module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers, createOrgProfile, getOrgProfile, deleteOrgProfile}
+  const getOrgCourses = async (orgId) => {
+    const id = parseInt(orgId)
+    await getOrg(id)
+  
+    const courses = await prisma.class.findMany({
+      where: { org_id: id },
+      select: { id: true, name: true, description: true, org_id: true, created_at: true } })
+  
+    return courses
+  }
+
+
+module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers, createOrgProfile, getOrgProfile, deleteOrgProfile, getOrgCourses}
