@@ -306,6 +306,7 @@ await utils.getUserProfile(id)
 
 // classes + assignments
 await utils.getClassById(id)
+await utils.getClassByOrgId(id)
 await utils.getAssignmentById(id)
 await utils.getEnrollment(userId, classId)
 await utils.isEnrolledAndActive(userId, classId) // returns boolean

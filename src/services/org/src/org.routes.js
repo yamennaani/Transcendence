@@ -63,4 +63,11 @@ router.delete('/:id/profile', async (req, res, next)=>{
     }catch(err){ next(err)}
 })
 
+
+router.get('/:id/courses', async (req, res, next)=>{
+    try{
+        res.json( await orgService.getOrgCourses(req.params.id))
+    }catch(err) { next(err) }
+})
+
 module.exports = router

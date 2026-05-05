@@ -13,7 +13,7 @@ app.get('/health', (req, res)=>{
 app.use('/submission', route)
 
 app.use((err, req, res, next)=>{
-    logger.error('org-service',err.message)
+    logger.error('submission-service',err.message)
     res.status(err.status || 500).json({error: err.message})
 })
 
