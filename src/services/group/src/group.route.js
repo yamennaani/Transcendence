@@ -8,8 +8,6 @@ route.post('/', async (req, res, next)=>{
     }catch(err){next(err)}
 })
 
-//leaving group, get group/profile, delete pending invite, show list of pending invites
-
 //leave group
 route.delete('/:id', async (req, res, next)=>{
     try{
