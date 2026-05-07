@@ -1,0 +1,50 @@
+const express = require('express')
+const route = express.Router()
+const service = require('./eval.service')
+
+route.get('/sheet/:id', async(req, res, next)=>{
+    try{
+        res.json(await service.getEvalSheetById(req.params.id))
+    }catch(err){next(err)}
+})
+
+route.get('/sheet/ass/:id', async(req, res, next)=>{
+        try{
+        res.json(await service.getEvalSheetByAssId(req.params.id))
+    }catch(err){next(err)}
+})
+
+route.post('/sheet', async (req, res, next)=>{
+    try{
+        res.json(await service.createEvalSheet(req.body))
+    }catch(err){next(err)}
+})
+
+route.post('/sheet/:id/section', async (req, res, next)=>{
+    try {
+        res.json(await service.createEvalSection(req.params.id, req.body))
+    } catch (err) {next(err)}
+})
+
+route.patch('/sheet/:id/section', async(req, res, next)=>{
+    try{
+        res.json(await service.updateEvalSheetSection(req.params.id, req.body))
+    }catch(err){ next(err)}
+})
+
+
+route.delete('/sheet/:id/section', async(req, res, next)=>{
+    console.log(req.body)
+    try{
+        res.json(await service.removeSection(req.params.id, req.body))
+    }catch(err){next(err)}
+})
+
+// TODO also move it.
+route.get('/assignment/:id', async(req, res, next)=>{
+    try{
+        res.json(await service.getAssignment(req.params.id))
+    }catch(err){ next(err)}
+})
+
+module.exports = route

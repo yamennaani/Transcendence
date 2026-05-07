@@ -24,7 +24,15 @@ check_env:
 		echo "DB_PORT=5432"                                         >> $(ENV_FILE); \
 		echo "PORT=3000"                                            >> $(ENV_FILE); \
 		echo "DB_PASSWORD=password"                                 >> $(ENV_FILE); \
-		echo "DB_LOCAL_PORT=5433"									>> $(ENV_FILE); \
+		echo "DB_LOCAL_PORT=5433"                                   >> $(ENV_FILE); \
+		echo "DATABASE_URL=\"postgresql://user:password@localhost:5433/db\"" >> $(ENV_FILE); \
+		echo "MINIO_ENDPOINT=minio"                                 >> $(ENV_FILE); \
+		echo "MINIO_PORT=9000"                                      >> $(ENV_FILE); \
+		echo "MINIO_ACCESS_KEY=minioadmin"                          >> $(ENV_FILE); \
+		echo "MINIO_SECRET_KEY=minioadmin"                          >> $(ENV_FILE); \
+		echo "MINIO_BUCKET=submissions"                             >> $(ENV_FILE); \
+		echo "MINIO_PUBLIC_HOST=localhost"                          >> $(ENV_FILE); \
+		echo "MINIO_PUBLIC_PORT=9000"                               >> $(ENV_FILE); \
 		echo "$(GREEN).env created at $(ENV_FILE)$(RESET)"; \
 	else \
 		echo "$(GREEN).env found.$(RESET)"; \

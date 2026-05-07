@@ -2,5 +2,6 @@ module.exports = {
     ...require('./src/userUtils'),
     ...require('./src/orgUtils'),
     ...require('./src/classUtils'),
-    ...require('./src/submissionUtils')
+    ...require('./src/submissionUtils'),
+    ...require('./src/evalUtils')
 }

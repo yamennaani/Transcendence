@@ -9,6 +9,7 @@ include:
   - services/enroll/docker-compose.yml
   - services/group/docker-compose.yml
   - services/submission/docker-compose.yml
+  - services/eval/docker-compose.yml
   - minio/docker-compose.yml
 
 
