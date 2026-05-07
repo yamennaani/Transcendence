@@ -71,6 +71,59 @@ const inviteMember = async (groupId, {leaderId, inviteeId})=>{
     })
 }
 
+
+//get the group profile
+const getGroup = async(groupId)=>{
+    if(!groupId)
+        throw new ValidationError('Invalid request')
+
+    const group = await utils.getGroupById(groupId, {members: {include: {user: true}}})
+    if(!group)
+        throw new NotFoundError('Group not found')
+    return group
+}
+
+//gets the invite
+const getInvites = async({userId})=>{
+    if(!userId)
+        throw new ValidationError('Invalid request')
+    const invites = await prisma.groupInvite.findMany({
+        where:{reciverId: parseInt(userId), status: 'Pending'},
+        include:{targetGroup: true, sender: true}
+    })
+    return invites
+}
+
+const leaveGroup = async(groupId, {userId})=>{
+    if(!groupId || !userId)
+        throw new ValidationError('Invalid request')
+
+    const group = await utils.getGroupById(groupId)
+    if(!group)
+        throw new NotFoundError('Group not found')
+    const isMemeber = await utils.existingMembership(userId, group.assId)
+    if(!isMemeber)
+        throw new ConflictError('User is not a member of this group')
+    if(group.leaderId === parseInt(userId))
+        throw new ConflictError('Group leader cannot leave the group')
+    await prisma.groupMember.delete({
+        where:{userId_groupId: {userId: parseInt(userId), groupId: parseInt(groupId)}}
+    })
+    return {message: 'Left the group successfully'}
+}
+
+const deleteInvite = async(inviteId)=>{
+    if(!inviteId)
+        throw new ValidationError('Invalid request')
+    const invite = await utils.getinvite(inviteId)
+    if(!invite)
+        throw new NotFoundError('Invite Not Found')
+    await prisma.groupInvite.delete({
+        where:{id: parseInt(inviteId)}
+    })
+    return {message: 'Invite deleted successfully'}
+}
+    
 const respondToInvite = async(inviteId, {userId, status})=>{
     if(!inviteId || !userId || !status)
         throw new ConflictError('Invalid request')
@@ -108,4 +161,4 @@ const respondToInvite = async(inviteId, {userId, status})=>{
     }
 }
 
-module.exports = {createGroup, inviteMember, respondToInvite}
+module.exports = {createGroup, inviteMember, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites}
