@@ -1,0 +1,64 @@
+<div [ngStyle]="pageStyle">
+  <!-- Header -->
+  <div style="margin-bottom:28px">
+    <div [ngStyle]="overlineStyle">Student dashboard</div>
+    <h1 [ngStyle]="h1Style">Welcome back, {{ firstName()  }}.</h1>
+    <p [ngStyle]="subtitleStyle">You have 2 pending evaluations to complete.</p>
+  </div>
+
+  <!-- Stats -->
+  <div [ngStyle]="statsRowStyle">
+    @for (s of stats; track s.label) {
+      <div [ngStyle]="statCardStyle(s)">
+        <div [ngStyle]="statLabelStyle(s)">{{ s.label }}</div>
+        <div [ngStyle]="statNumStyle(s)">
+          {{ s.value }}<span style="font-size:1.1rem;color:oklch(48% 0.01 272)">{{ s.unit }}</span>
+        </div>
+        <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">{{ s.sub }}</div>
+      </div>
+    }
+  </div>
+
+  <!-- Two-column -->
+  <div [ngStyle]="gridStyle">
+    <!-- Class progress -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272)">Class progress</span>
+        <span [ngStyle]="linkStyle" (click)="goToClasses()">View all →</span>
+      </div>
+      <div [ngStyle]="sectionPanelStyle">
+        @for (c of classes; track c.name) {
+          <app-progress-bar [value]="c.done" [max]="c.total" [label]="c.name" [sublabel]="sublabel(c)"/>
+        }
+      </div>
+    </div>
+
+    <!-- Recent assignments -->
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272)">Recent assignments</span>
+        <span [ngStyle]="linkStyle" (click)="goToAssignment()">View all →</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        @for (r of recent; track r.title) {
+          <div [ngStyle]="rowStyle(r.title)"
+               (mouseenter)="rowHovered = r.title"
+               (mouseleave)="rowHovered = null"
+               (click)="goToAssignment()">
+            <div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-size:0.9375rem;font-weight:600;color:oklch(94% 0.005 272)">{{ r.title }}</div>
+              <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:2px">max {{ r.max }}pts</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              @if (r.score !== null) {
+                <app-score-pill [score]="r.score!" [max]="r.max"/>
+              }
+              <app-badge [variant]="r.status"/>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

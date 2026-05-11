@@ -1,0 +1,301 @@
+/*
+ * Transcendence Design System — CSS Tokens
+ * Base: 8px unit, dark theme, Space Grotesk + DM Sans + JetBrains Mono
+ * Google Fonts substitutes (flag: replace with licensed fonts if supplied)
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap');
+
+/* ─────────────────────────────────────────
+   ROOT TOKENS
+───────────────────────────────────────── */
+:root {
+
+  /* ── Fonts ── */
+  --font-display:  'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body:     'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:     'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* ── Backgrounds ── */
+  --bg:              oklch(10% 0.025 272);
+  --surface:         oklch(15% 0.025 272);
+  --surface-raised:  oklch(19% 0.028 272);
+  --surface-overlay: oklch(15% 0.025 272 / 0.92);
+
+  /* ── Borders ── */
+  --border:         oklch(27% 0.03 272);
+  --border-subtle:  oklch(22% 0.025 272);
+  --border-strong:  oklch(38% 0.04 272);
+
+  /* ── Foreground / Text ── */
+  --fg1: oklch(94% 0.005 272);
+  --fg2: oklch(68% 0.010 272);
+  --fg3: oklch(48% 0.010 272);
+  --fg4: oklch(35% 0.010 272);
+
+  /* ── Primary: Electric Violet ── */
+  --violet:         oklch(64% 0.28 296);
+  --violet-dim:     oklch(55% 0.25 296);
+  --violet-bright:  oklch(72% 0.28 296);
+  --violet-subtle:  oklch(22% 0.08 296);
+  --violet-border:  oklch(40% 0.16 296);
+
+  /* ── Secondary: Cyan ── */
+  --cyan:           oklch(72% 0.15 200);
+  --cyan-dim:       oklch(62% 0.13 200);
+  --cyan-subtle:    oklch(20% 0.05 200);
+  --cyan-border:    oklch(38% 0.09 200);
+
+  /* ── Semantic: Success / Green ── */
+  --green:          oklch(68% 0.18 145);
+  --green-dim:      oklch(58% 0.16 145);
+  --green-subtle:   oklch(18% 0.06 145);
+  --green-border:   oklch(36% 0.10 145);
+
+  /* ── Semantic: Danger / Red ── */
+  --red:            oklch(62% 0.22 20);
+  --red-dim:        oklch(52% 0.20 20);
+  --red-subtle:     oklch(18% 0.07 20);
+  --red-border:     oklch(36% 0.12 20);
+
+  /* ── Semantic: Warning / Amber ── */
+  --amber:          oklch(75% 0.18 80);
+  --amber-dim:      oklch(65% 0.16 80);
+  --amber-subtle:   oklch(20% 0.06 80);
+  --amber-border:   oklch(38% 0.10 80);
+
+  /* ── Semantic: Info / Indigo ── */
+  --indigo:         oklch(62% 0.20 270);
+  --indigo-subtle:  oklch(18% 0.06 270);
+
+  /* ── Brand gradient ── */
+  --gradient-brand: linear-gradient(90deg, var(--violet) 0%, var(--cyan) 100%);
+  --gradient-brand-text: linear-gradient(90deg, oklch(72% 0.28 296) 0%, oklch(72% 0.15 200) 100%);
+
+  /* ─────────────────────────────────────────
+     TYPOGRAPHY SCALE
+  ───────────────────────────────────────── */
+
+  /* Display sizes — Space Grotesk */
+  --text-display-xl: 3.5rem;    /* 56px — hero numbers, XL headings */
+  --text-display-lg: 2.5rem;    /* 40px — page titles */
+  --text-display-md: 1.875rem;  /* 30px — section titles */
+  --text-display-sm: 1.375rem;  /* 22px — card titles */
+
+  /* Body sizes — DM Sans */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-base: 1rem;       /* 16px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-xs:   0.75rem;    /* 12px */
+
+  /* Mono sizes — JetBrains Mono */
+  --text-mono-base: 0.9375rem;  /* 15px */
+  --text-mono-sm:   0.8125rem;  /* 13px */
+
+  /* Line heights */
+  --leading-tight:  1.15;
+  --leading-snug:   1.35;
+  --leading-normal: 1.5;
+  --leading-loose:  1.7;
+
+  /* Letter spacing */
+  --tracking-tight:   -0.03em;
+  --tracking-normal:  -0.01em;
+  --tracking-wide:    0.04em;
+  --tracking-wider:   0.08em;
+  --tracking-widest:  0.12em;
+
+  /* ─────────────────────────────────────────
+     SEMANTIC TYPOGRAPHY VARS
+  ───────────────────────────────────────── */
+
+  /* h1 — page title */
+  --h1-size:    var(--text-display-lg);
+  --h1-weight:  700;
+  --h1-leading: var(--leading-tight);
+  --h1-tracking: var(--tracking-tight);
+  --h1-font:    var(--font-display);
+  --h1-color:   var(--fg1);
+
+  /* h2 — section title */
+  --h2-size:    var(--text-display-md);
+  --h2-weight:  600;
+  --h2-leading: var(--leading-snug);
+  --h2-tracking: var(--tracking-tight);
+  --h2-font:    var(--font-display);
+  --h2-color:   var(--fg1);
+
+  /* h3 — card / subsection title */
+  --h3-size:    var(--text-display-sm);
+  --h3-weight:  600;
+  --h3-leading: var(--leading-snug);
+  --h3-tracking: var(--tracking-normal);
+  --h3-font:    var(--font-display);
+  --h3-color:   var(--fg1);
+
+  /* h4 — small section label */
+  --h4-size:    var(--text-base);
+  --h4-weight:  600;
+  --h4-leading: var(--leading-normal);
+  --h4-tracking: var(--tracking-normal);
+  --h4-font:    var(--font-body);
+  --h4-color:   var(--fg1);
+
+  /* p — body paragraph */
+  --p-size:     var(--text-base);
+  --p-weight:   400;
+  --p-leading:  var(--leading-loose);
+  --p-tracking: var(--tracking-normal);
+  --p-font:     var(--font-body);
+  --p-color:    var(--fg2);
+
+  /* label — UI label */
+  --label-size:    var(--text-sm);
+  --label-weight:  500;
+  --label-leading: var(--leading-normal);
+  --label-tracking: var(--tracking-normal);
+
+  /* caption — smallest text */
+  --caption-size:    var(--text-xs);
+  --caption-weight:  400;
+  --caption-leading: var(--leading-normal);
+  --caption-tracking: var(--tracking-wide);
+
+  /* code — inline or block */
+  --code-size:    var(--text-mono-sm);
+  --code-weight:  400;
+  --code-leading: var(--leading-normal);
+  --code-font:    var(--font-mono);
+
+  /* overline — section labels above headings */
+  --overline-size:    var(--text-xs);
+  --overline-weight:  600;
+  --overline-leading: var(--leading-normal);
+  --overline-tracking: var(--tracking-widest);
+  --overline-color:   var(--violet);
+
+  /* ─────────────────────────────────────────
+     SPACING SCALE (8px base)
+  ───────────────────────────────────────── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:   12px;
+  --space-4:   16px;
+  --space-5:   20px;
+  --space-6:   24px;
+  --space-8:   32px;
+  --space-10:  40px;
+  --space-12:  48px;
+  --space-16:  64px;
+  --space-24:  96px;
+
+  /* ─────────────────────────────────────────
+     BORDER RADIUS
+  ───────────────────────────────────────── */
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* ─────────────────────────────────────────
+     SHADOWS / ELEVATION
+  ───────────────────────────────────────── */
+  --shadow-0: none;
+  --shadow-1: 0 1px 3px oklch(0% 0 0 / 0.40);
+  --shadow-2: 0 4px 16px oklch(0% 0 0 / 0.60);
+  --shadow-3: 0 8px 32px oklch(0% 0 0 / 0.80);
+  --shadow-glow-violet: 0 0 24px oklch(64% 0.28 296 / 0.35);
+  --shadow-glow-cyan:   0 0 24px oklch(72% 0.15 200 / 0.30);
+
+  /* ─────────────────────────────────────────
+     TRANSITIONS
+  ───────────────────────────────────────── */
+  --ease-standard:   cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-decelerate: cubic-bezier(0.0, 0, 0.2, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0, 1, 1);
+
+  --duration-micro:    100ms;
+  --duration-fast:     150ms;
+  --duration-standard: 250ms;
+  --duration-slow:     400ms;
+
+  --transition-color:     color var(--duration-fast) var(--ease-standard),
+                          background-color var(--duration-fast) var(--ease-standard),
+                          border-color var(--duration-fast) var(--ease-standard);
+  --transition-transform: transform var(--duration-micro) var(--ease-standard);
+  --transition-all:       all var(--duration-standard) var(--ease-standard);
+
+  /* ─────────────────────────────────────────
+     LAYOUT
+  ───────────────────────────────────────── */
+  --sidebar-width:      240px;
+  --content-max-width:  1280px;
+  --content-padding:    var(--space-8);
+  --header-height:      60px;
+}
+
+/* ─────────────────────────────────────────
+   GLOBAL BASE STYLES
+───────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  letter-spacing: var(--tracking-normal);
+  color: var(--fg1);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1 {
+  font-family: var(--h1-font); font-size: var(--h1-size);
+  font-weight: var(--h1-weight); line-height: var(--h1-leading);
+  letter-spacing: var(--h1-tracking); color: var(--h1-color); margin: 0;
+}
+h2 {
+  font-family: var(--h2-font); font-size: var(--h2-size);
+  font-weight: var(--h2-weight); line-height: var(--h2-leading);
+  letter-spacing: var(--h2-tracking); color: var(--h2-color); margin: 0;
+}
+h3 {
+  font-family: var(--h3-font); font-size: var(--h3-size);
+  font-weight: var(--h3-weight); line-height: var(--h3-leading);
+  letter-spacing: var(--h3-tracking); color: var(--h3-color); margin: 0;
+}
+h4 {
+  font-family: var(--h4-font); font-size: var(--h4-size);
+  font-weight: var(--h4-weight); line-height: var(--h4-leading);
+  letter-spacing: var(--h4-tracking); color: var(--h4-color); margin: 0;
+}
+p {
+  font-family: var(--p-font); font-size: var(--p-size);
+  font-weight: var(--p-weight); line-height: var(--p-leading);
+  letter-spacing: var(--p-tracking); color: var(--p-color); margin: 0;
+}
+code, pre {
+  font-family: var(--code-font); font-size: var(--code-size);
+  line-height: var(--code-leading);
+}
+
+/* ── Gradient text utility ── */
+.text-gradient {
+  background: var(--gradient-brand-text);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Overline utility ── */
+.overline {
+  font-family: var(--font-body);
+  font-size: var(--overline-size);
+  font-weight: var(--overline-weight);
+  letter-spacing: var(--overline-tracking);
+  text-transform: uppercase;
+  color: var(--overline-color);
+}
