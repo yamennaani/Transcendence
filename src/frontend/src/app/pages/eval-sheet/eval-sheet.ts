@@ -2,7 +2,7 @@ import { Component, signal, computed, inject } from '@angular/core'
 import { EvalService } from '../../core/services/eval.service'
 import { FormsModule } from '@angular/forms'
 import { CommonModule } from '@angular/common'
-
+import { Injectable } from '@angular/core'
 // Material
 import { MatCardModule } from '@angular/material/card'
 import { MatButtonModule } from '@angular/material/button'
@@ -32,6 +32,7 @@ import { MatIconModule } from '@angular/material/icon'
   templateUrl: './eval-sheet.html',
   styleUrl: './eval-sheet.css'
 })
+@Injectable({ providedIn: 'root' }) 
 export class EvalSheetComponent {
   private evalService = inject(EvalService)
 
