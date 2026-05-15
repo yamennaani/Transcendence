@@ -47,4 +47,29 @@ route.get('/assignment/:id', async(req, res, next)=>{
     }catch(err){ next(err)}
 })
 
+
+// Routes pertaining to EvalAssignment model/table
+
+route.post('/eval-assignments', async(req, res, next) => {
+    try{
+        res.json(await service.createEvalAssignment(req.body))
+    }catch(err){next(err)}
+})
+
+route.get('/assignment/:id/eval-assignments', async (req, res, next) => {
+  try {
+    res.json(await service.getEvalAssignments(req.params.id))
+  } catch (err) {
+    next(err)
+  }
+})
+
+route.get('/eval-assignments/:id', async (req, res, next) => {
+  try {
+    res.json(await service.getEvalAssignmentById(req.params.id))
+  } catch (err) {
+    next(err)
+  }
+})
+
 module.exports = route

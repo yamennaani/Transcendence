@@ -105,6 +105,83 @@ const removeSection = async (sheetId, {secId})=>{
     }
 }
 
+// methods pertaining to EvalAssignment model/table:
+const createEvalAssignment = async ({assignmentId, evalueeGroupId, evaluatorGroupId, evaluatorUserId, round}) => {
+  const assId = parseInt(assignmentId)
+  const evalueeGid = parseInt(evalueeGroupId)
+  const evaluatorGid = parseInt(evaluatorGroupId)
+  const evaluatorUid = parseInt(evaluatorUserId)
+  const roundNr = parseInt(round)
+
+  if (!assId || !evalueeGid || !evaluatorGid || !evaluatorUid || !roundNr)
+    throw new ValidationError('assignmentId, evalueeGroupId, evaluatorGroupId, evaluatorUserId and round are required')
+
+  const assignment = await prisma.assignment.findUnique({ where: { id: assId } })
+  if (!assignment)
+    throw new NotFoundError('Assignment not found')
+
+  const evalueeGroup = await prisma.group.findUnique({ where: { id: evalueeGid } })
+  if (!evalueeGroup)
+    throw new NotFoundError('Evaluee group not found')
+  if (evalueeGroup.assId !== assId)
+    throw new ValidationError('Evaluee group does not belong to this assignment')
+
+  const evaluatorGroup = await prisma.group.findUnique({ where: { id: evaluatorGid } })
+  if (!evaluatorGroup)
+    throw new NotFoundError('Evaluator group not found')
+  if (evaluatorGroup.assId !== assId)
+    throw new ValidationError('Evaluator group does not belong to this assignment')
+
+  if (evaluatorGid === evalueeGid)
+    throw new ValidationError('Evaluator group cannot evaluate itself')
+
+  const memberEvalueeGroup = await prisma.groupMember.findUnique({
+    where: { userId_groupId: {
+        userId: evaluatorUid,
+        groupId: evaluatorGid } } })
+  if (!memberEvalueeGroup)
+    throw new ValidationError('Evaluator user is not a member of evaluator group')
+
+  return await prisma.evalAssignment.create({
+    data: { assignmentId: assId, evalueeGroupId: evalueeGid, evaluatorGroupId: evaluatorGid,
+            evaluatorUserId: evaluatorUid, round: roundNr },
+    select: { id: true, assignmentId: true, evalueeGroupId: true, evaluatorGroupId: true,
+              evaluatorUserId: true, round: true, status: true, createdAt: true } })
+}
+
+const getEvalAssignments = async (assignmentId)=>{
+  const assignId = parseInt(assignmentId)
+
+  const assignment = await prisma.assignment.findUnique({ where: { id: assignId } })
+
+  if (!assignment)
+    throw new NotFoundError('Assignment not found')
+
+  const select = { id: true, assignmentId: true, evalueeGroupId: true, evaluatorGroupId: true,
+                   evaluatorUserId: true, round: true, status: true, submissionId: true,
+                   evalResponseId: true, createdAt: true }
+  return await utils.getEvalAssignments(assignId, select)
+}
+
+const getEvalAssignmentById = async (evalAssignmentId) => {
+  const evalAssignid = parseInt(evalAssignmentId)
+
+  const select = { id: true, assignmentId: true, evalueeGroupId: true, evaluatorGroupId: true,
+                   evaluatorUserId: true, round: true, status: true, submissionId: true,
+                   evalResponseId: true, createdAt: true }
+
+  const result = await utils.getEvalAssignmentById(evalAssignid, select)
+
+  if (!result)
+    throw new NotFoundError('Eval assignment not found')
+
+  return result
+}
+
+
+
 module.exports = {getEvalSheetById, getEvalSheetByAssId, getAssignment, createEvalSheet, createEvalSection,
-    updateEvalSheetSection, removeSection
+    updateEvalSheetSection, removeSection, 
+    createEvalAssignment,
+    getEvalAssignments, getEvalAssignmentById
 }
