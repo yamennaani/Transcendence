@@ -72,4 +72,17 @@ route.get('/eval-assignments/:id', async (req, res, next) => {
   }
 })
 
+route.put('/eval-assignments/:id', async(req, res, next) => {
+    try{
+        res.json(await service.updateEvalAssignment(req.params.id, req.body))
+    }catch(err){next(err)}
+})
+
+route.delete('/eval-assignments/:id', async(req, res, next) => {
+    try{
+        res.json(await service.deleteEvalAssignment(req.params.id))
+    }catch(err){next(err)}
+})
+
+
 module.exports = route
