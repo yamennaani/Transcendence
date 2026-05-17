@@ -274,7 +274,51 @@ const deleteEvalAssignment = async (evalAssignmentId) => {
     id: evalAssignmentIdInt }
 }
 
+// implement simple circular pairings (groups 0 -> 1, 1 -> 2, 2 -> 3, ..., n-1 -> 0)
+// to test that workflow of creating the pairing in the DB works
+// choose round = 1, evaluator is 1st user in group
+const generateSimpleEvalAssignmentPairings = async (assignmentId) => {
+  const assignmentIdInt = parseInt(assignmentId)
+
+  const assignment = await utils.getAssignmentById(assignmentIdInt)
+  if (!assignment)
+    throw new NotFoundError('Assignment not found')
+
+  const groups = await utils.getEligibleGroupsForAssignment(assignmentIdInt)
+
+  if (groups.length < 2)
+    throw new ValidationError('At least 2 groups required')
+
+  const createdEvalAssignments = []
+  for (let i = 0; i < groups.length; i++) {
+    const evalueeGroup = groups[i]
+    const evaluatorGroup = groups[(i + 1) % groups.length]
+
+    const evaluatorUser = evaluatorGroup.members[0].user
+
+    const evalAssignment = await createEvalAssignment({
+      assignmentId: assignmentIdInt,
+      evalueeGroupId: evalueeGroup.id,
+      evaluatorGroupId: evaluatorGroup.id,
+      evaluatorUserId: evaluatorUser.id,
+      round: 1
+    })
+
+    createdEvalAssignments.push(evalAssignment)
+  }
+
+  return {
+    message: 'Simple eval assignment pairings generated successfully',
+    assignmentId: assignmentIdInt,
+    round: 1,
+    count: createdEvalAssignments.length,
+    evalAssignments: createdEvalAssignments
+  }
+}
+
+
 module.exports = {getEvalSheetById, getEvalSheetByAssId, getAssignment, createEvalSheet, createEvalSection,
     updateEvalSheetSection, removeSection, 
-    getEvalAssignments, getEvalAssignmentById, createEvalAssignment, updateEvalAssignment, deleteEvalAssignment
+    getEvalAssignments, getEvalAssignmentById, createEvalAssignment, updateEvalAssignment, deleteEvalAssignment,
+    generateSimpleEvalAssignmentPairings
 }

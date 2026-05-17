@@ -42,6 +42,21 @@ const getEvalAssignmentById = async (id, select = null, include = null) => {
   return await prisma.evalAssignment.findUnique(options)
 }
 
+
+const getEligibleGroupsForAssignement = async (assignmentId) => {
+  const assignmentIdInt = parseInt(assignmentId)
+
+  if (isNaN(assignmentIdInt))
+    throw new ValidationError('Invalid assignment ID')
+
+  return await prisma.group.findMany({ 
+    where: {assId: assignmentIdInt, members: { some: {}} },
+    include: {members: 
+                { include: { user: { select: {id: true, username: true, email: true, role: true} }} }},
+    orderBy: {id: 'asc'}  })
+}
+
 module.exports = {getEvalSheetById, getEvalSheetByAssId,
-                  getEvalAssignments, getEvalAssignmentById
+                  getEvalAssignments, getEvalAssignmentById,
+                  getEligibleGroupsForAssignement
 }
