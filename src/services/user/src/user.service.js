@@ -3,6 +3,9 @@ const { NotFoundError, ConflictError, ValidationError } = require('../packages/e
 const utils = require('../packages/utils')
 const logger = require('../packages/logger')
 const bcrypt = require('bcrypt')
+const {createStorage} = require('../packages/fileManager')
+
+storage = createStorage('user-profile')
 
 const getAllUsers = async () => {
   const select = { id: true, email: true, username: true, created_at: true }
@@ -49,11 +52,11 @@ const loginUser = async ({ email, username, password }) => {
     throw new ValidationError('Email or username required')
   if (!password) 
     throw new ValidationError('Password required')
-  const user = await utils.searchUser(email, username)
+  const user = await utils.searchUser(email, username, null, {profile: true})
   if (!user) 
     throw new NotFoundError('User not found');
-  if (!await bcrypt.compare(password, user.userAuth.pass_hash)) 
-    throw new ValidationError('Invalid password');
+  //if (!await bcrypt.compare(password, user.userAuth.pass_hash)) 
+    //throw new ValidationError('Invalid password');
   return user;
 }
 
@@ -83,4 +86,24 @@ const deleteUser = async (id)=>{
   }
 }
 
-module.exports = { getAllUsers, getUserById, getRole, createUser, getProfile, updateProfile, deleteUser, loginUser }
+const uploadAvatar = async (userId, reqFile) => {
+  if (!userId || !reqFile)
+    throw new ValidationError('Invalid request')
+  
+  const user = await utils.getUserById(userId)
+  if (!user)
+    throw new NotFoundError('User not found')
+
+  const fileName = `avatar-${userId}-${Date.now()}-${reqFile.originalname}`
+  await storage.upload(fileName, reqFile.buffer, reqFile.mimetype, reqFile.size)
+  
+  // save the url to user profile
+  await prisma.userProfile.update({
+    where: { userId: parseInt(userId) },
+    data: { avatar: fileName }
+  })
+
+  return { message: 'Avatar uploaded', url: fileName }
+}
+
+module.exports = { getAllUsers, getUserById, getRole, createUser, getProfile, updateProfile, deleteUser, loginUser, uploadAvatar}

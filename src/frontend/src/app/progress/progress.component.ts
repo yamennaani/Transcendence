@@ -21,7 +21,7 @@ const EVALS = [
 @Component({
   selector: 'app-progress',
   standalone: true,
-  imports: [NgStyle, ProgressBarComponent, ScorePillComponent, AvatarComponent],
+  imports: [NgStyle, ProgressBarComponent, ScorePillComponent],
   template: `
     <div [ngStyle]="pageStyle">
       <div style="margin-bottom:28px">

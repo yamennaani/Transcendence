@@ -16,4 +16,16 @@ route.patch('/', async(req, res, next)=>{
     }catch(err){next(err)}
 })
 
+route.get('/:id', async(req, res, next)=>{
+    try{
+        res.json(await enrollService.getEnrollement(req.params.id))
+    }catch(error){next(error)}
+})
+
+route.get('/classes/:id', async(req, res, next)=>{
+    try{
+        await res.json(await enrollService.getEnrolledClasses(req.params.id))
+    }catch(err){next(err)}
+})
+
 module.exports = route

@@ -46,6 +46,7 @@ model User{
 model UserProfile{
   id Int @id @unique @default(autoincrement())
   bio String 
+  avatar String?
   userId Int @unique
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   last_update DateTime
@@ -96,6 +97,7 @@ model Organization{
 model OrgProfile{
   id Int @id @unique @default(autoincrement())
   bio String
+  avatar String?
   tel_num String
   orgid Int @unique
   org Organization @relation(fields: [orgid], references: [id], onDelete: Cascade)

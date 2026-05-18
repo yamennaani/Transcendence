@@ -1,12 +1,14 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
-import { DS } from '../tokens';
+import { Course, DS } from '../tokens';
 import { BadgeComponent } from '../shared/badge.component';
 import { ProgressBarComponent } from '../shared/progress-bar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
 import { BtnComponent } from '../shared/btn.component';
+import { CourseService } from '../core/services/course-service/course-service';
+import { EnrollService } from '../core/services/enroll-service/enroll-service';
 
 const STATS = [
   { label: 'Score avg',        value: '88', unit: '/100', sub: 'across 6 evaluations',  accent: false, warn: false },
@@ -15,11 +17,6 @@ const STATS = [
   { label: 'Pending reviews',  value: '2',  unit: '',     sub: 'waiting for you',        accent: false, warn: true  },
 ];
 
-const CLASSES = [
-  { name: 'Systems programming',          done: 6, total: 10, threshold: 80 },
-  { name: 'Algorithms & data structures', done: 9, total: 10, threshold: 80 },
-  { name: 'Web fundamentals',             done: 3, total: 8,  threshold: 80 },
-];
 
 const RECENT = [
   { title: 'Shell scripting basics', status: 'validated'   as const, score: 94,   max: 100 },
@@ -31,24 +28,52 @@ const RECENT = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgStyle, BadgeComponent, ProgressBarComponent, ScorePillComponent, BtnComponent],
+  imports: [NgStyle, BadgeComponent, ProgressBarComponent, ScorePillComponent],
   templateUrl: './dashboard.component.html',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
+
   private auth   = inject(AuthService);
   private router = inject(Router);
-  firstName = computed(() => this.auth.user()?.name?.split(' ')[0] ?? 'there');
+  private courseService = inject(CourseService)
+  private enrollService = inject(EnrollService)
+
+  courses = signal<any[]>([])
+  
+  firstName = computed(() => this.auth.user()?.username ?? 'there')
 
   user    = this.auth.user;
   stats   = STATS;
-  classes = CLASSES;
   recent  = RECENT;
 
-  sublabel(c: typeof CLASSES[0]) {
-    const pct = Math.round((c.done / c.total) * 100);
-    return pct >= c.threshold
+    ngOnInit(){
+    this.getClasses()
+  }
+
+  getClasses(){
+    const user = this.user()
+    if(!user || !user.id)
+    {
+        console.log('User not available yet');
+        return;
+    }
+    const id = user.id;
+    this.enrollService.getStudenEnrolledClasses(id).subscribe({
+      next:(result)=>{
+        this.courses.set(result);
+        this.courseService.setUserCourses(result);
+      },
+      error: (err)=>{
+        console.log(err.error)
+      }
+    })
+  }
+
+  sublabel(c: Course) {
+    const pct = Math.round((c.done / c.assignments?.length) * 100);
+    return pct >= c.pass_threshold
       ? 'Passed — threshold met'
-      : `Threshold: ${c.threshold}% · ${Math.ceil(c.total * c.threshold / 100) - c.done} more to pass`;
+      : `Threshold: ${c.pass_threshold}% · ${Math.ceil(c.assignments?.length * c.pass_threshold / 100) - c.done} more to pass`;
   }
 
   goToAssignment() { this.router.navigate(['/assignment']); }

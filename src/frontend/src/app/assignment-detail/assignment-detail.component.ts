@@ -1,11 +1,12 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DS } from '../tokens';
 import { BadgeComponent } from '../shared/badge.component';
 import { AvatarComponent } from '../shared/avatar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
 import { BtnComponent } from '../shared/btn.component';
+import { AssignmentService } from '../core/services/course-service/Assignment.service';
 
 const ASSIGNMENT = {
   title: 'C memory management', class: 'Systems programming',
@@ -24,8 +25,11 @@ const ASSIGNMENT = {
   imports: [NgStyle, BadgeComponent, AvatarComponent, ScorePillComponent, BtnComponent],
   templateUrl: './assignment-detail.component.html',
 })
-export class AssignmentDetailComponent {
+export class AssignmentDetailComponent implements OnInit{
   router = inject(Router);
+  private route = inject(ActivatedRoute);
+  private assService = inject(AssignmentService)
+  private assId = signal<number | null>(null)
 
   tab = signal<'detail' | 'evaluations' | 'submission'>('detail');
   a   = ASSIGNMENT;
@@ -33,6 +37,15 @@ export class AssignmentDetailComponent {
     const e = this.a.evaluations;
     return e.length ? Math.round(e.reduce((s, x) => s + x.score, 0) / e.length) : null;
   });
+
+    ngOnInit(): void {
+      console.log('hi')
+      this.route.queryParams.subscribe((params)=>{
+        if(params['assId']){
+          this.assId.set(parseInt(params['assId']))
+        }
+      })
+  }
 
   tabStyle(id: string) {
     const active = this.tab() === id;

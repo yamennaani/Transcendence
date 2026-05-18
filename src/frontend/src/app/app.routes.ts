@@ -15,7 +15,7 @@ const bocalGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   const role   = auth.role();
-  if (role === 'bocal' || role === 'admin') return true;
+  if (role === 'Bocal' || role === 'Admin') return true;
   return router.parseUrl('/dashboard');
 };
 
@@ -24,6 +24,11 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path:'user-profile',
+    canActivate: [authGuard],
+    loadComponent:()=> import('./userProfile/user-profile').then(m=>m.UserProfileComponent)
   },
   {
     path: 'dashboard',
@@ -36,7 +41,12 @@ export const routes: Routes = [
     loadComponent: () => import('./class-list/class-list.component').then(m => m.ClassListComponent),
   },
   {
-    path: 'assignment',
+    path:'assignment',
+    canActivate:[authGuard],
+    loadComponent:()=>import('./assignment-list/assignment-list.component').then(m=>m.AssignmentListComponent)
+  },
+  {
+    path: 'assignment-detail',
     canActivate: [authGuard],
     loadComponent: () => import('./assignment-detail/assignment-detail.component').then(m => m.AssignmentDetailComponent),
   },

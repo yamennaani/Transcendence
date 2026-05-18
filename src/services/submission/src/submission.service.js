@@ -1,7 +1,9 @@
 const {prisma} = require('../packages/database')
 const {NotFoundError, ValidationError, ConflictError, UnauthorizedError} = require('../packages/errors')
 const utils = require('../packages/utils')
-const minio = require('./minio')
+const { createStorage } = require('../packages/fileManager')
+const storage = createStorage('submissions')
+
 
 const validateGroupMember = async (groupId, userId)=>{
      const group = await utils.getGroupById(groupId, null, {
@@ -86,7 +88,7 @@ const closeSubmission = async (groupId, {userId})=>{
 
 const deleteExistingFile = async(url)=>{
     if(!url.startsWith('http')){
-        await minio.deleteFromMinio(url)
+        await storage.delete(url)
     }
 }
 
@@ -104,7 +106,7 @@ const uploadFile = async (groupId, userId, reqFile)=>{
         throw new ValidationError('Submission is already closed')
 
     const fileName = `${groupId}-${Date.now()}-${reqFile.originalname}`
-    await minio.uploadToMinio(fileName, reqFile.buffer, reqFile.mimetype, reqFile.size)
+    await storage.upload(fileName, reqFile.buffer, reqFile.mimetype, reqFile.size)
     if(existingSub.file)
     {
         await deleteExistingFile(existingSub.file.url);
@@ -135,7 +137,7 @@ const getDownloadUrl = async(groupId, userId)=>{
     if(!existingSub) throw new NotFoundError('Submission not found')
     if(!existingSub.file) throw new NotFoundError('File not found')
     
-    const url = await minio.getSignedUrl(existingSub.file.url, existingSub.file.name)
+    const url = await storage.getUrl(existingSub.file.url, existingSub.file.name)
     return {url, expiresIn: '10 minutes' }
 }
 
@@ -148,7 +150,7 @@ const removeFile = async (groupId, userId) =>{
     if(!existingSub.file) throw new NotFoundError('File not found')
     if(existingSub.status !== 'Open') throw new ValidationError('Submission is already closed')
     
-    await minio.deleteFromMinio(existingSub.file.url)
+    await storage.deleteFromMinio(existingSub.file.url)
     await prisma.submission.update({
         where:{id: existingSub.id},
         data:{fileId: null}

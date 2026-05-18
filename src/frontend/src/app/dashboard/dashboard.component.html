@@ -28,8 +28,8 @@
         <span [ngStyle]="linkStyle" (click)="goToClasses()">View all →</span>
       </div>
       <div [ngStyle]="sectionPanelStyle">
-        @for (c of classes; track c.name) {
-          <app-progress-bar [value]="c.done" [max]="c.total" [label]="c.name" [sublabel]="sublabel(c)"/>
+        @for (c of courses(); track c.name) {
+          <app-progress-bar [value]="c.done" [max]="c.assignments?.length ?? 0" [label]="c.name" [sublabel]="sublabel(c)"/>
         }
       </div>
     </div>

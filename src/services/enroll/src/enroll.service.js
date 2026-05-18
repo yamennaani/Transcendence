@@ -56,4 +56,31 @@ const dropStudent = async ({classId, studentId})=>{
     })
 }
 
-module.exports = {enrollStudent, dropStudent}
+const getEnrollement = async(studentId)=>{
+  if(!studentId)
+    throw new ValidationError('invalid request')
+  const user = await utils.getUserById(studentId, null, {enrollments:true})
+  if(!user)
+    throw new NotFoundError('User not found')
+  return user.enrollments
+}
+
+const getEnrolledClasses = async(studentId, filter)=>{
+  if(!studentId)
+    throw new ValidationError('invalid request')
+  const user = await utils.getUserById(studentId, null,
+    { enrollments: {
+      include:{class:{
+        include:{
+          assignments:true
+        }
+      }}
+    }})
+  if(!user)
+    throw new NotFoundError('User not found')
+  const enrolledClasses = user.enrollments.map(enroll => enroll.class)
+  return enrolledClasses
+
+}
+
+module.exports = {enrollStudent, dropStudent, getEnrollement, getEnrolledClasses}

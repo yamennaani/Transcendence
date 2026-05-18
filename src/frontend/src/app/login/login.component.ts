@@ -5,12 +5,8 @@ import { AuthService } from '../auth.service';
 import { DS, User } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
 import { BtnComponent } from '../shared/btn.component';
+import { UserService } from '../core/services/user-service/user-service';
 
-const DEMO_USERS: Record<string, User> = {
-  student: { name: 'Alex Martin', role: 'student', email: 'alex@43.school' },
-  bocal:   { name: 'Sarah Chen',  role: 'bocal',   email: 'sarah@43.school' },
-  admin:   { name: 'Root Admin',  role: 'admin',   email: 'admin@43.school' },
-};
 
 @Component({
   selector: 'app-login',
@@ -31,18 +27,6 @@ const DEMO_USERS: Record<string, User> = {
         <div [ngStyle]="cardStyle">
           <h1 [ngStyle]="h1Style">Sign in</h1>
           <p [ngStyle]="subtitleStyle">Your peer-to-peer learning platform.</p>
-
-          <!-- Role switcher (prototype) -->
-          <div style="margin-bottom:20px">
-            <div [ngStyle]="switchLabelStyle">Sign in as (prototype)</div>
-            <div style="display:flex;gap:6px">
-              @for (entry of roles; track entry.key) {
-                <button [ngStyle]="roleTabStyle(entry.key)" (click)="selectRole(entry.key)">
-                  {{ entry.key }}
-                </button>
-              }
-            </div>
-          </div>
 
           <!-- Form -->
           <div style="display:flex;flex-direction:column;gap:14px">
@@ -75,23 +59,30 @@ const DEMO_USERS: Record<string, User> = {
 export class LoginComponent {
   private auth   = inject(AuthService);
   private router = inject(Router);
+  private user = inject(UserService);
 
   role     = signal<string>('student');
-  email    = signal('alex@43.school');
-  password = signal('••••••••');
+  email    = signal('');
+  password = signal('');
   focused  = signal('');
 
-  roles = Object.entries(DEMO_USERS).map(([key, val]) => ({ key, val }));
-
-  selectRole(r: string) {
-    this.role.set(r);
-    this.email.set(DEMO_USERS[r].email);
-    this.password.set('••••••••');
-  }
-
   login() {
-    this.auth.login(DEMO_USERS[this.role()]);
-    this.router.navigate(['/dashboard']);
+    const data = {
+      email: this.email(),
+      username:"",
+      password:this.password()
+    }
+    this.user.loginUser(data).subscribe({
+      next:(user: any)=>{
+        this.role.set(user.role);
+        this.auth.login(user);
+        const dest = (user.role === 'Admin' || user.role === 'Bocal') ? '/bocal': '/dashboard'
+        this.router.navigate([dest]);
+      },
+      error: (err)=>{
+        console.log(err.error)
+      }
+    })
   }
 
   // Styles

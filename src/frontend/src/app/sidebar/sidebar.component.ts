@@ -9,13 +9,13 @@ import { AvatarComponent } from '../shared/avatar.component';
 interface NavItem { label: string; route: string; icon: string; roles: string[]; badge?: number; }
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['student','bocal','admin'] },
-  { label: 'My classes',  route: '/classes',            icon: 'book',       roles: ['student'] },
-  { label: 'Assignments', route: '/assignment',         icon: 'file',       roles: ['student','bocal','admin'] },
-  { label: 'Evaluations', route: '/evaluation',         icon: 'star',       roles: ['student'], badge: 2 },
-  { label: 'Progress',    route: '/progress',           icon: 'trending',   roles: ['student'] },
-  { label: 'Manage',      route: '/bocal',              icon: 'building',   roles: ['bocal','admin'] },
-  { label: 'Users',       route: '/users',              icon: 'users',      roles: ['admin'] },
+  { label: 'Dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
+  { label: 'My classes',  route: '/classes',            icon: 'book',       roles: ['Student'] },
+  { label: 'Assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },
+  { label: 'Evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student'], badge: 2 },
+  { label: 'Progress',    route: '/progress',           icon: 'trending',   roles: ['Student'] },
+  { label: 'Manage',      route: '/bocal',              icon: 'building',   roles: ['Bocal','Admin'] },
+  { label: 'Users',       route: '/users',              icon: 'users',      roles: ['Admin'] },
 ];
 
 @Component({
@@ -30,10 +30,12 @@ const NAV_ITEMS: NavItem[] = [
       </div>
 
       <!-- User chip -->
-      <div [ngStyle]="chipStyle">
-        <app-avatar [name]="user()?.name ?? ''" [size]="32"/>
+      <div [ngStyle]="chipStyle"
+      (click)="goToProfile()"
+      style="cursor: pointer;">
+        <app-avatar [name]="user()?.username ?? ''" [size]="32"/>
         <div style="flex:1;min-width:0">
-          <div [ngStyle]="userNameStyle">{{ user()?.name }}</div>
+          <div [ngStyle]="userNameStyle">{{ user()?.username }}</div>
           <div [ngStyle]="roleStyle()">{{ user()?.role }}</div>
         </div>
       </div>
@@ -113,7 +115,7 @@ export class SidebarComponent {
     const r = this.user()?.role;
     return {
       fontSize: '0.6875rem', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase',
-      color: r === 'bocal' ? DS.colors.cyan : r === 'admin' ? DS.colors.violet : DS.colors.fg3,
+      color: r === 'Bocal' ? DS.colors.cyan : r === 'Admin' ? DS.colors.violet : DS.colors.fg3,
     };
   });
 
@@ -129,5 +131,9 @@ export class SidebarComponent {
       fontSize: '0.875rem', fontWeight: active ? '500' : '400',
       fontFamily: DS.fonts.body, textDecoration: 'none',
     };
+  }
+
+  goToProfile(){
+    this.router.navigate(['user-profile'])
   }
 }
