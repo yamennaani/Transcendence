@@ -1,13 +1,16 @@
-import { Component, EventEmitter, input, Output, signal } from "@angular/core";
-import { MatIcon } from "@angular/material/icon";
+import { Component, EventEmitter, input, Output, signal, ViewChild } from "@angular/core";
 import { DS } from '../tokens';
 import { BtnComponent } from "./btn.component";
+import { IconComponent } from "./icon.component";
+import { FieldComponent } from "./field.component";
+import { BaseField, FieldType } from "./field.types";
 
 export interface ProfileHeader{
     name:string,
     bio:string,
-    avatarIcon:string
+    avatarUrl?: string;
 }
+
 
 export interface ProfileField{
     icon:string,
@@ -27,23 +30,24 @@ export interface ProfileViewSettings{
   template: `
     <div class="profile-card">
 
-      <div class="avatar">
-        <mat-icon>{{ header().avatarIcon }}</mat-icon>
-      </div>
+      <app-icon [settings]="{
+        name: header().name,
+        icon: header().avatarUrl,
+        size: 80,
+        borderRadius: 50,
+        allowEdit: isEditing(),
+        allowView: false
+      }" (iconChanged)="onAvatarChanged($event)" />
 
       <h2>{{ header().name }}</h2>
 
       <div class="fields">
-        @for (item of fields(); track item.label) {
-          <div class="field-row">
-            <mat-icon>{{ item.icon }}</mat-icon>
-            <span class="field-label">{{ item.label }}</span>
-            @if (isEditing() && item.allowEdit) {
-              <input [value]="tempFields()[$index].value" (input)="updateField($index, $event)" />
-            } @else {
-              <span class="field-value">{{ item.value || '—' }}</span>
-            }
-          </div>
+        @for (field of fields(); track field.label) {
+          <app-field
+            [field]="field"
+            [isEditing]="isEditing()"
+            (valueChanged)="onFieldChanged($event)"
+          />
         }
       </div>
 
@@ -64,7 +68,7 @@ export interface ProfileViewSettings{
 
     </div>
   `,
-  imports: [MatIcon, BtnComponent],
+  imports: [BtnComponent, IconComponent, FieldComponent],
   styles: [`
     .profile-card {
       max-width: 420px;
@@ -76,22 +80,6 @@ export interface ProfileViewSettings{
       flex-direction: column;
       align-items: center;
       gap: ${DS.space[4]};
-    }
-    .avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: ${DS.radius.full};
-      background: ${DS.colors.violetSubtle};
-      border: 2px solid ${DS.colors.violetBorder};
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .avatar mat-icon {
-      font-size: 36px;
-      width: 36px;
-      height: 36px;
-      color: ${DS.colors.violet};
     }
     h2 {
       font-family: ${DS.fonts.display};
@@ -166,20 +154,25 @@ export interface ProfileViewSettings{
 })
 export class ProfileComponent{
     header = input.required<ProfileHeader>();
-    fields = input.required<ProfileField[]>();
+    fields = input.required<FieldType[]>();
     @Output() fieldsChange = new EventEmitter<ProfileField[]>();
+    @ViewChild(IconComponent) iconComponent!: IconComponent;
 
     isEditing = signal(false)
     tempFields = signal<ProfileField[]>([]);
 
+    onFieldChanged(event:FieldType){
+
+    }
+
     startEdit(){
         this.isEditing.set(true);
-        this.tempFields.set(this.fields().map(f => ({ ...f })));
     }
 
     cancelUpdate(){
         this.isEditing.set(false);
-        this.tempFields.set([])
+        this.tempFields.set([]);
+        this.iconComponent?.cancelUpload();
     }
 
     applyUpdates(){
@@ -195,5 +188,9 @@ export class ProfileComponent{
         newArr[index].value = newValue;
         return newArr;})
     }
+
+    onAvatarChanged(url: string) {
+    console.log('avatar changed:', url);
+  }
     
 }

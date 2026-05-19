@@ -5,7 +5,36 @@ const logger = require('../packages/logger')
 const bcrypt = require('bcrypt')
 const {createStorage} = require('../packages/fileManager')
 
-storage = createStorage('user-profile')
+let storage
+(async () => {
+  storage = createStorage('user-profile')
+  await storage.ensureBucket()
+  await storage.makePublic()
+})().catch(err => logger.error('Failed to initialize storage:', err))
+
+//const url = storage.getPublicUrl(fileName)
+
+
+const uploadAvatar = async (userId, reqFile) => {
+  if (!userId || !reqFile)
+    throw new ValidationError('Invalid request')
+  
+  const user = await utils.getUserById(userId)
+  if (!user)
+    throw new NotFoundError('User not found')
+
+  const fileName = `avatar-${userId}-${Date.now()}-${reqFile.originalname}`
+  await storage.upload(fileName, reqFile.buffer, reqFile.mimetype, reqFile.size)
+  const publicUrl = storage.getPublicUrl(fileName)
+
+  // save the url to user profile
+  await prisma.userProfile.update({
+    where: { userId: parseInt(userId) },
+    data: { avatar: publicUrl }
+  })
+
+  return { message: 'Avatar uploaded', url: publicUrl }
+}
 
 const getAllUsers = async () => {
   const select = { id: true, email: true, username: true, created_at: true }
@@ -86,24 +115,5 @@ const deleteUser = async (id)=>{
   }
 }
 
-const uploadAvatar = async (userId, reqFile) => {
-  if (!userId || !reqFile)
-    throw new ValidationError('Invalid request')
-  
-  const user = await utils.getUserById(userId)
-  if (!user)
-    throw new NotFoundError('User not found')
-
-  const fileName = `avatar-${userId}-${Date.now()}-${reqFile.originalname}`
-  await storage.upload(fileName, reqFile.buffer, reqFile.mimetype, reqFile.size)
-  
-  // save the url to user profile
-  await prisma.userProfile.update({
-    where: { userId: parseInt(userId) },
-    data: { avatar: fileName }
-  })
-
-  return { message: 'Avatar uploaded', url: fileName }
-}
 
 module.exports = { getAllUsers, getUserById, getRole, createUser, getProfile, updateProfile, deleteUser, loginUser, uploadAvatar}

@@ -5,6 +5,7 @@ import { AuthService } from '../auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
 import { AvatarComponent } from '../shared/avatar.component';
+import { AppIconSettings, IconComponent } from '../shared/icon.component';
 
 interface NavItem { label: string; route: string; icon: string; roles: string[]; badge?: number; }
 
@@ -21,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [NgStyle, LogoComponent, AvatarComponent, RouterLink],
+  imports: [NgStyle, LogoComponent, IconComponent, RouterLink],
   template: `
     <nav [ngStyle]="navStyle">
       <!-- Logo -->
@@ -33,7 +34,8 @@ const NAV_ITEMS: NavItem[] = [
       <div [ngStyle]="chipStyle"
       (click)="goToProfile()"
       style="cursor: pointer;">
-        <app-avatar [name]="user()?.username ?? ''" [size]="32"/>
+        <!-- Replace app-avatar with app-icon -->
+        <app-icon [settings]="avatarSettings()" (iconChanged)="onAvatarChanged($event)"/>
         <div style="flex:1;min-width:0">
           <div [ngStyle]="userNameStyle">{{ user()?.username }}</div>
           <div [ngStyle]="roleStyle()">{{ user()?.role }}</div>
@@ -77,6 +79,23 @@ export class SidebarComponent {
   });
 
   logout() { this.auth.logout(); this.router.navigate(['/login']); }
+
+    // Create avatar settings computed from user data
+  avatarSettings = computed<AppIconSettings>(() => ({
+    name: this.user()?.username ?? '',
+    icon: this.user()?.profile?.avatar ?? undefined, // Assuming user has avatar URL
+    size: 32,
+    borderRadius: 8, // 8% for slightly rounded, change as needed
+    allowView: false,
+    allowEdit: false, // Set to true if you want upload from sidebar
+  }));
+
+  // Handle avatar change if you enable editing
+  onAvatarChanged(newIconUrl: string) {
+    // Update user avatar in your backend
+    console.log('Avatar changed:', newIconUrl);
+    // You would call an API to update the avatar here
+  }
 
   // Icon SVG strings (Lucide-compatible inline SVG, stroke 1.5)
   readonly icons: Record<string, string> = {
