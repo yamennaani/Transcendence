@@ -84,5 +84,11 @@ route.delete('/eval-assignments/:id', async(req, res, next) => {
     }catch(err){next(err)}
 })
 
+route.post('/assignment/:id/generate-simple-pairings', async(req, res, next) => {
+    try{
+        res.json(await service.generateSimpleEvalAssignmentPairings(req.params.id))
+    }catch(err){next(err)}
+})
+
 
 module.exports = route

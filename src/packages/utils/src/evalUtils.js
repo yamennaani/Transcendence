@@ -43,7 +43,7 @@ const getEvalAssignmentById = async (id, select = null, include = null) => {
 }
 
 
-const getEligibleGroupsForAssignement = async (assignmentId) => {
+const getEligibleGroupsForAssignment = async (assignmentId) => {
   const assignmentIdInt = parseInt(assignmentId)
 
   if (isNaN(assignmentIdInt))
@@ -58,5 +58,5 @@ const getEligibleGroupsForAssignement = async (assignmentId) => {
 
 module.exports = {getEvalSheetById, getEvalSheetByAssId,
                   getEvalAssignments, getEvalAssignmentById,
-                  getEligibleGroupsForAssignement
+                  getEligibleGroupsForAssignment
 }
