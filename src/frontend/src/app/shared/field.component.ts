@@ -1,12 +1,13 @@
 import { Component, computed, effect, EventEmitter, input, Output, signal } from "@angular/core";
-import { FieldType, FieldValue, FileField, SelectField, SliderField } from "./field.types";
+import { FieldType, FieldValue, FileField, IconField, SelectField, SliderField } from "./field.types";
 import { DS } from "../tokens";
 import { MatIcon } from "@angular/material/icon";
+import { IconComponent } from "./icon.component";
 
 @Component({
     selector: "app-field",
     standalone: true,
-    imports:[MatIcon],
+    imports:[MatIcon, IconComponent],
     template:`
     <div class="field-row">
         <div class="field-meta">
@@ -137,6 +138,19 @@ import { MatIcon } from "@angular/material/icon";
                         <span>{{ field().value || '—' }}</span>
                     }
                 }
+                @case ('icon') {
+                    @if(canEdit()){
+                        <app-icon 
+                        [settings]="asIconField().iconSettings"
+                        [allowEdit]="field().allowEdit"
+                        (fileSelected)="onFileObject($event)"
+                        />
+                    }
+                    @else {
+                        <app-icon [settings]="asIconField().iconSettings" 
+                        [allowEdit]="false" />
+                    }
+                }
             }
         </div>
     </div>
@@ -245,7 +259,6 @@ import { MatIcon } from "@angular/material/icon";
     isEditing = input.required<boolean>()
     @Output() valueChanged = new EventEmitter<FieldType>()
     tempValue = signal<FieldValue>(undefined)
-
     canEdit = computed(()=> this.field().allowEdit && this.isEditing())
 
     constructor() {
@@ -294,6 +307,10 @@ import { MatIcon } from "@angular/material/icon";
         }
     }
 
+    asIconField(){
+        return this.field() as IconField
+    }
+
     onChangeOption(event:Event){
         const value = (event.target as HTMLInputElement).value;
         this.tempValue.set(value);
@@ -309,21 +326,19 @@ import { MatIcon } from "@angular/material/icon";
         this.tempValue.set(value);
     }
 
-    onFileSelected(event:Event){
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (file) {
-            console.log('File name:', file.name);
-            console.log('File size:', file.size);
-            console.log('File type:', file.type);
-            
-            // Create preview for images
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.tempValue.set(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-        } 
+    onFileObject(file: File) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            this.tempValue.set(e.target?.result as string)
+        }
+        reader.readAsDataURL(file)
     }
+
+    onFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0]
+    if (file) this.onFileObject(file)
+    }
+
     onToggleChange(event: Event) {
         const checked = (event.target as HTMLInputElement).checked
         this.tempValue.set(checked)

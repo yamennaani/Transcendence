@@ -24,6 +24,20 @@ export class UserProfileComponent{
     
     getFields = computed<FieldType[]>(()=>[
         {
+            type:'icon',
+            icon:'',
+            label:'',
+            value: this.user()?.profile?.avatar,
+            iconSettings:{
+                name: this.user()?.username,
+                icon: this.user()?.profile?.avatar,
+                size: 80,
+                borderRadius: 0,
+            },
+            allowEdit: true,
+            required: false
+        },
+        {
             type: 'text',
             icon:'email',
             label: 'Email',
@@ -36,12 +50,12 @@ export class UserProfileComponent{
             icon:'badge',
             label: 'Role',
             value: this.user()?.role,
-            options: ['Admin'],
-            allowEdit: false,
+            options: ['Admin', 'Student', 'Bocal'],
+            allowEdit: true,
             required: true
         },
         {
-            type: 'text-area',
+            type: 'text',
             icon: 'person_book',
             label: 'Bio',
             value: this.user()?.profile?.bio,
@@ -56,9 +70,18 @@ export class UserProfileComponent{
             allowEdit: false,
             required: true
         },
+        {
+            type: 'file',
+            icon: 'calendar_today',
+            label: 'CreatedAt',
+            value: '',
+            accept:['.image'],
+            allowEdit: true,
+            required: true
+        },
     ]);
 
-    onFieldsUpdate(newFields:ProfileField[]){
+    onFieldsUpdate(newFields:FieldType[]){
         console.log('updated fields:', newFields);
     }
 }
