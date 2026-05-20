@@ -44,11 +44,12 @@ model User {
   @@map("user")
 }
 
-model UserProfile {
-  id          Int      @id @unique @default(autoincrement())
-  bio         String
-  userId      Int      @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model UserProfile{
+  id Int @id @unique @default(autoincrement())
+  bio String 
+  avatar String?
+  userId Int @unique
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   last_update DateTime
 
   @@map("userProfile")
@@ -106,9 +107,10 @@ model Organization{
   @@map("org")
 }
 
-model OrgProfile {
-  id      Int          @id @unique @default(autoincrement())
-  bio     String
+model OrgProfile{
+  id Int @id @unique @default(autoincrement())
+  bio String
+  avatar String?
   tel_num String
   orgid   Int          @unique
   org     Organization @relation(fields: [orgid], references: [id], onDelete: Cascade)

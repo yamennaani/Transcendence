@@ -1,0 +1,103 @@
+<div [ngStyle]="pageStyle">
+  <div style="margin-bottom:24px">
+    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <h1 [ngStyle]="h1Style">Manage classes</h1>
+      <app-btn variant="primary" (clicked)="showNew.set(true)">+ New class</app-btn>
+    </div>
+  </div>
+
+  <!-- New class modal -->
+  @if (showNew()) {
+    <div [ngStyle]="overlayStyle">
+      <div [ngStyle]="modalStyle">
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.25rem;font-weight:700;color:oklch(94% 0.005 272);margin-bottom:20px">Create a new class</h2>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <label [ngStyle]="labelStyle">Class name</label>
+            <input [ngStyle]="inputStyle" [value]="newName()" (input)="newName.set($any($event.target).value)" placeholder="e.g. Systems programming"/>
+          </div>
+          <div>
+            <label [ngStyle]="labelStyle">Pass threshold</label>
+            <div style="display:flex;gap:8px">
+              @for (v of thresholdOpts; track v) {
+                <button [ngStyle]="threshTabStyle(v)" (click)="newThreshold.set(v)">{{ v }}%</button>
+              }
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:24px">
+          <app-btn variant="primary" [disabled]="!newName()" (clicked)="showNew.set(false)">Create class</app-btn>
+          <app-btn variant="ghost" (clicked)="showNew.set(false)">Cancel</app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Tab bar -->
+  <div [ngStyle]="tabBarStyle">
+    <button [ngStyle]="tabStyle('classes')"   (click)="tab.set('classes')">Classes</button>
+    <button [ngStyle]="tabStyle('students')"  (click)="tab.set('students')">Students</button>
+    <button [ngStyle]="tabStyle('analytics')" (click)="tab.set('analytics')">Analytics</button>
+  </div>
+
+  <!-- Classes tab -->
+  @if (tab() === 'classes') {
+    <div style="display:flex;flex-direction:column;gap:10px">
+      @for (c of classes; track c.id) {
+        <div [ngStyle]="cardStyle">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+                <span style="font-family:'Space Grotesk',sans-serif;font-size:1.0625rem;font-weight:600;color:oklch(94% 0.005 272)">{{ c.name }}</span>
+                <span [ngStyle]="statusBadgeStyle(c.status)">{{ c.status }}</span>
+              </div>
+              <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                {{ c.students }} students · {{ c.assignments }} assignments · {{ c.threshold }}% threshold
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <app-btn variant="secondary" size="sm">+ Assignment</app-btn>
+              <app-btn variant="ghost" size="sm">Edit</app-btn>
+            </div>
+          </div>
+          <app-progress-bar [value]="c.onTrack" [max]="c.students"
+            [sublabel]="c.onTrack + ' of ' + c.students + ' students on track'"/>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Students tab -->
+  @if (tab() === 'students') {
+    <div [ngStyle]="tableStyle">
+      <div style="display:grid;grid-template-columns:1fr 120px 100px 100px">
+        <div [ngStyle]="thStyle">Student</div>
+        <div [ngStyle]="thStyle">Class</div>
+        <div [ngStyle]="thStyle">Progress</div>
+        <div [ngStyle]="thStyle">Avg score</div>
+        @for (s of students; track s.name) {
+          <div [ngStyle]="tdStyle" style="gap:8px">
+            <app-avatar [name]="s.name" [size]="24"/>{{ s.name }}
+          </div>
+          <div [ngStyle]="tdStyle">{{ s.cls }}</div>
+          <div [ngStyle]="{...tdStyle, fontFamily:'JetBrains Mono,monospace'}">{{ s.prog }}/{{ s.total }}</div>
+          <div [ngStyle]="tdStyle"><app-score-pill [score]="s.score"/></div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Analytics tab -->
+  @if (tab() === 'analytics') {
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      @for (a of analytics; track a.label) {
+        <div [ngStyle]="cardStyle">
+          <div [ngStyle]="{fontSize:'0.6875rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:a.color,marginBottom:'8px'}">{{ a.label }}</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:2.5rem;font-weight:700;letter-spacing:'-0.03em';color:oklch(94% 0.005 272);line-height:1">{{ a.value }}</div>
+          <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">{{ a.sub }}</div>
+        </div>
+      }
+    </div>
+  }
+</div>

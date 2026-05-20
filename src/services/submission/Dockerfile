@@ -8,6 +8,7 @@ COPY packages/database ./packages/database
 COPY packages/logger   ./packages/logger
 COPY packages/errors   ./packages/errors
 COPY packages/utils   ./packages/utils
+COPY packages/fileManager ./packages/fileManager
 
 RUN cd packages/database && npm install
 
@@ -28,6 +29,9 @@ COPY packages/utils   ./packages/utils
 
 COPY packages/database/index.js      ./packages/database/index.js
 COPY packages/database/generated     ./packages/database/generated
+
+COPY packages/fileManager ./packages/fileManager
+RUN cd packages/fileManager && npm install --omit=dev
 
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src

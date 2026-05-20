@@ -11,8 +11,6 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "express": "^5.2.1",
-    "minio": "^8.0.7",
-    "multer": "^2.1.1"
+    "express": "^5.2.1"
   }
 }

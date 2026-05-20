@@ -1,23 +1,16 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
+import { User } from './tokens';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private tokenKey = 'access_token';
+  private _user = signal<User | null>(null);
 
-  setToken(token: string): void {
-    localStorage.setItem(this.tokenKey, token);
-  }
+  readonly user   = this._user.asReadonly();
+  readonly isLoggedIn = computed(() => this._user() !== null);
+  readonly role       = computed(() => this._user()?.role ?? null);
 
-  getToken(): string | null {
-    return localStorage.getItem(this.tokenKey);
-  }
+  login(user: User): void { this._user.set(user); }
+  logout(): void           { this._user.set(null); }
 
-  isLoggedIn(): boolean {
-    return !!this.getToken();
-  }
-
-  logout(): void {
-    localStorage.removeItem(this.tokenKey);
-    // Optionally call backend /api/auth/logout
-  }
+  
 }

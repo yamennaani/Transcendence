@@ -26,7 +26,8 @@
             ],
             "styles": [
               "src/material-theme.scss",
-              "src/styles.css"
+              "src/styles.css",
+              "src/global.css"
             ]
           },
           "configurations": {
@@ -54,7 +55,10 @@
           "defaultConfiguration": "production"
         },
         "serve": {
-          "builder": "@angular/build:dev-server",
+          "builder": "@angular/build:dev-server", 
+           "options": {
+              "proxyConfig": "proxy.conf.json"
+            },
           "configurations": {
             "production": {
               "buildTarget": "frontend:build:production"
