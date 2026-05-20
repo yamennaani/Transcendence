@@ -1,9 +1,4 @@
-// src/packages/database/prisma/seed.js
-
-require('dotenv').config()
-
 const { PrismaClient } = require('../generated/prisma')
-
 const prisma = new PrismaClient()
 
 const passwordHash = 'fake-hashed-password-for-dev'
@@ -34,6 +29,9 @@ async function clearDatabase() {
 
 async function createUser({ email, username, role, orgId, bio }) {
   return prisma.user.create({
+  const passwordHash = 'fake-hashed-password-for-dev'
+
+  const org1 = await prisma.organization.create({
     data: {
       email,
       username,
@@ -560,6 +558,33 @@ async function main() {
       status: 'Submitted'
     }
   })
+  // ============================================
+  // Seed AuthAllowedEmail table
+  // ============================================
+  const adminUser = await prisma.user.findFirst({ where: { role: 'Admin' } });
+
+  await prisma.authAllowedEmail.createMany({
+    data: [
+      {
+        email: 'newstudent1@example.com',
+        used: false,
+        invited_by: adminUser ? adminUser.id : null,
+      },
+      {
+        email: 'newstudent2@example.com',
+        used: false,
+        invited_by: adminUser ? adminUser.id : null,
+      },
+      {
+        email: 'guest@example.com',
+        used: false,
+        invited_by: null,
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log('AuthAllowedEmail seeded.');
 
   console.log('Seed complete.')
   console.log({
