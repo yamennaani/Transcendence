@@ -4,6 +4,7 @@ import { NgStyle } from '@angular/common';
 import { AuthService } from './auth.service';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { DS } from './tokens';
+import { LanguageSwitcherComponent } from './languages/language-switcher.component';
 
 @Component({
   selector: 'app-root',

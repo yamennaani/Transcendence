@@ -9,6 +9,7 @@ import { ScorePillComponent } from '../shared/score-pill.component';
 import { BtnComponent } from '../shared/btn.component';
 import { CourseService } from '../core/services/course-service/course-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
+import { LanguageSwitcherComponent } from '../languages/language-switcher.component';
 
 const STATS = [
   { label: 'Score avg',        value: '88', unit: '/100', sub: 'across 6 evaluations',  accent: false, warn: false },
@@ -28,7 +29,7 @@ const RECENT = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgStyle, BadgeComponent, ProgressBarComponent, ScorePillComponent],
+  imports: [NgStyle, BadgeComponent, ProgressBarComponent, ScorePillComponent, LanguageSwitcherComponent],
   templateUrl: './dashboard.component.html',
 })
 export class DashboardComponent implements OnInit {
