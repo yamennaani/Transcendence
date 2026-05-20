@@ -1,8 +1,4 @@
-// src/packages/database/prisma/seed.js
-
 const { PrismaClient } = require('../generated/prisma')
-//const bcrypt = require('bcrypt')
-
 const prisma = new PrismaClient()
 
 async function main() {
@@ -29,7 +25,6 @@ async function main() {
   await prisma.orgProfile.deleteMany()
   await prisma.organization.deleteMany()
 
-  //const passwordHash = await bcrypt.hash('password123', 10)
   const passwordHash = 'fake-hashed-password-for-dev'
 
   const org1 = await prisma.organization.create({
@@ -299,13 +294,41 @@ async function main() {
     })
   }
 
+  // ============================================
+  // Seed AuthAllowedEmail table
+  // ============================================
+  const adminUser = await prisma.user.findFirst({ where: { role: 'Admin' } });
+
+  await prisma.authAllowedEmail.createMany({
+    data: [
+      {
+        email: 'newstudent1@example.com',
+        used: false,
+        invited_by: adminUser ? adminUser.id : null,
+      },
+      {
+        email: 'newstudent2@example.com',
+        used: false,
+        invited_by: adminUser ? adminUser.id : null,
+      },
+      {
+        email: 'guest@example.com',
+        used: false,
+        invited_by: null,
+      },
+    ],
+    skipDuplicates: true,
+  });
+
+  console.log('AuthAllowedEmail seeded.');
+
   console.log('Seed complete.')
   console.log({
     organizations: 2,
     users: students.length + 2,
     classes: 2,
     assignments: 2,
-    groups: 2
+    groups: 2,
   })
 }
 

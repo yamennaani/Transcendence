@@ -39,6 +39,7 @@ model User{
 
   sentInvites     GroupInvite[] @relation("SentInvites")
   receivedInvites GroupInvite[] @relation("ReceivedInvites")
+  invitedEmails AuthAllowedEmail[] @relation("InvitedBy")
 
   @@map("user")
 }
@@ -56,6 +57,15 @@ model UserProfile{
 model UserAuth{
   id Int @id @default(autoincrement())
   pass_hash String?
+  // email                     String              @unique @db.VarChar(255)
+
+  provider                  String              @default("local") @db.VarChar(20)
+  provider_user_id          String?             @db.VarChar(255)
+  verification_token_hash   String?             @db.Text
+  verification_token_expiry DateTime? 
+  reset_token_hash          String?             @db.Text
+  reset_token_expiry        DateTime?
+  email_verified            Boolean             @default(false)
 
   // 42 OAUTH
   forty_two_id       String? @unique
@@ -68,9 +78,11 @@ model UserAuth{
   @@map("userAuth")
 }
 
+
+
 model RefreshToken{
   id  Int @id @default(autoincrement())
-  token String @unique
+  tokenHash String @unique
   userId Int
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   expiresAt DateTime
@@ -78,6 +90,7 @@ model RefreshToken{
 
   @@map("refreshToken")
 }
+
 
 model Organization{
   id Int @id @unique @default(autoincrement())
@@ -328,3 +341,18 @@ enum GroupInviteStatus {
   Accepted
   Rejected
 }
+
+
+
+
+model AuthAllowedEmail {
+  id         Int       @id @default(autoincrement())
+  email      String    @unique @db.VarChar(255)
+  created_at DateTime  @default(now())
+  used       Boolean   @default(false)
+  invited_by Int? 
+  invitedBy  User? @relation("InvitedBy", fields: [invited_by], references: [id], onDelete: Cascade)
+
+  @@map("auth_allowed_emails")
+}
+
