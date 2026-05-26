@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const subService = require('./submission.service')
-const upload = require('./upload.middleware')
+const { uploader } = require('../packages/fileManager')
 
 
 router.post('/', async (req, res, next)=>{
@@ -23,7 +23,7 @@ router.get('/assignment/:assId/', async (req, res, next)=>{
 })
 
 
-router.post('/:groupId/file', upload.single('file'), async (req, res, next) => {
+router.post('/:groupId/file', uploader.single('file'), async (req, res, next) => {
   try {
     const { userId } = req.body
     res.json(await subService.uploadFile(req.params.groupId, userId, req.file))

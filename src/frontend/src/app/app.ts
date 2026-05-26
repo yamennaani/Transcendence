@@ -1,13 +1,38 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { HeaderNavComponent } from './components/header-nav/header-nav'
+import { NgStyle } from '@angular/common';
+import { AuthService } from './auth.service';
+import { SidebarComponent } from './sidebar/sidebar.component';
+import { DS } from './tokens';
 
 @Component({
   selector: 'app-root',
-  imports: [HeaderNavComponent, RouterOutlet],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  standalone: true,
+  imports: [RouterOutlet, NgStyle, SidebarComponent],
+  template: `
+    @if (auth.isLoggedIn()) {
+      <div [ngStyle]="shellStyle">
+        <app-sidebar/>
+        <main [ngStyle]="mainStyle">
+          <router-outlet/>
+        </main>
+      </div>
+    } @else {
+      <router-outlet/>
+    }
+  `,
+  styles: [`
+    :host { display: block; height: 100vh; overflow: hidden; }
+  `],
 })
-export class App {
-  protected readonly title = signal('frontend');
+export class AppComponent {
+  auth = inject(AuthService);
+
+  readonly shellStyle = {
+    display: 'flex', height: '100vh', overflow: 'hidden',
+    background: DS.colors.bg,
+  };
+  readonly mainStyle = {
+    flex: '1', overflow: 'hidden', display: 'flex',
+  };
 }

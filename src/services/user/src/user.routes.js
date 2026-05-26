@@ -1,43 +1,51 @@
 const express = require('express')
-const { getAllUsers, getUserById, createUser, getProfile, updateProfile, deleteUser, loginUser, getRole } = require('./user.service')
+const userService = require('./user.service')
 
 const router = express.Router()
+const {uploader} = require('../packages/fileManager')
+
+router.post('/:id/avatar', uploader.single('avatar'), async (req, res, next) => {
+  try {
+    res.json(await userService.uploadAvatar(req.params.id, req.file))
+  } catch (err) { next(err) }
+})
+
 
 router.get('/', async (req, res, next) => {
   try {
-    res.json(await getAllUsers())
+    res.json(await userService.getAllUsers())
   } catch (err) { next(err) }
 })
 
 router.get('/:id', async (req, res, next) => {
   try {
-    res.json(await getUserById(req.params.id))
+    res.json(await userService.getUserById(req.params.id))
   } catch (err) { next(err) }
 })
 
 //Havent tested it yet
 router.get('/:id/role', async (req, res, next) => {
   try {
-    res.json(await getRole(req.params.id))
+    res.json(await userService.getRole(req.params.id))
   } catch (err) { next(err) }
 })
 
 router.post('/login', async (req, res, next) => {
   try {
-    res.json(await loginUser(req.body))
+    res.json(await userService.loginUser(req.body))
   } catch (err) { next(err) }
 })
 
 
 router.post('/register', async (req, res, next) => {
   try {
-    res.status(201).json(await createUser(req.body))
+    res.status(201).json(await userService.createUser(req.body))
   } catch (err) { next(err) }
 })
 
 router.get('/:id/profile', async (req, res, next)=>{
   try {
-    res.json(await getProfile(req.params.id))
+    res.json(await userService.getProfile(req.params.id))
   } catch (err) {
     next(err)
   }
@@ -45,7 +53,7 @@ router.get('/:id/profile', async (req, res, next)=>{
 
 router.patch('/:id/profile', async (req, res, next)=>{
   try{
-    res.json(await updateProfile(req.params.id, req.body.bio));
+    res.json(await userService.updateProfile(req.params.id, req.body.bio));
   }catch(err){
     next(err)
   }
@@ -53,7 +61,7 @@ router.patch('/:id/profile', async (req, res, next)=>{
 
 router.delete('/:id', async(req, res, next)=>{
   try{
-    res.json(await deleteUser(req.params.id))
+    res.json(await userService.deleteUser(req.params.id))
   }catch(err){
     next(err)
   }

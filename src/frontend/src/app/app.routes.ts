@@ -1,24 +1,69 @@
-import { Routes } from '@angular/router'
-import { HomePageComponent } from './pages/home-page/home-page'
+import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from './auth.service';
+
+// Auth guard using inject()
+const authGuard = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  if (auth.isLoggedIn()) return true;
+  return router.parseUrl('/login');
+};
+
+const bocalGuard = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  const role   = auth.role();
+  if (role === 'Bocal' || role === 'Admin') return true;
+  return router.parseUrl('/dashboard');
+};
 
 export const routes: Routes = [
-  { path: '', component: HomePageComponent },
-  { path: 'classrooms', redirectTo: '' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   {
-    path: 'profile',
-    loadComponent: () => import('./pages/profile-page/profile-page').then(m => m.ProfilePageComponent)
+    path: 'login',
+    loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
   },
   {
-    path: 'assignments',
-    loadComponent: () => import('./pages/assignments/assignments-page').then(m => m.AssignmentsPageComponent)
+    path:'user-profile',
+    canActivate: [authGuard],
+    loadComponent:()=> import('./userProfile/user-profile').then(m=>m.UserProfileComponent)
   },
   {
-    path: 'assignment/:id',
-    loadComponent: () => import('./pages/assignment-details/assignment-details-page').then(m => m.AssignmentDetailsPageComponent)
+    path: 'dashboard',
+    canActivate: [authGuard],
+    loadComponent: () => import('./dashboard/dashboard.component').then(m => m.DashboardComponent),
   },
   {
-    path: 'eval-sheet',
-    loadComponent: () => import('./pages/eval-sheet/eval-sheet').then(m => m.EvalSheetComponent)
+    path: 'classes',
+    canActivate: [authGuard],
+    loadComponent: () => import('./class-list/class-list.component').then(m => m.ClassListComponent),
   },
-  { path: '**', redirectTo: '' }
-]
+  {
+    path:'assignment',
+    canActivate:[authGuard],
+    loadComponent:()=>import('./assignment-list/assignment-list.component').then(m=>m.AssignmentListComponent)
+  },
+  {
+    path: 'assignment-detail',
+    canActivate: [authGuard],
+    loadComponent: () => import('./assignment-detail/assignment-detail.component').then(m => m.AssignmentDetailComponent),
+  },
+  {
+    path: 'evaluation',
+    canActivate: [authGuard],
+    loadComponent: () => import('./evaluation-flow/evaluation-flow.component').then(m => m.EvaluationFlowComponent),
+  },
+  {
+    path: 'progress',
+    canActivate: [authGuard],
+    loadComponent: () => import('./progress/progress.component').then(m => m.ProgressComponent),
+  },
+  {
+    path: 'bocal',
+    canActivate: [authGuard, bocalGuard],
+    loadComponent: () => import('./bocal-panel/bocal-panel.component').then(m => m.BocalPanelComponent),
+  },
+  { path: '**', redirectTo: 'login' },
+];
