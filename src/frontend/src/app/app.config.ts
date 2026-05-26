@@ -8,7 +8,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { MyMissingTranslationHandler } from './languages/language.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
-  return new TranslateHttpLoader(http, './languages', '.json');
+  return new TranslateHttpLoader(http, 'languages/', '.json');
 }
 
 function initLanguage(translate: TranslateService) {

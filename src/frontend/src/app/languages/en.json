@@ -1,4 +1,15 @@
 {
-    
-
+    "label_score_avg": "Score avg",
+    "label_progress": "Progress",
+    "label_evaluations_given": "Evaluations given",
+    "label_pending_reviews": "Pending reviews",
+    "sub_evaluations": "across 6 evaluations",
+    "sub_assignments": "You have 2 pending evaluations to complete.",
+    "label_dashboard": "Dashboard",
+    "label_my_classes": "My classes",
+    "label_assignments": "Assignments",
+    "label_evaluations": "Evaluations",
+    "label_progress": "Progress",
+    "label_manage": "Manage",
+    "label_users": "Users"
 }

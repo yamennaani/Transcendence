@@ -1,6 +1,8 @@
 {
-    
-
-
-
+    "label_score_avg": "Durchschnittliche Punktzahl",
+    "label_progress": "Fortschritt",
+    "label_evaluations_given": "Abgegebene Bewertungen",
+    "label_pending_reviews": "Ausstehende Überprüfungen",
+    "sub_evaluations": "über 6 Bewertungen",
+    "sub_assignments": "Sie haben 2 ausstehende Bewertungen."
 }

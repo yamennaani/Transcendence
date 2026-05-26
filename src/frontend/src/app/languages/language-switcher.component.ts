@@ -19,13 +19,18 @@ import { TranslateService } from "@ngx-translate/core";
     styles: `
       .language-switcher {
         position: relative;
-        display: inline-block;
+        display: block;
+        width: 100%;
       }
       .current-lang {
         background: none;
         border: none;
         cursor: pointer;
         font-size: 16px;
+        color: white;
+        width: 100%;
+        text-align: left;
+        padding: 0;
       }
       .lang-options {
         display: none;
