@@ -139,7 +139,7 @@ const updateAssignment = async (assignId, {classId, name, description, groupSize
 }
 
 const deleteAssignment = async (assignId)=>{
-    const targetAssign = getAssignmentById(assignId)
+    const targetAssign = await getAssignmentById(assignId)
     if (!targetAssign)
         throw new NotFoundError('Assignment not found')
     
