@@ -1,0 +1,753 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   landing.component.css
+   Complete file — original styles + Angular Material animation guards.
+   All colour values mirror the DS token object in design-tokens.ts.
+═══════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* ── Backgrounds & surfaces ── */
+  --bg:             oklch(10% 0.025 272);   /* DS.colors.bg            */
+  --surface:        oklch(15% 0.025 272);   /* DS.colors.surface       */
+  --surface-raised: oklch(19% 0.028 272);   /* DS.colors.surfaceRaised */
+
+  /* ── Borders ── */
+  --border:         oklch(27% 0.03 272);    /* DS.colors.border        */
+  --border-subtle:  oklch(22% 0.025 272);   /* DS.colors.borderSubtle  */
+
+  /* ── Foreground ── */
+  --fg1: oklch(94% 0.005 272);              /* DS.colors.fg1           */
+  --fg2: oklch(68% 0.01  272);              /* DS.colors.fg2           */
+  --fg3: oklch(48% 0.01  272);              /* DS.colors.fg3           */
+
+  /* ── Violet ── */
+  --violet:        oklch(64% 0.28 296);     /* DS.colors.violet        */
+  --violet-bright: oklch(72% 0.28 296);
+  --violet-dim:    oklch(55% 0.25 296);     /* DS.colors.violetDim     */
+  --violet-subtle: oklch(22% 0.08 296);     /* DS.colors.violetSubtle  */
+  --violet-border: oklch(40% 0.16 296);     /* DS.colors.violetBorder  */
+
+  /* ── Cyan ── */
+  --cyan:        oklch(72% 0.15 200);       /* DS.colors.cyan          */
+  --cyan-subtle: oklch(20% 0.05 200);       /* DS.colors.cyanSubtle    */
+  --cyan-border: oklch(38% 0.09 200);       /* DS.colors.cyanBorder    */
+
+  /* ── Semantic ── */
+  --green:        oklch(68% 0.18 145);      /* DS.colors.green         */
+  --green-subtle: oklch(18% 0.06 145);      /* DS.colors.greenSubtle   */
+  --green-border: oklch(36% 0.10 145);      /* DS.colors.greenBorder   */
+  --amber:        oklch(75% 0.18 80);       /* DS.colors.amber         */
+  --red:          oklch(62% 0.22 20);       /* DS.colors.red           */
+
+  /* ── Gradient ── */
+  --gradient: linear-gradient(90deg, var(--violet-bright), var(--cyan));
+
+  /* ── Typography — DS.fonts ── */
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body:    'DM Sans', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  /* ── Radii — DS.radius ── */
+  --r-sm:   6px;    /* DS.radius.sm   */
+  --r-md:   8px;    /* DS.radius.md   */
+  --r-lg:   12px;   /* DS.radius.lg   */
+  --r-xl:   16px;   /* DS.radius.xl   */
+  --r-full: 9999px; /* DS.radius.full */
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BASE
+───────────────────────────────────────────────────────────────────────── */
+html, body {
+  background: var(--bg);
+  color: var(--fg1);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+::selection { background: var(--violet-subtle); color: var(--violet-bright); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   NAV
+───────────────────────────────────────────────────────────────────────── */
+nav.top {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 32px;
+  backdrop-filter: blur(12px) saturate(180%);
+  background: oklch(10% 0.025 272 / 0.6);
+  border-bottom: 1px solid transparent;
+  transition: border-color 300ms;
+}
+nav.top.scrolled { border-bottom-color: var(--border-subtle); }
+
+.logo {
+  display: flex; align-items: center; gap: 10px;
+  text-decoration: none;
+}
+.logo-mark { width: 28px; height: 22px; flex-shrink: 0; }
+.logo-text {
+  font-family: var(--font-display); font-weight: 700; font-size: 1.25rem;
+  letter-spacing: -0.04em;
+  background: var(--gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.nav-right { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+  font-size: 0.875rem; color: var(--fg2); text-decoration: none;
+  padding: 6px 12px; border-radius: var(--r-sm);
+  transition: color 150ms, background 150ms;
+}
+.nav-link:hover { color: var(--fg1); background: var(--surface); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   BUTTONS
+───────────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-body); font-weight: 500;
+  border: none; cursor: pointer; border-radius: var(--r-md);
+  padding: 9px 18px; font-size: 0.875rem;
+  transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--violet); color: #fff; }
+.btn-primary:hover {
+  background: var(--violet-dim);
+  box-shadow: 0 0 24px oklch(64% 0.28 296 / 0.4);
+}
+
+.btn-ghost { background: transparent; color: var(--fg1); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--surface); border-color: var(--border); }
+
+.btn-lg { padding: 14px 26px; font-size: 1rem; border-radius: var(--r-lg); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   HERO
+───────────────────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 100px 32px 80px;
+  overflow: hidden;
+}
+
+/* Animated mesh-gradient background */
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 30%, oklch(64% 0.28 296 / 0.18), transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 70%, oklch(72% 0.15 200 / 0.15), transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 90%, oklch(62% 0.20 270 / 0.12), transparent 70%);
+  animation: mesh-shift 20s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+@keyframes mesh-shift {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(-5%, 3%) scale(1.15); }
+}
+
+/* Grid texture */
+.hero-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(oklch(27% 0.03 272 / 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(27% 0.03 272 / 0.6) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 40%, black, transparent 80%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Cursor glow — position driven by JS lerp, no CSS transition competing */
+.cursor-glow {
+  position: fixed;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, oklch(64% 0.28 296 / 0.08), transparent 70%);
+  pointer-events: none; z-index: 1;
+  transform: translate(-50%, -50%);
+  transition: opacity 300ms; /* only opacity — left/top handled by JS */
+  mix-blend-mode: screen;
+  will-change: left, top;
+}
+
+.hero-content {
+  position: relative; z-index: 2;
+  max-width: 920px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+
+.hero-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: var(--r-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--fg2); letter-spacing: 0.04em;
+  animation: fade-in-up 600ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+.hero-tag .pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 0 oklch(68% 0.18 145 / 0.6);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(68% 0.18 145 / 0.6); }
+  50%       { box-shadow: 0 0 0 6px oklch(68% 0.18 145 / 0); }
+}
+
+/* ── Hero title ── */
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  font-weight: 700; line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--fg1);
+  perspective: 800px;
+  perspective-origin: center top;
+}
+
+/* Character-by-character reveal — @keyframes, not transitions,
+   so zone.js cannot interrupt them. Guard duration with !important
+   so Material's global reset can't shorten it. */
+.hero-title .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(40px) rotateX(-90deg);
+  animation-name: char-reveal !important;
+  animation-duration: 800ms !important;
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1) !important;
+  animation-fill-mode: forwards !important;
+  will-change: transform, opacity;
+}
+@keyframes char-reveal {
+  to { opacity: 1; transform: translateY(0) rotateX(0); }
+}
+
+.hero-title .gradient {
+  background: var(--gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 200% auto;
+  /* Two animations on one element — both need !important guards */
+  animation-name: gradient-shift, char-reveal !important;
+  animation-duration: 8s, 800ms !important;
+  animation-timing-function: linear, cubic-bezier(0, 0, 0.2, 1) !important;
+  animation-iteration-count: infinite, 1 !important;
+  animation-fill-mode: none, forwards !important;
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.hero-title .cursor {
+  display: inline-block; width: 0.5ch; height: 0.85em;
+  background: var(--violet);
+  margin-left: 6px;
+  vertical-align: -0.08em;
+  animation: blink 1s steps(2) infinite !important;
+  border-radius: 1px;
+  box-shadow: 0 0 12px oklch(64% 0.28 296 / 0.5);
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.hero-sub {
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  color: var(--fg2);
+  max-width: 580px; line-height: 1.6;
+  animation: fade-in-up 800ms 400ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+.hero-actions {
+  display: flex; gap: 12px; margin-top: 8px;
+  animation: fade-in-up 800ms 600ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Floating eval cards in hero ── */
+.hero-orbit {
+  position: absolute; inset: 0;
+  pointer-events: none; z-index: 1;
+}
+.float-card {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 10px 14px;
+  font-family: var(--font-mono); font-size: 0.75rem;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 8px 32px oklch(0% 0 0 / 0.4);
+  /* Base float animation — overridden when .show is added */
+  animation: float 6s ease-in-out infinite;
+  opacity: 0;
+}
+.float-card.show {
+  animation:
+    float-in 1s   cubic-bezier(0, 0, 0.2, 1) forwards,
+    float    6s   ease-in-out                 1s infinite !important;
+}
+@keyframes float-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.9); }
+  to   { opacity: 0.85; transform: translateY(0) scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-12px); }
+}
+
+.float-card .dot { width: 6px; height: 6px; border-radius: 50%; }
+.fc-1 { top: 18%; left:  6%; }
+.fc-2 { top: 28%; right: 8%; }
+.fc-3 { bottom: 22%; left: 10%; }
+.fc-4 { bottom: 30%; right:  6%; }
+
+/* Scroll hint */
+.scroll-hint {
+  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 0.6875rem;
+  color: var(--fg3); letter-spacing: 0.12em; text-transform: uppercase;
+  animation: bounce 2.4s ease-in-out infinite;
+}
+.scroll-hint svg { width: 14px; height: 14px; }
+@keyframes bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%       { transform: translate(-50%, 8px); }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SECTIONS
+───────────────────────────────────────────────────────────────────────── */
+section { padding: 120px 32px; position: relative; }
+.container { max-width: 1100px; margin: 0 auto; }
+
+.overline {
+  font-family: var(--font-body);
+  font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--violet); margin-bottom: 12px;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 700; line-height: 1.1;
+  letter-spacing: -0.03em;
+  max-width: 700px; margin-bottom: 16px;
+}
+.section-sub {
+  font-size: 1.0625rem; color: var(--fg2);
+  max-width: 580px; line-height: 1.7;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   SCROLL REVEAL
+   
+   These are CSS *transitions* — the element starts at the "from" state
+   and transitions to the "to" state when JS adds .visible.
+   
+   The critical guard here is !important on duration + delay, which prevents
+   Angular Material's global resets from collapsing them to 0ms.
+   will-change is set BEFORE .visible so the compositor promotes the layer
+   early (i.e. before the transition needs to start).
+───────────────────────────────────────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  will-change: opacity, transform;
+  transition:
+    opacity   800ms cubic-bezier(0, 0, 0.2, 1),
+    transform 800ms cubic-bezier(0, 0, 0.2, 1) !important;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: auto; /* free the GPU layer once animation is done */
+}
+
+/* Stagger delays — !important so Material cannot strip them */
+.reveal-d1 { transition-delay: 100ms !important; }
+.reveal-d2 { transition-delay: 200ms !important; }
+.reveal-d3 { transition-delay: 300ms !important; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   PEER NETWORK
+───────────────────────────────────────────────────────────────────────── */
+.peer-section {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 60px;
+  align-items: center;
+}
+.peer-graph {
+  position: relative;
+  aspect-ratio: 1;
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.peer-graph svg { width: 100%; height: 100%; }
+
+.peer-graph .node {
+  fill: var(--surface-raised);
+  stroke: var(--border);
+  stroke-width: 1;
+  transition: fill 400ms, stroke 400ms, filter 400ms !important;
+}
+.peer-graph .node.active {
+  fill: var(--violet-subtle);
+  stroke: var(--violet);
+  filter: drop-shadow(0 0 12px oklch(64% 0.28 296 / 0.6));
+}
+.peer-graph .node.center {
+  fill: var(--violet);
+  stroke: var(--violet-bright);
+  filter: drop-shadow(0 0 20px oklch(64% 0.28 296 / 0.8));
+}
+
+.peer-graph .link {
+  stroke: var(--border);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+  opacity: 0.5;
+  transition: stroke 400ms, opacity 400ms !important;
+}
+.peer-graph .link.active {
+  stroke: var(--violet);
+  opacity: 1;
+  animation: dash-flow 2s linear infinite !important;
+}
+@keyframes dash-flow { to { stroke-dashoffset: -16; } }
+
+.peer-graph .node-label {
+  fill: var(--fg2);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FEATURE GRID
+───────────────────────────────────────────────────────────────────────── */
+.features-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 28px;
+  transition: all 300ms cubic-bezier(0, 0, 0.2, 1);
+  position: relative; overflow: hidden;
+}
+/* Gradient border on hover — CSS mask trick */
+.feature-card::before {
+  content: '';
+  position: absolute; inset: -1px;
+  border-radius: var(--r-xl);
+  padding: 1px;
+  background: linear-gradient(135deg, transparent 30%, var(--violet) 60%, transparent 90%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 300ms;
+}
+.feature-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border);
+  background: var(--surface-raised);
+}
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  width: 40px; height: 40px;
+  border-radius: var(--r-lg);
+  background: var(--violet-subtle);
+  border: 1px solid var(--violet-border);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 18px;
+  color: var(--violet-bright);
+}
+.feature-icon.cyan {
+  background: var(--cyan-subtle);
+  border-color: var(--cyan-border);
+  color: var(--cyan);
+}
+.feature-icon.green {
+  background: var(--green-subtle);
+  border-color: var(--green-border);
+  color: var(--green);
+}
+.feature-icon svg { width: 20px; height: 20px; }
+
+.feature-title {
+  font-family: var(--font-display);
+  font-size: 1.125rem; font-weight: 600;
+  margin-bottom: 8px;
+}
+.feature-desc { font-size: 0.9375rem; color: var(--fg2); line-height: 1.6; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   STATS
+───────────────────────────────────────────────────────────────────────── */
+.stats-section {
+  background: linear-gradient(180deg, transparent, oklch(15% 0.025 272 / 0.4), transparent);
+  padding: 80px 32px;
+}
+.stats-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
+  max-width: 1100px; margin: 0 auto;
+}
+.stat-block { text-align: left; }
+.stat-num {
+  font-family: var(--font-display);
+  font-size: clamp(3rem, 5vw, 4.5rem);
+  font-weight: 700; line-height: 1;
+  letter-spacing: -0.04em;
+  background: var(--gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.stat-label { font-size: 0.875rem; color: var(--fg2); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   EVALUATION DEMO CARDS
+   
+   These combine a 3-D entrance transition AND a width transition on the
+   score bar — both are transition-based, not keyframes, so they are the
+   most vulnerable to zone.js interruptions and Material overrides.
+   
+   Strategy:
+   - Explicit "from" state on both the card and the fill (opacity:0,
+     transform:…, width:0) so the browser always has a starting point.
+   - will-change on card before .visible so the GPU layer is ready.
+   - !important on every duration and delay.
+   - Per-card and per-bar stagger encoded redundantly in both the generic
+     .d1/.d2/.d3 rules and the .visible variants so whichever wins
+     specificity, the timing is still correct.
+───────────────────────────────────────────────────────────────────────── */
+.eval-demo {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+  margin-top: 40px;
+  perspective: 1000px;
+}
+
+.eval-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 20px;
+  /* Initial "from" state */
+  opacity: 0;
+  transform: translateY(40px) rotateX(20deg);
+  will-change: opacity, transform;
+  transition: opacity 600ms cubic-bezier(0, 0, 0.2, 1),
+              transform 600ms cubic-bezier(0, 0, 0.2, 1) !important;
+}
+.eval-card.visible {
+  opacity: 1;
+  transform: translateY(0) rotateX(0);
+  will-change: auto;
+}
+/* Card entrance stagger */
+.eval-card.d1 { transition-delay: 100ms !important; }
+.eval-card.d2 { transition-delay: 250ms !important; }
+.eval-card.d3 { transition-delay: 400ms !important; }
+
+.eval-card-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 14px;
+}
+.eval-avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display); font-weight: 600; font-size: 12px;
+  flex-shrink: 0;
+}
+.eval-avatar.a { background: oklch(30% 0.12 200); color: oklch(80% 0.12 200); }
+.eval-avatar.b { background: oklch(30% 0.12 145); color: oklch(80% 0.12 145); }
+.eval-avatar.c { background: oklch(30% 0.12 296); color: oklch(80% 0.12 296); }
+
+.eval-name { font-size: 0.8125rem; font-weight: 500; color: var(--fg1); }
+.eval-meta { font-size: 0.6875rem; color: var(--fg3); font-family: var(--font-mono); }
+
+/* Score bar container */
+.score-bar {
+  height: 4px; background: var(--border-subtle);
+  border-radius: var(--r-full); overflow: hidden;
+  margin: 12px 0 8px;
+}
+
+/* ── Score bar fill ─────────────────────────────────────────────────────
+   --w is set as inline style on the parent .eval-card (e.g. style="--w:88%").
+   Width starts at 0, transitions to var(--w) when .visible is added.
+   
+   Material's mat-progress-bar styles and CDK overlay styles can both match
+   "[class*=bar]" or "div" inside a card and set width/transition to
+   something shorter. The !important on both the initial state and the
+   transition duration wins that specificity battle.
+── */
+.score-bar-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: var(--r-full);
+  /* Explicit initial state — never rely on "unset" since Material may
+     interpret unset width differently from 0 */
+  width: 0 !important;
+  will-change: width;
+  transition: width 1200ms cubic-bezier(0, 0, 0.2, 1) 700ms !important;
+}
+
+/* Animate to target when card becomes visible */
+.eval-card.visible .score-bar-fill {
+  width: var(--w) !important;
+}
+
+/* Per-card stagger for the bar fill — fires after the card itself has
+   finished entering, so the user sees card → then bar animate */
+.eval-card.d1.visible .score-bar-fill { transition-delay:  700ms !important; }
+.eval-card.d2.visible .score-bar-fill { transition-delay:  850ms !important; }
+.eval-card.d3.visible .score-bar-fill { transition-delay: 1000ms !important; }
+
+.score-num {
+  font-family: var(--font-display); font-size: 1.5rem; font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--green);
+}
+.score-num small { font-size: 0.875rem; font-weight: 500; color: var(--fg3); }
+
+.eval-feedback {
+  font-size: 0.8125rem; color: var(--fg2); line-height: 1.5;
+  margin-top: 10px; padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   MARQUEE
+───────────────────────────────────────────────────────────────────────── */
+.marquee-wrap {
+  overflow: hidden;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 28px 0;
+  mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 10%, black 90%, transparent);
+}
+.marquee {
+  display: flex; gap: 56px;
+  animation: marquee 60s linear infinite !important;
+  width: max-content;
+  will-change: transform;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-item {
+  font-family: var(--font-display);
+  font-size: 1.5rem; font-weight: 600;
+  color: var(--fg3); letter-spacing: -0.02em;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 56px;
+}
+.marquee-item::after { content: '/'; color: var(--violet); font-weight: 400; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   CTA
+───────────────────────────────────────────────────────────────────────── */
+.cta-section {
+  text-align: center;
+  padding: 140px 32px;
+  position: relative; overflow: hidden;
+}
+.cta-bg {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 40% at 50% 50%, oklch(64% 0.28 296 / 0.15), transparent 70%);
+}
+.cta-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 700; line-height: 1.1;
+  letter-spacing: -0.04em;
+  margin-bottom: 16px;
+  position: relative;
+}
+.cta-title .gradient {
+  background: var(--gradient);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.cta-sub {
+  font-size: 1.125rem; color: var(--fg2);
+  max-width: 480px; margin: 0 auto 32px;
+  position: relative;
+}
+.cta-actions { display: flex; gap: 12px; justify-content: center; position: relative; }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border-subtle);
+  padding: 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 0.8125rem; color: var(--fg3);
+  font-family: var(--font-mono);
+}
+footer .links { display: flex; gap: 24px; }
+footer a { color: var(--fg3); text-decoration: none; transition: color 150ms; }
+footer a:hover { color: var(--fg1); }
+
+/* ─────────────────────────────────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .features-grid        { grid-template-columns: 1fr; }
+  .stats-grid           { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .peer-section         { grid-template-columns: 1fr; gap: 40px; }
+  .peer-graph           { max-width: 400px; margin: 0 auto; }
+  .eval-demo            { grid-template-columns: 1fr; }
+  .float-card           { display: none; }
+  section               { padding: 80px 24px; }
+  nav.top               { padding: 14px 20px; }
+  .nav-link             { display: none; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   REDUCED MOTION
+   Collapse every animation and transition to an instant snap.
+   Applies to both our custom animations and the !important guards above.
+───────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+    transition-delay:          0ms    !important;
+  }
+}

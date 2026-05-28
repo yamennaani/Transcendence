@@ -4,20 +4,7 @@ import { BtnComponent } from "./btn.component";
 import { IconComponent } from "./icon.component";
 import { FieldComponent } from "./field.component";
 import { FieldType } from "./field.types";
-
-export interface ProfileHeader{
-    name:string,
-    bio:string,
-    avatarUrl?: string;
-}
-
-
-export interface ProfileField{
-    icon:string,
-    label:string,
-    value: string | undefined,
-    allowEdit: boolean
-}
+import { HeaderComponent, HeaderConfig } from "./header.component";
 
 export interface ProfileViewSettings{
   width:number,
@@ -29,6 +16,9 @@ export interface ProfileViewSettings{
   standalone: true,
   template: `
     <div class="profile-card">
+      <app-header 
+      [config]="header()"
+      />
       <div class="fields">
         @for (field of fields(); track field.label) {
           <app-field
@@ -56,7 +46,7 @@ export interface ProfileViewSettings{
 
     </div>
   `,
-  imports: [BtnComponent, IconComponent, FieldComponent],
+  imports: [BtnComponent, FieldComponent, HeaderComponent],
   styles: [`
     .profile-card {
       max-width: 420px;
@@ -103,7 +93,7 @@ export interface ProfileViewSettings{
   `]
 })
 export class ProfileComponent{
-    header = input.required<ProfileHeader>();
+    header = input.required<HeaderConfig>();
     fields = input.required<FieldType[]>();
     @Output() fieldsChange = new EventEmitter<FieldType[]>();
 
@@ -111,7 +101,6 @@ export class ProfileComponent{
     @ViewChildren(FieldComponent) fieldComponents!: QueryList<FieldComponent>
 
     isEditing = signal(false)
-    tempFields = signal<ProfileField[]>([]);
 
     onFieldChanged(event:FieldType){
 
@@ -123,7 +112,6 @@ export class ProfileComponent{
 
     cancelUpdate(){
         this.isEditing.set(false);
-        this.tempFields.set([]);
         this.iconComponent?.cancelUpload();
     }
 

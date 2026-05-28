@@ -24,7 +24,7 @@ import { IconComponent } from "./icon.component";
                         <input
                         type="text"
                         [value]="tempValue()"
-                        (input)="tempValue.set($event.target.value)" />
+                        (input)="onTextChange($event)" />
                     }
                     @else {
                         <span>{{ field().value || '—' }}</span>
@@ -57,11 +57,11 @@ import { IconComponent } from "./icon.component";
                         @if( getOptionCount() <= 1){}
                         @else if(getOptionCount() == 2){
                             @for (option of getOptions(); track $index) {
-                                <input type="radio" 
+                                <input type="radio"
                                     name="field-{{field().label}}"
                                     [value]="option"
                                     [checked]="tempValue() === option"
-                                    (change)="tempValue.set(option)" />
+                                    (change)="onChangeOption($event)" />
                                 <label>{{ option }}</label>
                             }
                         }
@@ -95,7 +95,7 @@ import { IconComponent } from "./icon.component";
                 }
                 @case ('color') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="color"
                         [value]="tempValue()"
                         (input)="onTextChange($event)"
@@ -106,7 +106,7 @@ import { IconComponent } from "./icon.component";
                 }
                 @case ('date') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="date"
                         [value]="tempValue()"
                         (input)="onTextChange($event)"
@@ -117,7 +117,7 @@ import { IconComponent } from "./icon.component";
                 }
                 @case ('file') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="file"
                         [accept]="getAcceptedFile()"
                         (input)="onFileSelected($event)"
@@ -128,7 +128,7 @@ import { IconComponent } from "./icon.component";
                 }
                 @case ('toggle') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="checkbox"
                         [checked]="tempValue()"
                         (change)="onToggleChange($event)"
@@ -140,14 +140,14 @@ import { IconComponent } from "./icon.component";
                 }
                 @case ('icon') {
                     @if(canEdit()){
-                        <app-icon 
+                        <app-icon
                         [settings]="asIconField().iconSettings"
                         [allowEdit]="field().allowEdit"
                         (fileSelected)="onFileObject($event)"
                         />
                     }
                     @else {
-                        <app-icon [settings]="asIconField().iconSettings" 
+                        <app-icon [settings]="asIconField().iconSettings"
                         [allowEdit]="false" />
                     }
                 }
@@ -258,12 +258,12 @@ import { IconComponent } from "./icon.component";
     field = input.required<FieldType>();
     isEditing = input.required<boolean>()
     @Output() valueChanged = new EventEmitter<FieldType>()
+    @Output() fileChosen = new EventEmitter<{ label: string; file: File }>()
     tempValue = signal<FieldValue>(undefined)
     canEdit = computed(()=> this.field().allowEdit && this.isEditing())
 
     constructor() {
         effect(() => {
-            // runs when field() changes, resets temp on cancel
             if (!this.isEditing()) {
                 this.tempValue.set(this.field().value)
             }
@@ -272,8 +272,8 @@ import { IconComponent } from "./icon.component";
 
     applyChange() {
         this.valueChanged.emit({
-            ...this.field(),    // spread existing field (icon, label, type, etc.)
-            value: this.tempValue()  // override with new value
+            ...this.field(),
+            value: this.tempValue()
         } as FieldType)
     }
 
@@ -292,7 +292,7 @@ import { IconComponent } from "./icon.component";
         else{
             const sliderField = (this.field() as SliderField )
             return[sliderField.min, sliderField.max]
-        } 
+        }
     }
 
     getAcceptedFile():string{
@@ -314,33 +314,39 @@ import { IconComponent } from "./icon.component";
     onChangeOption(event:Event){
         const value = (event.target as HTMLInputElement).value;
         this.tempValue.set(value);
+        this.applyChange();
     }
 
     onTextChange(event: Event) {
         const value = (event.target as HTMLInputElement).value
         this.tempValue.set(value)
+        this.applyChange();
     }
 
     onNumberChange(event:Event){
         const value = Number((event.target as HTMLInputElement).value);
         this.tempValue.set(value);
+        this.applyChange();
     }
 
     onFileObject(file: File) {
+        this.fileChosen.emit({ label: this.field().label, file });
         const reader = new FileReader()
         reader.onload = (e) => {
             this.tempValue.set(e.target?.result as string)
+            this.applyChange();
         }
         reader.readAsDataURL(file)
     }
 
     onFileSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0]
-    if (file) this.onFileObject(file)
+        const file = (event.target as HTMLInputElement).files?.[0]
+        if (file) this.onFileObject(file)
     }
 
     onToggleChange(event: Event) {
         const checked = (event.target as HTMLInputElement).checked
         this.tempValue.set(checked)
+        this.applyChange();
     }
 }
