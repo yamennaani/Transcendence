@@ -56,7 +56,7 @@ export interface ProfileViewSettings{
 
     </div>
   `,
-  imports: [BtnComponent, IconComponent, FieldComponent],
+  imports: [BtnComponent, FieldComponent],
   styles: [`
     .profile-card {
       max-width: 420px;

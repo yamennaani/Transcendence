@@ -1,11 +1,22 @@
 const nodemailer = require('nodemailer');
 
-// Configure transporter (Mailtrap example)
+
+// const transporter = nodemailer.createTransport({
+//   host: process.env.EMIAL_HOST,
+//   port: process.env.EMAIL_PORT,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS
+//   }
+// });
+
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port: parseInt(process.env.EMAIL_PORT),
-    secure: false,              // true for 465, false for 587
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
+  host: "sandbox.smtp.mailtrap.io",
+  port: 2525,
+  auth: {
+    user: "abd7afb8b22993",
+    pass: "2d08047fd50cc6"
+  }
 });
 
 const sendResetEmail = async (to, resetUrl) => {
@@ -20,7 +31,6 @@ const sendResetEmail = async (to, resetUrl) => {
             <p>If you did not request this, ignore this email.</p>
         `,
     };
-
     await transporter.sendMail(mailOptions);
 };
 
@@ -28,7 +38,7 @@ const sendResetEmail = async (to, resetUrl) => {
 const sendVerificationEmail = async (to, verificationUrl) => {
     const mailOptions = {
         from: '"Auth Service" <noreply@yourapp.com>',
-        to,
+        to:to,
         subject: 'Verify your email address',
         html: `
             <p>Thank you for registering.</p>
@@ -39,7 +49,6 @@ const sendVerificationEmail = async (to, verificationUrl) => {
     };
     await transporter.sendMail(mailOptions);
 };
-
 
 
 const zxcvbn = require('zxcvbn');
@@ -62,12 +71,7 @@ const jwt = require('jsonwebtoken');
 
 const generateAccessToken = (userId, email) => {
   const expiresIn = process.env.JWT_ACCESS_EXPIRY || '15m';
-  console.log('Generating access token with expiry:', expiresIn);
-  const token = jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
-  console.log('Token iat (issued at):', Date.now());
-  const decoded = jwt.decode(token);
-  console.log('Token expires at (UTC):', new Date(decoded.exp * 1000).toISOString());
-  return token;
+  return jwt.sign({ userId, email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn });
 };
 
 // const generateAccessToken = (userId, email) => {

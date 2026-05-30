@@ -1,6 +1,6 @@
 import { Component, computed, inject } from "@angular/core";
 import { ProfileComponent, ProfileField, ProfileHeader } from "../shared/profile.component";
-import { AuthService } from "../auth.service";
+import { AuthService } from "../services/auth.service";
 import { FieldType } from "../shared/field.types";
 
 @Component({

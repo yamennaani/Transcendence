@@ -1,7 +1,7 @@
 import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { Course, DS } from '../tokens';
 import { BadgeComponent } from '../shared/badge.component';
 import { ProgressBarComponent } from '../shared/progress-bar.component';
@@ -46,8 +46,12 @@ export class DashboardComponent implements OnInit {
   stats   = STATS;
   recent  = RECENT;
 
-    ngOnInit(){
-    this.getClasses()
+    ngOnInit() {
+    if (this.user()?.id) {
+      this.getClasses();
+    } else {
+      this.auth.getMe().subscribe(() => this.getClasses());
+    }
   }
 
   getClasses(){

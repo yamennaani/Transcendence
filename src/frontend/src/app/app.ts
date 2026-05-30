@@ -1,7 +1,7 @@
 import { Component, inject, computed } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NgStyle } from '@angular/common';
-import { AuthService } from './auth.service';
+import { AuthService } from './services/auth.service';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { DS } from './tokens';
 
@@ -10,7 +10,9 @@ import { DS } from './tokens';
   standalone: true,
   imports: [RouterOutlet, NgStyle, SidebarComponent],
   template: `
-    @if (auth.isLoggedIn()) {
+    @if (!auth.initialized()) {
+      <!-- Hold rendering until the silent token refresh completes -->
+    } @else if (auth.isLoggedIn()) {
       <div [ngStyle]="shellStyle">
         <app-sidebar/>
         <main [ngStyle]="mainStyle">

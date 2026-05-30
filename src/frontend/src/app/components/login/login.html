@@ -1,0 +1,7 @@
+<form (ngSubmit)="onSubmit()">
+  <input type="email" [(ngModel)]="email" required placeholder="Email">
+  <input type="password" [(ngModel)]="password" required placeholder="Password">
+  <button type="submit">Login</button>
+</form>
+<button (click)="loginWithGitHub()">Login with GitHub</button>
+<p *ngIf="error">{{ error }}</p>
