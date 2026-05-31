@@ -1,96 +1,281 @@
-<div [ngStyle]="pageStyle">
-  <!-- Breadcrumb -->
-  <div [ngStyle]="crumbStyle">
-    <span [ngStyle]="crumbLinkStyle" (click)="router.navigate(['/classes'])">my classes</span>
-    <span>/</span><span>{{ a.class }}</span>
-    <span>/</span><span style="color:oklch(94% 0.005 272)">{{ a.title }}</span>
-  </div>
-
-  <!-- Header -->
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:16px">
+<!-- ── Not found ─────────────────────────────────────────────── -->
+@if (notFound()) {
+  <div class="not-found">
     <div>
-      <h1 [ngStyle]="h1Style">{{ a.title }}</h1>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-        <app-badge variant="under_review"/>
-        <span [ngStyle]="monoMetaStyle">max {{ a.maxScore }}pts + {{ a.bonusScore }} bonus</span>
-        <span [ngStyle]="monoMetaStyle">submitted {{ a.submittedAt }}</span>
-      </div>
+      <div class="not-found-icon">⚠️</div>
+      <div class="not-found-title">Assignment not found</div>
+      <div class="not-found-sub">The requested assignment could not be loaded.</div>
+      <app-btn variant="secondary" (clicked)="router.navigate(['/assignment'])">Back to assignments</app-btn>
     </div>
-    @if (avg() !== null) {
-      <div style="text-align:right;flex-shrink:0">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:2.5rem;font-weight:700;letter-spacing:-0.03em;color:oklch(68% 0.18 145);line-height:1">
-          {{ avg() }}<span style="font-size:1rem;color:oklch(48% 0.01 272)">/100</span>
-        </div>
-        <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:2px">current avg</div>
-      </div>
-    }
   </div>
+}
 
-  <!-- Eval progress indicator -->
-  <div [ngStyle]="evalPanelStyle">
-    <div style="display:flex;gap:8px;align-items:center">
-      @for (n of [0,1,2]; track n) {
-        @if (n > 0) { <div style="width:24px;height:1px;background:oklch(27% 0.03 272)"></div> }
-        <div [ngStyle]="evalDotStyle(n)">{{ n < a.evaluations.length ? '✓' : n + 1 }}</div>
-      }
-    </div>
-    <span style="font-size:0.875rem;color:oklch(68% 0.01 272)">
-      {{ a.evaluations.length }} of {{ a.requiredEvals }} evaluations completed
+<!-- ── Main page ──────────────────────────────────────────────── -->
+@if (!notFound() && assignment()) {
+<div class="page">
+
+  <!-- Breadcrumb -->
+  <div class="crumb">
+    <span class="crumb-link" (click)="router.navigate(['/classes'])">My classes</span>
+    <span>/</span>
+    <span class="crumb-link"
+      (click)="router.navigate(['/assignment'], { queryParams: { classId: assignment()!.classid } })">
+      {{ className() ?? '…' }}
     </span>
+    <span>/</span>
+    <span style="color:oklch(94% 0.005 272)">{{ assignment()!.name }}</span>
   </div>
 
-  <!-- Tab bar -->
-  <div [ngStyle]="tabBarStyle">
-    <button [ngStyle]="tabStyle('detail')"      (click)="tab.set('detail')">Description</button>
-    <button [ngStyle]="tabStyle('evaluations')" (click)="tab.set('evaluations')">Evaluations ({{ a.evaluations.length }})</button>
-    <button [ngStyle]="tabStyle('submission')"  (click)="tab.set('submission')">Your submission</button>
-  </div>
-
-  <!-- Detail tab -->
-  @if (tab() === 'detail') {
-    <div [ngStyle]="panelStyle">
-      <p style="font-size:0.9375rem;color:oklch(68% 0.01 272);line-height:1.7">{{ a.description }}</p>
-      <div style="margin-top:16px;padding-top:16px;border-top:1px solid oklch(22% 0.025 272);display:flex;gap:12px">
-        <app-btn variant="secondary" (clicked)="tab.set('submission')">View your submission</app-btn>
-        <app-btn variant="ghost">Download brief</app-btn>
+  <!-- ── Hero ──────────────────────────────────────────────────── -->
+  <div class="hero">
+    <div class="hero-left">
+      <h1 class="hero-title">{{ assignment()!.name }}</h1>
+      <div class="hero-badges">
+        @if (!isStaff()) {
+          <app-badge [variant]="statusBadge()"/>
+        }
+        <span class="mono-tag">{{ assignment()!.max_score }} pts max</span>
+        @if (assignment()!.pass_threshold) {
+          <span class="mono-tag">{{ assignment()!.pass_threshold }}% threshold</span>
+        }
+        <span class="mono-tag">{{ assignment()!.req_eval }} eval{{ assignment()!.req_eval === 1 ? '' : 's' }} required</span>
+        @if (assignment()!.groupSize && assignment()!.groupSize! > 1) {
+          <span class="mono-tag">group ≤ {{ assignment()!.groupSize }}</span>
+        }
       </div>
     </div>
+
+    <!-- Stats grid -->
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <span class="stat-label">Max score</span>
+        <span class="stat-value">{{ assignment()!.max_score }}</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Req. evals</span>
+        <span class="stat-value">{{ assignment()!.req_eval }}</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Group size</span>
+        <span class="stat-value">{{ assignment()!.groupSize ?? 1 }}</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label">Threshold</span>
+        <span class="stat-value">{{ assignment()!.pass_threshold ?? '—' }}{{ assignment()!.pass_threshold ? '%' : '' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Description ───────────────────────────────────────────── -->
+  <app-container [config]="flatConfig">
+    <div class="desc-body">
+      <div class="desc-label">Description</div>
+      <p class="desc-text">{{ assignment()!.description || 'No description provided.' }}</p>
+    </div>
+  </app-container>
+
+  <!-- ════════════════════════════════════════════════════════════
+       STUDENT VIEW
+       ════════════════════════════════════════════════════════════ -->
+  @if (!isStaff()) {
+
+    <!-- Two-column: group + submission -->
+    <div class="two-col">
+
+      <!-- ── Your Group ───────────────────────────────────────── -->
+      <app-container [config]="cardConfig">
+        <div class="card-inner">
+          <div class="card-title">Your Group</div>
+
+          <!-- Error banner -->
+          @if (actionError()) {
+            <div style="font-size:0.8125rem;color:oklch(62% 0.22 20);background:oklch(18% 0.07 20);border:1px solid oklch(36% 0.12 20);border-radius:8px;padding:10px 12px;">
+              {{ actionError() }}
+            </div>
+          }
+
+          <!-- No group & no invites -->
+          @if (groupStatus() === 'no-group') {
+            @if ((assignment()?.groupSize ?? 1) <= 1) {
+              <!-- Solo assignment: one-click join -->
+              <p class="hint-text">This is a solo assignment. Click below to get started.</p>
+              <div class="action-row">
+                <app-btn variant="primary" (clicked)="joinSoloAssignment()">Join assignment</app-btn>
+              </div>
+            } @else {
+              <!-- Group assignment: name input + create -->
+              <p class="hint-text">You're not part of a group yet.</p>
+              <input
+                class="name-input"
+                type="text"
+                placeholder="Group name…"
+                [value]="groupName()"
+                (input)="groupName.set($any($event.target).value)" />
+              <div class="action-row">
+                <app-btn variant="primary" (clicked)="createGroup()">Create group</app-btn>
+              </div>
+            }
+          }
+
+          <!-- Pending invites -->
+          @if (groupStatus() === 'has-invites') {
+            @for (inv of myInvites(); track inv.id) {
+              <div class="invite-item">
+                <div>
+                  <div class="section-title">{{ inv.targetGroup?.name ?? 'Group invite' }}</div>
+                  <div class="invite-from">from {{ inv.senderUser?.username }}</div>
+                </div>
+                <div class="invite-btns">
+                  <app-btn variant="primary" size="sm" (clicked)="acceptInvite(inv.id)">Accept</app-btn>
+                  <app-btn variant="ghost"   size="sm" (clicked)="declineInvite(inv.id)">Decline</app-btn>
+                </div>
+              </div>
+            }
+          }
+
+          <!-- In a group -->
+          @if (groupStatus() === 'in-group') {
+            @if ((assignment()?.groupSize ?? 1) <= 1) {
+              <!-- Solo: minimal confirmation -->
+              <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:oklch(18% 0.07 145);border:1px solid oklch(36% 0.12 145)">
+                <span style="font-size:1rem">✓</span>
+                <span style="font-size:0.875rem;color:oklch(72% 0.15 145)">You're enrolled in this assignment.</span>
+              </div>
+            } @else {
+              <!-- Multi-member group -->
+              <div class="section-title">{{ myGroup()!.name }}</div>
+              <div class="members-list">
+                @for (m of myGroup()!.members ?? []; track m.id) {
+                  <div class="member-row">
+                    <app-avatar [name]="m.user.username" [size]="28"/>
+                    <span class="member-name">{{ m.user.username }}</span>
+                    @if (m.userId === myGroup()!.leaderId) {
+                      <app-badge variant="violet" customLabel="leader"/>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
+      </app-container>
+
+      <!-- ── Submission ────────────────────────────────────────── -->
+      <app-container [config]="cardConfig">
+        <div class="card-inner">
+          <div class="card-title">Submission</div>
+
+          @if (!myGroup()) {
+            <p class="hint-text">Join or create a group first.</p>
+          }
+
+          @if (myGroup() && !mySubmission()) {
+            <p class="hint-text">No submission started yet.</p>
+            <app-btn variant="primary" (clicked)="startSubmission()">Start submission</app-btn>
+          }
+
+          @if (mySubmission()) {
+            <div class="sub-status-row">
+              <app-badge [variant]="subStatusVariant(mySubmission().status)"/>
+              <span class="hint-text">{{ mySubmission().status === 'Open' ? 'Open — you can still upload.' : 'Closed.' }}</span>
+            </div>
+
+            @if (mySubmission().status === 'Open') {
+              <div class="action-row">
+                <!-- File upload wrapper -->
+                <div class="upload-btn-wrap">
+                  <app-btn variant="secondary">Upload file</app-btn>
+                  <input class="file-input" type="file" (change)="onFileSelected($event)"/>
+                </div>
+                <app-btn variant="ghost" (clicked)="closeSubmission()">Close submission</app-btn>
+              </div>
+            }
+
+            @if (mySubmission().file) {
+              <div style="font-size:0.8125rem;color:oklch(72% 0.15 200)">
+                ✓ {{ mySubmission().file.name }}
+              </div>
+            }
+          }
+        </div>
+      </app-container>
+    </div>
+
+    <!-- ── Evaluation progress ────────────────────────────────── -->
+    <app-container [config]="flatConfig">
+      <div class="eval-inner">
+        <div class="eval-dots">
+          @for (n of evalSlots(); track n) {
+            @if (n > 0) {
+              <div class="eval-connector" [class.done]="n <= completedEvals()"></div>
+            }
+            <div class="eval-dot" [class.done]="n < completedEvals()">{{ n + 1 }}</div>
+          }
+        </div>
+        <span class="eval-summary">
+          <strong style="color:oklch(94% 0.005 272)">{{ completedEvals() }}</strong>
+          of {{ assignment()!.req_eval }} evaluations received
+        </span>
+        <span class="eval-pct">
+          {{ assignment()!.req_eval > 0 ? ((completedEvals() / assignment()!.req_eval) * 100 | number:'1.0-0') : 0 }}%
+        </span>
+      </div>
+    </app-container>
   }
 
-  <!-- Evaluations tab -->
-  @if (tab() === 'evaluations') {
-    <div style="display:flex;flex-direction:column;gap:12px">
-      @for (ev of a.evaluations; track ev.evaluator) {
-        <div [ngStyle]="evalCardStyle">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <app-avatar [name]="ev.evaluator" [size]="28"/>
-              <span style="font-size:0.875rem;font-weight:500;color:oklch(94% 0.005 272)">{{ ev.evaluator }}</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <app-score-pill [score]="ev.score" [max]="a.maxScore"/>
-              <span style="font-size:0.75rem;color:oklch(48% 0.01 272)">{{ ev.date }}</span>
+  <!-- ════════════════════════════════════════════════════════════
+       STAFF VIEW (Bocal / Admin)
+       ════════════════════════════════════════════════════════════ -->
+  @if (isStaff()) {
+
+    <!-- Stats row -->
+    <div class="staff-stats">
+      <div class="sstat">
+        <span class="sstat-label">Groups</span>
+        <span class="sstat-value">{{ staffGroupCount() }}</span>
+      </div>
+      <div class="sstat">
+        <span class="sstat-label">Submitted</span>
+        <span class="sstat-value">{{ staffSubmittedCount() }}</span>
+      </div>
+      <div class="sstat">
+        <span class="sstat-label">Avg score</span>
+        <span class="sstat-value">{{ staffAvgScore() ?? '—' }}</span>
+      </div>
+    </div>
+
+    <!-- Submissions list -->
+    @if (allSubs().length === 0) {
+      <app-container [config]="flatConfig">
+        <div style="padding:32px;text-align:center;color:oklch(48% 0.01 272);font-size:0.875rem">
+          No submissions yet.
+        </div>
+      </app-container>
+    }
+
+    @for (sub of allSubs(); track sub.id) {
+      <app-container [config]="flatConfig">
+        <div class="sub-row">
+          <div class="sub-row-left">
+            <div>
+              <div class="sub-group-name">{{ sub.group?.name ?? 'Group #' + sub.groupId }}</div>
+              <div class="sub-members">
+                @for (m of sub.group?.members ?? []; track m.id; let last = $last) {
+                  {{ m.user?.username }}@if (!last) { · }
+                }
+              </div>
             </div>
           </div>
-          <p style="font-size:0.875rem;color:oklch(68% 0.01 272);line-height:1.6">{{ ev.feedback }}</p>
+          <div class="sub-row-right">
+            @if (sub.finalScore != null) {
+              <app-score-pill [score]="sub.finalScore" [max]="assignment()!.max_score"/>
+            }
+            <app-badge [variant]="subStatusVariant(sub.status)"/>
+          </div>
         </div>
-      }
-      @if (a.evaluations.length < a.requiredEvals) {
-        <div [ngStyle]="waitStyle">
-          <span style="font-size:0.875rem;color:oklch(75% 0.18 80)">
-            Waiting for {{ a.requiredEvals - a.evaluations.length }} more evaluator(s).
-          </span>
-        </div>
-      }
-    </div>
+      </app-container>
+    }
   }
 
-  <!-- Submission tab -->
-  @if (tab() === 'submission') {
-    <div [ngStyle]="panelStyle">
-      <div style="font-size:0.6875rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:oklch(48% 0.01 272);margin-bottom:10px">Submitted repository</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:oklch(72% 0.15 200);background:oklch(20% 0.05 200);border:1px solid oklch(38% 0.09 200);border-radius:8px;padding:10px 14px;margin-bottom:16px">{{ a.repoUrl }}</div>
-      <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">Submitted on {{ a.submittedAt }}</div>
-    </div>
-  }
 </div>
+}

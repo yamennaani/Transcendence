@@ -7,17 +7,7 @@ import { NgStyle } from '@angular/common';
   imports: [NgStyle],
   template: `
     <div style="display:flex;align-items:center;gap:10px">
-      <svg [attr.width]="size() * 1.1" [attr.height]="size()" viewBox="0 0 44 40" fill="none">
-        <defs>
-          <linearGradient id="lg" x1="0" x2="1" y1="0" y2="0">
-            <stop offset="0%" stop-color="oklch(72% 0.28 296)"/>
-            <stop offset="100%" stop-color="oklch(72% 0.15 200)"/>
-          </linearGradient>
-        </defs>
-        <rect x="0" y="5" width="44" height="6" rx="3" fill="url(#lg)"/>
-        <rect x="19" y="5" width="6" height="32" rx="3" fill="url(#lg)"/>
-      </svg>
-      <span [ngStyle]="wordmarkStyle()">43</span>
+      <span [ngStyle]="wordmarkStyle()">My Awesome Project</span>
     </div>
   `,
 })
