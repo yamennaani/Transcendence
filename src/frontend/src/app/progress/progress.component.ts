@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { NgStyle } from '@angular/common';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { ProgressBarComponent } from '../shared/progress-bar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';

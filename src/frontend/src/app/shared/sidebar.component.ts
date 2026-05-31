@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
 import { AvatarComponent } from '../shared/avatar.component';
@@ -77,7 +77,7 @@ export class SidebarComponent {
   hovered = signal('');
 
   visibleItems = computed(() => {
-    const role = this.user()?.role ?? 'student';
+    const role = this.user()?.role ?? 'Student';
     return NAV_ITEMS.filter(i => i.roles.includes(role));
   });
 

@@ -16,7 +16,7 @@ export interface ProfileViewSettings{
   standalone: true,
   template: `
     <div class="profile-card">
-      <app-header 
+      <app-header
       [config]="header()"
       />
       <div class="fields">

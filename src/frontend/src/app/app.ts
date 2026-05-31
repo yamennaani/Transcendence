@@ -11,7 +11,7 @@ import { DS } from './tokens';
   standalone: true,
   imports: [RouterOutlet, NgStyle, SidebarComponent, LoadingSpinnerComponent],
   template: `
-    <app-loading-spinner/>
+  <app-loading-spinner/>
     @if (auth.isLoggedIn()) {
       <div [ngStyle]="shellStyle">
         <app-sidebar/>
