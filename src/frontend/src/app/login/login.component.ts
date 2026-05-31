@@ -4,12 +4,10 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
-import { BtnComponent } from '../shared/btn.component';
-
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [NgStyle, LogoComponent, BtnComponent],
+  imports: [NgStyle, LogoComponent],
   template: `
     <div [ngStyle]="pageStyle">
       <div [ngStyle]="gridStyle"></div>

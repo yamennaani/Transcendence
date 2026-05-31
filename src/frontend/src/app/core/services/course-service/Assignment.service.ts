@@ -35,7 +35,7 @@ export interface AssignmentResponse {
 @Injectable({ providedIn: "root" })
 export class AssignmentService {
   private http = inject(HttpClient);
-  private baseAssignments = "/api/assignment";
+  private baseAssignments = "/api/class/assignment";
   private baseClasses = "/api/class";
 
   // Signals for state management

@@ -161,4 +161,17 @@ const respondToInvite = async(inviteId, {userId, status})=>{
     }
 }
 
-module.exports = {createGroup, inviteMember, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites}
+const getMyGroupForAssignment = async ({ userId, assId }) => {
+    if (!userId || !assId)
+        throw new ValidationError('Invalid request')
+    const membership = await utils.existingMembership(userId, assId, {
+        group: {
+            include: {
+                members: { include: { user: true } }
+            }
+        }
+    })
+    return membership?.group ?? null
+}
+
+module.exports = {createGroup, inviteMember, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites, getMyGroupForAssignment}

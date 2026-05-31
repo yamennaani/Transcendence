@@ -11,35 +11,35 @@ RESET  = \033[0m
 
 .PHONY: setup build up down clean restart run re dev prod check_env studio populateDB
 
-setup:
+setup: check_env
 	@echo "$(GREEN)Setup complete.$(RESET)"
 
 check_env:
 	@echo "$(BLUE)Checking .env...$(RESET)"
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "$(YELLOW).env not found — generating...$(RESET)"; \
-		echo "POSTGRES_USER=user"                                    > $(ENV_FILE); \
-		echo "POSTGRES_DB=db"                                       >> $(ENV_FILE); \
-		echo "DB_HOST=database"                                     >> $(ENV_FILE); \
-		echo "DB_PORT=5432"                                         >> $(ENV_FILE); \
-		echo "PORT=3000"                                            >> $(ENV_FILE); \
-		echo "DB_PASSWORD=password"                                 >> $(ENV_FILE); \
-		echo "DB_LOCAL_PORT=5433"                                   >> $(ENV_FILE); \
+		echo "POSTGRES_USER=user" > $(ENV_FILE); \
+		echo "POSTGRES_DB=db" >> $(ENV_FILE); \
+		echo "DB_HOST=database" >> $(ENV_FILE); \
+		echo "DB_PORT=5432" >> $(ENV_FILE); \
+		echo "PORT=3000" >> $(ENV_FILE); \
+		echo "DB_PASSWORD=password" >> $(ENV_FILE); \
+		echo "DB_LOCAL_PORT=5433" >> $(ENV_FILE); \
 		echo "DATABASE_URL=\"postgresql://user:password@localhost:5433/db\"" >> $(ENV_FILE); \
-		echo "MINIO_ENDPOINT=minio"                                 >> $(ENV_FILE); \
-		echo "MINIO_PORT=9000"                                      >> $(ENV_FILE); \
-		echo "MINIO_ACCESS_KEY=minioadmin"                          >> $(ENV_FILE); \
-		echo "MINIO_SECRET_KEY=minioadmin"                          >> $(ENV_FILE); \
-		echo "MINIO_BUCKET=submissions"                             >> $(ENV_FILE); \
-		echo "MINIO_PUBLIC_HOST=localhost"                          >> $(ENV_FILE); \
-		echo "MINIO_PUBLIC_PORT=9000"                               >> $(ENV_FILE); \
+		echo "MINIO_ENDPOINT=minio" >> $(ENV_FILE); \
+		echo "MINIO_PORT=9000" >> $(ENV_FILE); \
+		echo "MINIO_ACCESS_KEY=minioadmin" >> $(ENV_FILE); \
+		echo "MINIO_SECRET_KEY=minioadmin" >> $(ENV_FILE); \
+		echo "MINIO_BUCKET=submissions" >> $(ENV_FILE); \
+		echo "MINIO_PUBLIC_HOST=localhost" >> $(ENV_FILE); \
+		echo "MINIO_PUBLIC_PORT=9000" >> $(ENV_FILE); \
 		echo "$(GREEN).env created at $(ENV_FILE)$(RESET)"; \
 	else \
 		echo "$(GREEN).env found.$(RESET)"; \
 	fi
 	@if [ ! -L src/packages/database/.env ]; then \
 		echo "$(BLUE)Linking packages/database/.env to root .env...$(RESET)"; \
-		ln -sf $(PWD)/$(ENV_FILE) src/packages/database/.env; \
+		ln -sf `pwd`/$(ENV_FILE) src/packages/database/.env; \
 		echo "$(GREEN)Linked!$(RESET)"; \
 	fi
 
@@ -86,7 +86,7 @@ clean: down
 
 fclean: clean
 	@echo "$(RED)Removing .env...$(RESET)"
-# 	@rm -f $(ENV_FILE)
+	@rm -f $(ENV_FILE)
 
 print_url:
 	@echo "$(GREEN)http://localhost$(RESET)"
