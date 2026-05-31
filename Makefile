@@ -11,7 +11,7 @@ RESET  = \033[0m
 
 .PHONY: setup build up down clean restart run re dev prod check_env studio populateDB
 
-setup: check_env
+setup:
 	@echo "$(GREEN)Setup complete.$(RESET)"
 
 check_env:
@@ -86,7 +86,7 @@ clean: down
 
 fclean: clean
 	@echo "$(RED)Removing .env...$(RESET)"
-	@rm -f $(ENV_FILE)
+# 	@rm -f $(ENV_FILE)
 
 print_url:
 	@echo "$(GREEN)http://localhost$(RESET)"
