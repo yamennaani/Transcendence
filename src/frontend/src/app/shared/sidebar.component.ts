@@ -6,7 +6,8 @@ import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
 import { AvatarComponent } from '../shared/avatar.component';
 import { IconComponent } from '../shared/icon.component';
-import { AppIconSettings, IconField } from '../shared/field.types';
+import { AppIconSettings } from './field.types';
+import { LanguageSwitcherComponent } from '../languages/language-switcher.component';
 
 interface NavItem { label: string; route: string; icon: string; roles: string[]; badge?: number; }
 
@@ -23,7 +24,7 @@ const NAV_ITEMS: NavItem[] = [
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [NgStyle, LogoComponent, IconComponent, RouterLink],
+  imports: [NgStyle, LogoComponent, IconComponent, RouterLink, LanguageSwitcherComponent],
   template: `
     <nav [ngStyle]="navStyle">
       <!-- Logo -->
@@ -62,6 +63,9 @@ const NAV_ITEMS: NavItem[] = [
 
       <!-- Bottom -->
       <div style="padding:8px;border-top:1px solid oklch(22% 0.025 272)">
+        <div [ngStyle]="itemStyle('')" style="text-decoration:none">
+          <app-language-switcher/>
+        </div>
         <a [ngStyle]="itemStyle('/settings')" style="text-decoration:none" href="#">Settings</a>
         <a [ngStyle]="itemStyle('/logout')" (click)="logout()" style="text-decoration:none;cursor:pointer">Sign out</a>
       </div>

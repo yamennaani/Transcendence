@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { SidebarComponent } from './shared/sidebar.component';
 import { LoadingSpinnerComponent } from './shared/loading-spinner.component';
 import { DS } from './tokens';
+import { LanguageSwitcherComponent } from './languages/language-switcher.component';
 
 @Component({
   selector: 'app-root',
