@@ -1,12 +1,13 @@
 import { Component, computed, effect, EventEmitter, input, Output, signal } from "@angular/core";
-import { FieldType, FieldValue, FileField, SelectField, SliderField } from "./field.types";
+import { FieldType, FieldValue, FileField, IconField, SelectField, SliderField } from "./field.types";
 import { DS } from "../tokens";
 import { MatIcon } from "@angular/material/icon";
+import { IconComponent } from "./icon.component";
 
 @Component({
     selector: "app-field",
     standalone: true,
-    imports:[MatIcon],
+    imports:[MatIcon, IconComponent],
     template:`
     <div class="field-row">
         <div class="field-meta">
@@ -23,7 +24,7 @@ import { MatIcon } from "@angular/material/icon";
                         <input
                         type="text"
                         [value]="tempValue()"
-                        (input)="tempValue.set($event.target.value)" />
+                        (input)="onTextChange($event)" />
                     }
                     @else {
                         <span>{{ field().value || '—' }}</span>
@@ -56,11 +57,11 @@ import { MatIcon } from "@angular/material/icon";
                         @if( getOptionCount() <= 1){}
                         @else if(getOptionCount() == 2){
                             @for (option of getOptions(); track $index) {
-                                <input type="radio" 
+                                <input type="radio"
                                     name="field-{{field().label}}"
                                     [value]="option"
                                     [checked]="tempValue() === option"
-                                    (change)="tempValue.set(option)" />
+                                    (change)="onChangeOption($event)" />
                                 <label>{{ option }}</label>
                             }
                         }
@@ -94,7 +95,7 @@ import { MatIcon } from "@angular/material/icon";
                 }
                 @case ('color') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="color"
                         [value]="tempValue()"
                         (input)="onTextChange($event)"
@@ -105,7 +106,7 @@ import { MatIcon } from "@angular/material/icon";
                 }
                 @case ('date') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="date"
                         [value]="tempValue()"
                         (input)="onTextChange($event)"
@@ -116,7 +117,7 @@ import { MatIcon } from "@angular/material/icon";
                 }
                 @case ('file') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="file"
                         [accept]="getAcceptedFile()"
                         (input)="onFileSelected($event)"
@@ -127,7 +128,7 @@ import { MatIcon } from "@angular/material/icon";
                 }
                 @case ('toggle') {
                     @if(canEdit()){
-                        <input 
+                        <input
                         type="checkbox"
                         [checked]="tempValue()"
                         (change)="onToggleChange($event)"
@@ -135,6 +136,19 @@ import { MatIcon } from "@angular/material/icon";
                     }
                     @else {
                         <span>{{ field().value || '—' }}</span>
+                    }
+                }
+                @case ('icon') {
+                    @if(canEdit()){
+                        <app-icon
+                        [settings]="asIconField().iconSettings"
+                        [allowEdit]="field().allowEdit"
+                        (fileSelected)="onFileObject($event)"
+                        />
+                    }
+                    @else {
+                        <app-icon [settings]="asIconField().iconSettings"
+                        [allowEdit]="false" />
                     }
                 }
             }
@@ -244,13 +258,12 @@ import { MatIcon } from "@angular/material/icon";
     field = input.required<FieldType>();
     isEditing = input.required<boolean>()
     @Output() valueChanged = new EventEmitter<FieldType>()
+    @Output() fileChosen = new EventEmitter<{ label: string; file: File }>()
     tempValue = signal<FieldValue>(undefined)
-
     canEdit = computed(()=> this.field().allowEdit && this.isEditing())
 
     constructor() {
         effect(() => {
-            // runs when field() changes, resets temp on cancel
             if (!this.isEditing()) {
                 this.tempValue.set(this.field().value)
             }
@@ -259,8 +272,8 @@ import { MatIcon } from "@angular/material/icon";
 
     applyChange() {
         this.valueChanged.emit({
-            ...this.field(),    // spread existing field (icon, label, type, etc.)
-            value: this.tempValue()  // override with new value
+            ...this.field(),
+            value: this.tempValue()
         } as FieldType)
     }
 
@@ -279,7 +292,7 @@ import { MatIcon } from "@angular/material/icon";
         else{
             const sliderField = (this.field() as SliderField )
             return[sliderField.min, sliderField.max]
-        } 
+        }
     }
 
     getAcceptedFile():string{
@@ -294,38 +307,46 @@ import { MatIcon } from "@angular/material/icon";
         }
     }
 
+    asIconField(){
+        return this.field() as IconField
+    }
+
     onChangeOption(event:Event){
         const value = (event.target as HTMLInputElement).value;
         this.tempValue.set(value);
+        this.applyChange();
     }
 
     onTextChange(event: Event) {
         const value = (event.target as HTMLInputElement).value
         this.tempValue.set(value)
+        this.applyChange();
     }
 
     onNumberChange(event:Event){
         const value = Number((event.target as HTMLInputElement).value);
         this.tempValue.set(value);
+        this.applyChange();
     }
 
-    onFileSelected(event:Event){
-        const file = (event.target as HTMLInputElement).files?.[0];
-        if (file) {
-            console.log('File name:', file.name);
-            console.log('File size:', file.size);
-            console.log('File type:', file.type);
-            
-            // Create preview for images
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                this.tempValue.set(e.target?.result as string);
-            };
-            reader.readAsDataURL(file);
-        } 
+    onFileObject(file: File) {
+        this.fileChosen.emit({ label: this.field().label, file });
+        const reader = new FileReader()
+        reader.onload = (e) => {
+            this.tempValue.set(e.target?.result as string)
+            this.applyChange();
+        }
+        reader.readAsDataURL(file)
     }
+
+    onFileSelected(event: Event) {
+        const file = (event.target as HTMLInputElement).files?.[0]
+        if (file) this.onFileObject(file)
+    }
+
     onToggleChange(event: Event) {
         const checked = (event.target as HTMLInputElement).checked
         this.tempValue.set(checked)
+        this.applyChange();
     }
 }

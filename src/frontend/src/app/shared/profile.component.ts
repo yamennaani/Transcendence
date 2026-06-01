@@ -1,23 +1,10 @@
-import { Component, EventEmitter, input, Output, signal, ViewChild } from "@angular/core";
+import { Component, EventEmitter, input, Output, QueryList, signal, ViewChild, ViewChildren } from "@angular/core";
 import { DS } from '../tokens';
 import { BtnComponent } from "./btn.component";
 import { IconComponent } from "./icon.component";
 import { FieldComponent } from "./field.component";
-import { BaseField, FieldType } from "./field.types";
-
-export interface ProfileHeader{
-    name:string,
-    bio:string,
-    avatarUrl?: string;
-}
-
-
-export interface ProfileField{
-    icon:string,
-    label:string,
-    value: string | undefined,
-    allowEdit: boolean
-}
+import { FieldType } from "./field.types";
+import { HeaderComponent, HeaderConfig } from "./header.component";
 
 export interface ProfileViewSettings{
   width:number,
@@ -29,18 +16,9 @@ export interface ProfileViewSettings{
   standalone: true,
   template: `
     <div class="profile-card">
-
-      <app-icon [settings]="{
-        name: header().name,
-        icon: header().avatarUrl,
-        size: 80,
-        borderRadius: 50,
-        allowEdit: isEditing(),
-        allowView: false
-      }" (iconChanged)="onAvatarChanged($event)" />
-
-      <h2>{{ header().name }}</h2>
-
+      <app-header
+      [config]="header()"
+      />
       <div class="fields">
         @for (field of fields(); track field.label) {
           <app-field
@@ -68,7 +46,7 @@ export interface ProfileViewSettings{
 
     </div>
   `,
-  imports: [BtnComponent, IconComponent, FieldComponent],
+  imports: [BtnComponent, FieldComponent, HeaderComponent],
   styles: [`
     .profile-card {
       max-width: 420px;
@@ -95,44 +73,6 @@ export interface ProfileViewSettings{
       gap: ${DS.space[3]};
       margin-top: ${DS.space[2]};
     }
-    .field-row {
-      display: flex;
-      align-items: center;
-      gap: ${DS.space[3]};
-      padding: ${DS.space[3]};
-      background: ${DS.colors.surfaceRaised};
-      border: 1px solid ${DS.colors.borderSubtle};
-      border-radius: ${DS.radius.md};
-    }
-    .field-row mat-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: ${DS.colors.fg3};
-      flex-shrink: 0;
-    }
-    .field-label {
-      font-size: 0.75rem;
-      color: ${DS.colors.fg3};
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      min-width: 60px;
-    }
-    .field-value {
-      font-size: 0.875rem;
-      color: ${DS.colors.fg2};
-      flex: 1;
-    }
-    input {
-      flex: 1;
-      background: ${DS.colors.bg};
-      border: 1px solid ${DS.colors.violetBorder};
-      border-radius: ${DS.radius.sm};
-      color: ${DS.colors.fg1};
-      font-size: 0.875rem;
-      padding: 4px 8px;
-      outline: none;
-    }
     .actions {
       width: 100%;
       display: flex;
@@ -153,13 +93,14 @@ export interface ProfileViewSettings{
   `]
 })
 export class ProfileComponent{
-    header = input.required<ProfileHeader>();
+    header = input.required<HeaderConfig>();
     fields = input.required<FieldType[]>();
-    @Output() fieldsChange = new EventEmitter<ProfileField[]>();
+    @Output() fieldsChange = new EventEmitter<FieldType[]>();
+
     @ViewChild(IconComponent) iconComponent!: IconComponent;
+    @ViewChildren(FieldComponent) fieldComponents!: QueryList<FieldComponent>
 
     isEditing = signal(false)
-    tempFields = signal<ProfileField[]>([]);
 
     onFieldChanged(event:FieldType){
 
@@ -171,22 +112,16 @@ export class ProfileComponent{
 
     cancelUpdate(){
         this.isEditing.set(false);
-        this.tempFields.set([]);
         this.iconComponent?.cancelUpload();
     }
 
     applyUpdates(){
-        this.fieldsChange.emit(this.tempFields());
+        const updates = this.fieldComponents.map((fc)=>({
+          ...fc.field(),
+          value: fc.tempValue()
+        } as FieldType));
+        this.fieldsChange.emit(updates);
         this.isEditing.set(false);
-        this.tempFields.set([]);
-    }
-
-    updateField(index:number, event:Event){
-        const newValue = (event.target as HTMLInputElement).value;
-        this.tempFields.update(arr => {
-        const newArr = arr.map(field => ({ ...field }));
-        newArr[index].value = newValue;
-        return newArr;})
     }
 
     onAvatarChanged(url: string) {

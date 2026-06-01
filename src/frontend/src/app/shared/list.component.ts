@@ -1,309 +1,312 @@
-import { Component, input, signal, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  ContentChild,
+  EventEmitter,
+  Output,
+  TemplateRef,
+  computed,
+  input,
+  signal,
+} from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 
-// Material UI Imports
-import { MatTableModule } from '@angular/material/table';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatCardModule } from '@angular/material/card';
+import { BadgeVariant, DS } from '../tokens';
+import { ContainerComponent, ContainerConfig } from './container.component';
+import { BadgeComponent } from './badge.component';
+import { ProgressBarComponent } from './progress-bar.component';
+import { BtnComponent } from './btn.component';
 
-import { DS } from '../tokens';
-
-/**
- * Configuration for a single column in the generic list
- */
-export interface ListColumnConfig<T> {
-  key: keyof T;
+export interface ListColumn<T> {
   label: string;
-  width?: string;
-  render?: (item: T) => string | number;
+  render: (item: T) => string | number;
 }
 
-/**
- * Configuration for badge display
- */
-export interface ListBadgeConfig<T> {
+export interface ListBadge<T> {
   show: (item: T) => boolean;
-  variant?: 'validated' | 'failed' | 'under_review' | 'submitted' | 'pending' | 'violet' | 'cyan';
-  label: string;
+  variant: BadgeVariant;
+  label?: string;
 }
 
-/**
- * Configuration for row styling
- */
-export interface ListRowConfig<T> {
-  hoverBg?: string;
-  defaultBg?: string;
-  borderColor?: (item: T) => string;
-}
-
-/**
- * Progress data structure
- */
-export interface ProgressData {
+export interface ListProgressData {
   value: number;
   max: number;
-  label: string;
-}
-
-/**
- * Main configuration for the generic list
- */
-export interface GenericListConfig<T> {
-  title: string;
-  subtitle?: string;
-  columns: ListColumnConfig<T>[];
-  rowConfig?: ListRowConfig<T>;
-  badge?: ListBadgeConfig<T>;
-  emptyMessage?: string;
-  trackBy: (item: T) => string | number;
-  onRowClick?: (item: T) => void;
+  label?: string;
 }
 
 @Component({
-  selector: 'app-generic-list',
+  selector: 'app-list',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatIconModule,
-    MatChipsModule,
-    MatProgressBarModule,
-    MatCardModule,
-  ],
+  imports: [NgTemplateOutlet, ContainerComponent, BadgeComponent, ProgressBarComponent, BtnComponent],
   template: `
-    <div class="list-container">
-      <!-- Header -->
-      <div class="list-header">
-        <div class="list-overline">{{ config().subtitle || 'List' }}</div>
-        <h1 class="list-title">{{ config().title }}</h1>
-      </div>
+    <div class="list">
 
-      <!-- Items Container -->
-      <div class="list-items">
-        @if ((items() ?? []).length > 0) {
-          @for (item of items() ?? []; track config().trackBy(item)) {
-            <mat-card
-              class="list-item"
-              [class.hovered]="hoveredId() === getItemId(item)"
-              (mouseenter)="hoveredId.set(getItemId(item))"
-              (mouseleave)="hoveredId.set(null)"
-              (click)="onItemClick(item)">
-              
-              <!-- Row Content -->
-              <mat-card-content>
-                <div class="row-header">
-                  <div class="row-info">
-                    <!-- First Column (Title) -->
-                    @for (column of config().columns; let idx = $index; track column.key) {
-                      @if (idx === 0) {
-                        <div class="row-title">{{ column.render ? column.render(item) : item[column.key] }}</div>
+      @if (title()) {
+        <div class="list-head">
+          @if (overline()) { <p class="overline">{{ overline() }}</p> }
+          <h1 class="list-title">{{ title() }}</h1>
+        </div>
+      }
+
+      @if (isPaginated()) {
+
+        <!-- ── Paginated card (CreateClassPage pattern) ── -->
+        <div class="paged-card">
+
+          <div class="paged-scroll">
+            @if (allItems().length === 0) {
+              <p class="empty">{{ emptyMessage() }}</p>
+            }
+            @for (item of pagedItems(); track trackBy()(item)) {
+              <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: item }"/>
+            }
+          </div>
+
+          <div class="paged-footer">
+            <span class="page-info">
+              {{ currentPage() * pageSize() + 1 }}–{{ pageEnd() }} of {{ allItems().length }}
+            </span>
+            <div class="page-btns">
+              @for (p of pages(); track p) {
+                <app-btn
+                  [variant]="p === currentPage() ? 'secondary' : 'ghost'"
+                  size="sm"
+                  (clicked)="goTo(p)">
+                  {{ p + 1 }}
+                </app-btn>
+              }
+            </div>
+          </div>
+        </div>
+
+      } @else {
+
+        <!-- ── Flat (no pagination) ── -->
+        <div class="list-body">
+          @if (allItems().length === 0) {
+            <p class="empty">{{ emptyMessage() }}</p>
+          }
+          @for (item of allItems(); track trackBy()(item)) {
+            <ng-container *ngTemplateOutlet="rowTpl; context: { $implicit: item }"/>
+          }
+        </div>
+
+      }
+    </div>
+
+    <!-- ── Row template (shared between both modes) ── -->
+    <ng-template #rowTpl let-item>
+      <div
+        class="row"
+        [class.row--clickable]="rowClick.observed"
+        (click)="rowClick.emit(item)"
+        (mouseenter)="hovered.set(trackBy()(item))"
+        (mouseleave)="hovered.set(null)">
+
+        <app-container [config]="rowConfig(item)">
+          @if (rowTemplate) {
+            <ng-container *ngTemplateOutlet="rowTemplate; context: { $implicit: item }"/>
+          } @else {
+            <div class="default-row">
+              <div class="default-row__header">
+                <div class="default-row__info">
+                  @if (columns()[0]; as first) {
+                    <span class="row-title">{{ first.render(item) }}</span>
+                  }
+                  @if (metaItems(item).length > 0) {
+                    <span class="row-meta">
+                      @for (m of metaItems(item); track m; let last = $last) {
+                        {{ m }}@if (!last) { <span class="sep"> · </span> }
                       }
-                    }
-
-                    <!-- Meta Row (Other Columns) -->
-                    @if (config().columns.length > 1) {
-                      <div class="row-meta">
-                        @for (column of config().columns; let idx = $index; track idx) {
-                          @if (idx > 0) {
-                            <span class="meta-item">{{ column.render ? column.render(item) : item[column.key] }}</span>
-                            @if (idx < config().columns.length - 1) {
-                              <span class="meta-separator">·</span>
-                            }
-                          }
-                        }
-                      </div>
-                    }
-                  </div>
-
-                  <!-- Badge -->
-                  @if (config().badge?.show(item)) {
-                    <mat-chip
-                      [highlighted]="config().badge?.variant === 'validated'"
-                      class="badge-chip">
-                      {{ config().badge?.label }}
-                    </mat-chip>
+                    </span>
                   }
                 </div>
-
-                <!-- Progress Bar -->
-                @if (getProgressData(item); as prog) {
-                  <div class="progress-section">
-                    <mat-progress-bar
-                      mode="determinate"
-                      [value]="(prog.value / prog.max) * 100"
-                      color="accent">
-                    </mat-progress-bar>
-                    <div class="progress-label">{{ prog.label }}</div>
-                  </div>
+                @if (badge() && badge()!.show(item)) {
+                  <app-badge [variant]="badge()!.variant" [customLabel]="badge()!.label ?? ''"/>
                 }
-              </mat-card-content>
-            </mat-card>
+              </div>
+              @if (progress(item); as prog) {
+                <app-progress-bar [value]="prog.value" [max]="prog.max" [sublabel]="prog.label ?? ''"/>
+              }
+            </div>
           }
-        } @else {
-          <!-- Empty State -->
-          <div class="empty-state">
-            <mat-icon class="empty-icon">inbox</mat-icon>
-            <p>{{ config().emptyMessage || 'No items found' }}</p>
-          </div>
-        }
+        </app-container>
       </div>
-    </div>
+    </ng-template>
   `,
   styles: [`
-    .list-container {
-      flex: 1;
-      overflow-y: auto;
-      padding: 32px;
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: ${DS.space[6]};
     }
 
-    .list-header {
-      margin-bottom: 28px;
-    }
+    /* ── Header ── */
+    .list-head { display: flex; flex-direction: column; gap: 6px; }
 
-    .list-overline {
+    .overline {
+      margin: 0;
       font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.12em;
       text-transform: uppercase;
       color: ${DS.colors.violet};
-      margin-bottom: 6px;
     }
 
     .list-title {
+      margin: 0;
       font-family: ${DS.fonts.display};
       font-size: 2rem;
       font-weight: 700;
       letter-spacing: -0.03em;
       color: ${DS.colors.fg1};
-      margin: 0;
     }
 
-    .list-items {
+    /* ── Flat layout ── */
+    .list-body {
       display: flex;
       flex-direction: column;
-      gap: 14px;
-      max-width: 700px;
+      gap: 10px;
+      max-width: 680px;
     }
 
-    .list-item {
-      cursor: pointer;
-      transition: all 150ms ease-in-out;
-      background-color: ${DS.colors.surface};
+    /* ── Paginated card layout (mirrors CreateClassPage) ── */
+    .paged-card {
+      display: flex;
+      flex-direction: column;
+      max-width: 680px;
+      background: ${DS.colors.surface};
+      border: 1px solid ${DS.colors.border};
+      border-radius: ${DS.radius.xl};
+      overflow: hidden;
     }
 
-    .list-item:hover {
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    .paged-scroll {
+      display: flex;
+      flex-direction: column;
     }
 
-    .list-item.hovered {
-      background-color: ${DS.colors.surfaceRaised};
+    .paged-footer {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: ${DS.space[3]} ${DS.space[4]};
+      border-top: 1px solid ${DS.colors.borderSubtle};
+      background: ${DS.colors.surface};
     }
 
-    .row-header {
+    .page-info {
+      font-family: ${DS.fonts.mono};
+      font-size: 0.75rem;
+      color: ${DS.colors.fg3};
+    }
+
+    .page-btns {
+      display: flex;
+      gap: ${DS.space[1]};
+    }
+
+    /* ── Empty ── */
+    .empty {
+      margin: 0;
+      padding: ${DS.space[6]};
+      font-size: 0.875rem;
+      color: ${DS.colors.fg3};
+      text-align: center;
+    }
+
+    /* ── Row ── */
+    .row { transition: transform 80ms ease; }
+    .row--clickable { cursor: pointer; }
+    .row--clickable:active { transform: scale(0.995); }
+
+    /* ── Default row content ── */
+    .default-row {
+      padding: ${DS.space[4]};
+      display: flex;
+      flex-direction: column;
+      gap: ${DS.space[3]};
+    }
+
+    .default-row__header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 14px;
+      gap: ${DS.space[3]};
     }
 
-    .row-info {
+    .default-row__info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
       flex: 1;
     }
 
     .row-title {
       font-family: ${DS.fonts.display};
-      font-size: 1.125rem;
+      font-size: 1.0625rem;
       font-weight: 600;
       color: ${DS.colors.fg1};
-      margin-bottom: 3px;
     }
 
-    .row-meta {
-      font-size: 0.8125rem;
-      color: ${DS.colors.fg3};
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .meta-item {
-      white-space: nowrap;
-    }
-
-    .meta-separator {
-      color: ${DS.colors.fg3};
-      margin: 0 4px;
-    }
-
-    .badge-chip {
-      height: auto;
-      padding: 4px 12px;
-    }
-
-    .progress-section {
-      margin-top: 12px;
-    }
-
-    .progress-label {
-      font-size: 0.75rem;
-      color: ${DS.colors.fg2};
-      margin-top: 6px;
-    }
-
-    .empty-state {
-      padding: 32px;
-      text-align: center;
-      color: ${DS.colors.fg2};
-    }
-
-    .empty-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin: 0 auto;
-      opacity: 0.5;
-    }
-
-    mat-card {
-      border: 1px solid ${DS.colors.border};
-      border-radius: 12px;
-    }
+    .row-meta { font-size: 0.8125rem; color: ${DS.colors.fg3}; }
+    .sep      { color: ${DS.colors.fg3}; }
   `],
 })
-export class GenericListComponent<T> {
-  config = input.required<GenericListConfig<T>>();
-  items = input.required<T[] | null>();
-  progressDataFn = input<((item: T) => ProgressData | null) | null>(null);
+export class ListComponent<T> {
+  items        = input.required<T[] | null>();
+  trackBy      = input.required<(item: T) => string | number>();
+  columns      = input<ListColumn<T>[]>([]);
+  title        = input<string>('');
+  overline     = input<string>('');
+  emptyMessage = input<string>('No items found');
+  badge        = input<ListBadge<T> | null>(null);
+  progressFn   = input<((item: T) => ListProgressData | null) | null>(null);
+  /** Items per page. 0 (default) disables pagination. */
+  pageSize = input<number>(0);
 
-  @Output() itemClicked = new EventEmitter<T>();
+  @ContentChild(TemplateRef) rowTemplate?: TemplateRef<{ $implicit: T }>;
+  @Output() rowClick = new EventEmitter<T>();
 
-  hoveredId = signal<string | number | null>(null);
+  hovered     = signal<string | number | null>(null);
+  currentPage = signal(0);
 
-  /**
-   * Get the ID for an item (used for tracking hover state)
-   */
-  getItemId(item: T): string | number {
-    return this.config().trackBy(item);
+  allItems   = computed(() => this.items() ?? []);
+
+  totalPages = computed(() =>
+    this.pageSize() > 0 ? Math.max(1, Math.ceil(this.allItems().length / this.pageSize())) : 1
+  );
+
+  isPaginated = computed(() => this.pageSize() > 0 && this.totalPages() > 1);
+
+  pages = computed(() => Array.from({ length: this.totalPages() }, (_, i) => i));
+
+  pagedItems = computed(() => {
+    const start = this.currentPage() * this.pageSize();
+    return this.allItems().slice(start, start + this.pageSize());
+  });
+
+  pageEnd = computed(() =>
+    Math.min((this.currentPage() + 1) * this.pageSize(), this.allItems().length)
+  );
+
+  goTo(page: number) {
+    this.currentPage.set(page);
+    this.hovered.set(null);
   }
 
-  /**
-   * Handle item click
-   */
-  onItemClick(item: T): void {
-    this.config().onRowClick?.(item);
-    this.itemClicked.emit(item);
+  private readonly flatConfig: ContainerConfig = { variant: 'flat', height: 'auto', scrollable: false };
+  private readonly cardConfig: ContainerConfig = { variant: 'card', height: 'auto', scrollable: false };
+
+  rowConfig(item: T): ContainerConfig {
+    return this.hovered() === this.trackBy()(item) ? this.cardConfig : this.flatConfig;
   }
 
-  /**
-   * Get progress data for an item
-   */
-  getProgressData(item: T): ProgressData | null {
-    const fn = this.progressDataFn();
-    if (!fn) return null;
-    return fn(item) ?? null;
+  metaItems(item: T): string[] {
+    return this.columns().slice(1).map(col => String(col.render(item)));
+  }
+
+  progress(item: T): ListProgressData | null {
+    return this.progressFn()?.(item) ?? null;
   }
 }

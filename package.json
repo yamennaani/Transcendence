@@ -1,6 +1,13 @@
 {
   "dependencies": {
+<<<<<<< HEAD
     "@ngx-translate/core": "^15.0.0",
     "@ngx-translate/http-loader": "^8.0.0"
+=======
+    "@prisma/client": "^5.22.0",
+    "dotenv": "^17.4.2",
+    "nodemailer": "^8.0.7",
+    "prisma": "^5.22.0"
+>>>>>>> develop
   }
 }

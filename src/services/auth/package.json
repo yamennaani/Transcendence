@@ -4,14 +4,31 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-      "start": "node src/index.js",
-      "dev": "nodemon src/index.js"
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "express": "^5.2.1"
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
+    "google-auth-library": "^10.6.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^8.0.7",
+    "password-validator": "^5.3.0",
+    "pg": "^8.20.0",
+    "uuid": "^14.0.0",
+    "validator": "^13.15.35",
+    "zxcvbn": "^4.4.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

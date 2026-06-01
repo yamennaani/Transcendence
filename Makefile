@@ -18,28 +18,28 @@ check_env:
 	@echo "$(BLUE)Checking .env...$(RESET)"
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "$(YELLOW).env not found — generating...$(RESET)"; \
-		echo "POSTGRES_USER=user"                                    > $(ENV_FILE); \
-		echo "POSTGRES_DB=db"                                       >> $(ENV_FILE); \
-		echo "DB_HOST=database"                                     >> $(ENV_FILE); \
-		echo "DB_PORT=5432"                                         >> $(ENV_FILE); \
-		echo "PORT=3000"                                            >> $(ENV_FILE); \
-		echo "DB_PASSWORD=password"                                 >> $(ENV_FILE); \
-		echo "DB_LOCAL_PORT=5433"                                   >> $(ENV_FILE); \
+		echo "POSTGRES_USER=user" > $(ENV_FILE); \
+		echo "POSTGRES_DB=db" >> $(ENV_FILE); \
+		echo "DB_HOST=database" >> $(ENV_FILE); \
+		echo "DB_PORT=5432" >> $(ENV_FILE); \
+		echo "PORT=3000" >> $(ENV_FILE); \
+		echo "DB_PASSWORD=password" >> $(ENV_FILE); \
+		echo "DB_LOCAL_PORT=5433" >> $(ENV_FILE); \
 		echo "DATABASE_URL=\"postgresql://user:password@localhost:5433/db\"" >> $(ENV_FILE); \
-		echo "MINIO_ENDPOINT=minio"                                 >> $(ENV_FILE); \
-		echo "MINIO_PORT=9000"                                      >> $(ENV_FILE); \
-		echo "MINIO_ACCESS_KEY=minioadmin"                          >> $(ENV_FILE); \
-		echo "MINIO_SECRET_KEY=minioadmin"                          >> $(ENV_FILE); \
-		echo "MINIO_BUCKET=submissions"                             >> $(ENV_FILE); \
-		echo "MINIO_PUBLIC_HOST=localhost"                          >> $(ENV_FILE); \
-		echo "MINIO_PUBLIC_PORT=9000"                               >> $(ENV_FILE); \
+		echo "MINIO_ENDPOINT=minio" >> $(ENV_FILE); \
+		echo "MINIO_PORT=9000" >> $(ENV_FILE); \
+		echo "MINIO_ACCESS_KEY=minioadmin" >> $(ENV_FILE); \
+		echo "MINIO_SECRET_KEY=minioadmin" >> $(ENV_FILE); \
+		echo "MINIO_BUCKET=submissions" >> $(ENV_FILE); \
+		echo "MINIO_PUBLIC_HOST=localhost" >> $(ENV_FILE); \
+		echo "MINIO_PUBLIC_PORT=9000" >> $(ENV_FILE); \
 		echo "$(GREEN).env created at $(ENV_FILE)$(RESET)"; \
 	else \
 		echo "$(GREEN).env found.$(RESET)"; \
 	fi
 	@if [ ! -L src/packages/database/.env ]; then \
 		echo "$(BLUE)Linking packages/database/.env to root .env...$(RESET)"; \
-		ln -sf $(PWD)/$(ENV_FILE) src/packages/database/.env; \
+		ln -sf `pwd`/$(ENV_FILE) src/packages/database/.env; \
 		echo "$(GREEN)Linked!$(RESET)"; \
 	fi
 
@@ -103,7 +103,7 @@ populateDB:
 	read answer; \
 	if [ "$$answer" = "yes" ]; then \
 		echo "$(BLUE)Running seed script...$(RESET)"; \
-		cd src/packages/database && npm run seed; \
+		cd src/packages/database && npm run seed && \
 		echo "$(GREEN)Database populated.$(RESET)"; \
 	else \
 		echo "$(RED)Cancelled.$(RESET)"; \

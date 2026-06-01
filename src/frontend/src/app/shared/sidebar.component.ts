@@ -1,11 +1,12 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
 import { AvatarComponent } from '../shared/avatar.component';
-import { AppIconSettings, IconComponent } from '../shared/icon.component';
+import { IconComponent } from '../shared/icon.component';
+import { AppIconSettings } from './field.types';
 import { LanguageSwitcherComponent } from '../languages/language-switcher.component';
 
 interface NavItem { label: string; route: string; icon: string; roles: string[]; badge?: number; }
@@ -36,7 +37,9 @@ const NAV_ITEMS: NavItem[] = [
       (click)="goToProfile()"
       style="cursor: pointer;">
         <!-- Replace app-avatar with app-icon -->
-        <app-icon [settings]="avatarSettings()" (iconChanged)="onAvatarChanged($event)"/>
+        <app-icon [settings]="avatarSettings()" 
+        [allowEdit]="false"
+        (iconChanged)="onAvatarChanged($event)"/>
         <div style="flex:1;min-width:0">
           <div [ngStyle]="userNameStyle">{{ user()?.username }}</div>
           <div [ngStyle]="roleStyle()">{{ user()?.role }}</div>
@@ -78,7 +81,7 @@ export class SidebarComponent {
   hovered = signal('');
 
   visibleItems = computed(() => {
-    const role = this.user()?.role ?? 'student';
+    const role = this.user()?.role ?? 'Student';
     return NAV_ITEMS.filter(i => i.roles.includes(role));
   });
 
@@ -89,7 +92,7 @@ export class SidebarComponent {
     name: this.user()?.username ?? '',
     icon: this.user()?.profile?.avatar ?? undefined, // Assuming user has avatar URL
     size: 32,
-    borderRadius: 8, // 8% for slightly rounded, change as needed
+    borderRadius: 0, // 8% for slightly rounded, change as needed
     allowView: false,
     allowEdit: false, // Set to true if you want upload from sidebar
   }));

@@ -1,5 +1,5 @@
-export type FieldType = TextField | NumField | ToggleField | SliderField | FileField | TextArea | DateField | ColorField | SelectField
-export type FieldValue = string | number | boolean | string[] | undefined
+export type FieldType = TextField | NumField | ToggleField | SliderField | FileField | TextArea | DateField | ColorField | SelectField | IconField
+export type FieldValue = string | number | boolean | string[] | File| undefined
 
 export interface BaseField {
   icon:string,
@@ -56,4 +56,17 @@ export interface SelectField extends BaseField{
   type: 'select'  
   value: string | undefined
   options: string[]
+}
+
+export interface IconField extends BaseField{
+  type: 'icon'
+  iconSettings: AppIconSettings
+  value: string | undefined
+}
+
+export interface AppIconSettings{
+    name: string | undefined
+    icon: string | undefined,
+    size: number,
+    borderRadius: number
 }

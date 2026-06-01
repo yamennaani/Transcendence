@@ -3,7 +3,6 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
-// Auth guard using inject()
 const authGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
@@ -19,10 +18,24 @@ const bocalGuard = () => {
   return router.parseUrl('/dashboard');
 };
 
+// Redirect logged-in users away from public pages
+const guestGuard = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.isLoggedIn()) return true;
+  const role = auth.role();
+  return router.parseUrl(role === 'Admin' || role === 'Bocal' ? '/bocal' : '/dashboard');
+};
+
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  {
+    path: '',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./landing/landing.component').then(m => m.LandingComponent),
+  },
   {
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
   },
   {
@@ -65,5 +78,5 @@ export const routes: Routes = [
     canActivate: [authGuard, bocalGuard],
     loadComponent: () => import('./bocal-panel/bocal-panel.component').then(m => m.BocalPanelComponent),
   },
-  { path: '**', redirectTo: 'login' },
+  { path: '**', redirectTo: '' },
 ];

@@ -1,15 +1,7 @@
 import { Component, computed, ElementRef, EventEmitter, input, Output, signal, ViewChild } from "@angular/core";
 import { NgStyle } from "@angular/common";
 import { DS } from '../tokens';
-
-export interface AppIconSettings{
-    name: string
-    icon: string | undefined,
-    size: number,
-    borderRadius: number
-    allowView: boolean,
-    allowEdit: boolean,
-}
+import { AppIconSettings, IconField } from "./field.types";
 
 @Component({
     selector: "app-icon",
@@ -31,8 +23,8 @@ export interface AppIconSettings{
                  [style.width.px]="settings().size * 0.8" 
                  [style.height.px]="settings().size * 0.8" 
                  style="border-radius: inherit; object-fit: cover;" />
-        } @else if (icon()) {
-            <img [src]="icon()" 
+        } @else if (settings().icon) {
+            <img [src]="settings().icon" 
                  [style.width.px]="settings().size * 0.8" 
                  [style.height.px]="settings().size * 0.8" 
                  style="border-radius: inherit; object-fit: cover;" />
@@ -40,7 +32,7 @@ export interface AppIconSettings{
             {{initials()}}
         }
         
-        @if (settings().allowEdit) {
+        @if (allowEdit()) {
             <div class="edit-overlay" (click)="triggerUpload()">
                 ✏️
             </div>
@@ -80,6 +72,8 @@ export interface AppIconSettings{
 })
 export class IconComponent {
     settings = input.required<AppIconSettings>();
+    allowEdit = input.required<boolean>();
+
     @Output() iconChanged = new EventEmitter<string>(); // Emits final URL after save
     @Output() fileSelected = new EventEmitter<File>(); // Emits raw file for parent to handle
     @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>
@@ -87,15 +81,26 @@ export class IconComponent {
     hovered = signal(false);
     tempPreviewUrl = signal<string | null>(null); // Store temporary preview URL
     private currentFile = signal<File | null>(null); // Store selected file
-    
-    icon = computed(() => this.settings().icon);
 
-    initials = computed(() =>
-        this.settings().name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase());
 
-    private hue = computed(() => 
-        this.settings().name.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 360);
+    initials = computed(() => {
+        const name = this.settings().name;
+        if (!name) return '??';
+        
+        return name.split(' ')
+            .map(w => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+    });
 
+    private hue = computed(() => {
+        const name = this.settings().name;
+        if (!name) return 0;
+        
+        return name.split('')
+            .reduce((a, c) => a + c.charCodeAt(0), 0) % 360;
+    });
     styles = computed(() => {
         const h = this.hue(), s = this.settings().size, r = this.settings().borderRadius;
         return {

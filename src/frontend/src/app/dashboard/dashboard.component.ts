@@ -1,12 +1,11 @@
 import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { Course, DS } from '../tokens';
 import { BadgeComponent } from '../shared/badge.component';
 import { ProgressBarComponent } from '../shared/progress-bar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
-import { BtnComponent } from '../shared/btn.component';
 import { CourseService } from '../core/services/course-service/course-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
 import { TranslateService } from '@ngx-translate/core';
@@ -41,8 +40,11 @@ export class DashboardComponent implements OnInit {
   recent  = RECENT;
 
   ngOnInit() {
-    this.getClasses();
-
+    if (this.user()?.id) {
+      this.getClasses();
+    } else {
+      this.auth.getMe().subscribe(() => this.getClasses());
+    }
      // 👇 waits for translations to fully load before building stats
     this.translate.get('label_score_avg').subscribe(() => {
       this.stats = this.buildStats();
