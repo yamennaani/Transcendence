@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { NgStyle, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 import { DS } from '../tokens';
 import { TabListComponent, TabDirective } from '../shared/tabs.component';
 import { AvatarComponent } from '../shared/avatar.component';
@@ -11,6 +12,7 @@ import { FieldComponent } from '../shared/field.component';
 import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { CreateClassPage } from '../shared/CreateClassPage';
 import { FieldType, SelectField } from '../shared/field.types';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../auth.service';
 import { CourseService } from '../core/services/course-service/course-service';
 import { AssignmentService, AssignmentResponse } from '../core/services/course-service/Assignment.service';
@@ -34,18 +36,18 @@ export interface OrgMember {
   created_at: string;
 }
 
-const ANALYTICS = [
-  { label: 'Completion rate',            value: '—', sub: 'avg across all classes',    color: DS.colors.violet },
-  { label: 'Avg evaluations/submission', value: '—', sub: 'target: 3.0',               color: DS.colors.cyan   },
-  { label: 'Pass rate',                  value: '—', sub: 'students hitting threshold', color: DS.colors.green  },
-  { label: 'Pending evaluations',        value: '—', sub: 'across all assignments',     color: DS.colors.amber  },
+const ANALYTICS_KEYS = [
+  { labelKey: 'analytics_completion_rate',    valueKey: '—',        subKey: 'analytics_completion_sub',    color: DS.colors.violet },
+  { labelKey: 'analytics_avg_evals',          valueKey: '—',        subKey: 'analytics_avg_evals_sub',      color: DS.colors.cyan   },
+  { labelKey: 'analytics_pass_rate',          valueKey: '—',        subKey: 'analytics_pass_rate_sub',      color: DS.colors.green  },
+  { labelKey: 'analytics_pending_evals',      valueKey: '—',        subKey: 'analytics_pending_evals_sub',  color: DS.colors.amber  },
 ];
 
 @Component({
   selector: 'app-bocal-panel',
   standalone: true,
   imports: [
-    NgStyle, DatePipe,
+    NgStyle, DatePipe, TranslateModule,
     TabListComponent, TabDirective,
     AvatarComponent, BtnComponent, FieldComponent, ContainerComponent, ListComponent,
     CreateClassPage,
@@ -58,6 +60,7 @@ export class BocalPanelComponent implements OnInit {
   private assignService = inject(AssignmentService);
   private orgService    = inject(OrgService);
   private loading       = inject(LoadingService);
+  private translate     = inject(TranslateService);
   router = inject(Router);
 
   // ── Tab state ──────────────────────────────────────────────
@@ -78,7 +81,7 @@ export class BocalPanelComponent implements OnInit {
   members          = signal<OrgMember[]>([]);
   selectedClass    = signal<BocalClass | null>(null);
   classAssignments = signal<AssignmentResponse[]>([]);
-  analytics        = ANALYTICS;
+  analytics        = signal<any[]>([]);
 
   students = computed(() => this.members().filter(m => m.role === 'Student'));
 
@@ -114,7 +117,23 @@ export class BocalPanelComponent implements OnInit {
 
   private get orgId() { return this.auth.user()?.orgId; }
 
-  ngOnInit() { this.loadAll(); }
+  ngOnInit() { 
+    this.buildAnalytics();
+    this.translate.onLangChange.subscribe(() => {
+      this.buildAnalytics();
+    });
+    this.loadAll(); 
+  }
+
+  private buildAnalytics() {
+    const translated = ANALYTICS_KEYS.map(a => ({
+      label: this.translate.instant(a.labelKey),
+      value: a.valueKey,
+      sub: this.translate.instant(a.subKey),
+      color: a.color,
+    }));
+    this.analytics.set(translated);
+  }
 
   loadAll() {
     const orgId = this.orgId;
@@ -183,9 +202,9 @@ export class BocalPanelComponent implements OnInit {
     const username = (this.getMemberValue('Username') as string)?.trim();
     const role     = (this.getMemberValue('Role') as string) ?? 'Student';
 
-    if (!email)    { this.memberError.set('Email is required.');    return; }
-    if (!username) { this.memberError.set('Username is required.'); return; }
-    if (!orgId)    { this.memberError.set('No organization found.'); return; }
+    if (!email)    { this.memberError.set(this.translate.instant('err_email_required'));    return; }
+    if (!username) { this.memberError.set(this.translate.instant('err_username_required')); return; }
+    if (!orgId)    { this.memberError.set(this.translate.instant('err_no_org')); return; }
 
     this.memberError.set(null);
     this.loading.show();
@@ -197,7 +216,7 @@ export class BocalPanelComponent implements OnInit {
         this.loadAll();
       },
       error: (err) => {
-        this.memberError.set(err?.error?.message ?? 'Failed to add member.');
+        this.memberError.set(err?.error?.message ?? this.translate.instant('err_add_member_failed'));
         this.loading.hide();
       },
     });
@@ -225,10 +244,10 @@ export class BocalPanelComponent implements OnInit {
     const reqEval  = parseInt(this.getAssignValue('Required Evals'), 10);
 
     if (!cls)                          { return; }
-    if (!name)                         { this.assignmentError.set('Name is required.'); return; }
-    if (!desc)                         { this.assignmentError.set('Description is required.'); return; }
-    if (isNaN(maxScore) || maxScore <= 0) { this.assignmentError.set('Enter a valid max score.'); return; }
-    if (isNaN(reqEval)  || reqEval  <= 0) { this.assignmentError.set('Enter a valid required evals count.'); return; }
+    if (!name)                         { this.assignmentError.set(this.translate.instant('err_name_required')); return; }
+    if (!desc)                         { this.assignmentError.set(this.translate.instant('err_description_required')); return; }
+    if (isNaN(maxScore) || maxScore <= 0) { this.assignmentError.set(this.translate.instant('err_invalid_max_score')); return; }
+    if (isNaN(reqEval)  || reqEval  <= 0) { this.assignmentError.set(this.translate.instant('err_invalid_required_evals')); return; }
 
     this.assignmentError.set(null);
     this.loading.show();
@@ -242,7 +261,7 @@ export class BocalPanelComponent implements OnInit {
         this.loading.hide();
       },
       error: (err) => {
-        this.assignmentError.set(err?.error?.message ?? 'Failed to create assignment.');
+        this.assignmentError.set(err?.error?.message ?? this.translate.instant('err_create_assignment_failed'));
         this.loading.hide();
       },
     });

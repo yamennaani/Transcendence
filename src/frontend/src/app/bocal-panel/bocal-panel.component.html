@@ -2,26 +2,26 @@
 
   <!-- ── Header ─────────────────────────────────────────────── -->
   <div style="margin-bottom:20px">
-    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <div [ngStyle]="overlineStyle">{{ 'bocal_panel' | translate }}</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <h1 [ngStyle]="h1Style">
         @if (selectedClass()) {
-          <span [ngStyle]="crumbStyle" (click)="selectedClass.set(null)">← Classes</span>
+          <span [ngStyle]="crumbStyle" (click)="selectedClass.set(null)">← {{ 'tab_classes' | translate }}</span>
           {{ selectedClass()!.name }}
         } @else {
-          Manage classes
+          {{ 'manage_classes' | translate }}
         }
       </h1>
 
       <!-- Context-sensitive action button -->
       @if (activeTab() === 0 && !selectedClass()) {
-        <app-btn variant="primary" (clicked)="showNew.set(true)">+ New class</app-btn>
+        <app-btn variant="primary" (clicked)="showNew.set(true)">{{ 'new_class' | translate }}</app-btn>
       }
       @if (activeTab() === 0 && selectedClass()) {
-        <app-btn variant="primary" (clicked)="showAddAssign.set(true)">+ Assignment</app-btn>
+        <app-btn variant="primary" (clicked)="showAddAssign.set(true)">{{ 'new_assignment' | translate }}</app-btn>
       }
       @if (activeTab() === 1) {
-        <app-btn variant="primary" (clicked)="showAddMember.set(true)">+ Add member</app-btn>
+        <app-btn variant="primary" (clicked)="showAddMember.set(true)">{{ 'add_member_btn' | translate }}</app-btn>
       }
     </div>
   </div>
@@ -40,7 +40,7 @@
     <div [ngStyle]="overlayStyle" (click)="closeMemberModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Add member
+          {{ 'modal_add_member' | translate }}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           @for (field of memberFields; track field.label) {
@@ -51,8 +51,8 @@
           <div [ngStyle]="errorStyle">{{ memberError() }}</div>
         }
         <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeMemberModal()">Cancel</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onAddMember()">Add member</app-btn>
+          <app-btn variant="ghost"   size="md" (clicked)="closeMemberModal()">{{ 'btn_cancel' | translate }}</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onAddMember()">{{ 'btn_add_member' | translate }}</app-btn>
         </div>
       </div>
     </div>
@@ -63,7 +63,7 @@
     <div [ngStyle]="overlayStyle" (click)="closeAssignModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          New assignment — {{ selectedClass()?.name }}
+          {{ 'modal_new_assignment' | translate }} — {{ selectedClass()?.name }}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           @for (field of assignmentFields; track field.label) {
@@ -74,8 +74,8 @@
           <div [ngStyle]="errorStyle">{{ assignmentError() }}</div>
         }
         <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeAssignModal()">Cancel</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onAddAssignment()">Create</app-btn>
+          <app-btn variant="ghost"   size="md" (clicked)="closeAssignModal()">{{ 'btn_cancel' | translate }}</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onAddAssignment()">{{ 'btn_create' | translate }}</app-btn>
         </div>
       </div>
     </div>
@@ -83,9 +83,9 @@
 
   <!-- ── Tab list ───────────────────────────────────────────── -->
   <app-tab-list (tabChanged)="onTabChanged($event)">
-    <ng-template appTab label="Classes"   icon="school"  />
-    <ng-template appTab label="Students"  icon="people"  [count]="students().length" />
-    <ng-template appTab label="Analytics" icon="bar_chart" />
+    <ng-template appTab [label]="'tab_classes' | translate"   icon="school"  />
+    <ng-template appTab [label]="'tab_students' | translate"  icon="people"  [count]="students().length" />
+    <ng-template appTab [label]="'tab_analytics' | translate" icon="bar_chart" />
   </app-tab-list>
 
   <!-- ══════════════════════════════════════════════════════════
@@ -101,7 +101,7 @@
         <app-container [config]="flatConfig">
           <div style="padding:16px 20px">
             <p style="font-size:0.9rem;color:oklch(68% 0.01 272);margin:0 0 12px">
-              {{ selectedClass()!.description || 'No description.' }}
+              {{ selectedClass()!.description || ('msg_no_description_dot' | translate) }}
             </p>
             <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
               {{ selectedClass()!.assignmentCount }} assignment{{ selectedClass()!.assignmentCount === 1 ? '' : 's' }}
@@ -114,9 +114,9 @@
         @if (classAssignments().length === 0) {
           <app-container [config]="insetConfig">
             <div [ngStyle]="emptyStyle">
-              No assignments yet.
+              {{ 'msg_no_assignments_yet' | translate }}
               <div style="margin-top:8px">
-                <app-btn variant="secondary" size="sm" (clicked)="showAddAssign.set(true)">+ Add first assignment</app-btn>
+                <app-btn variant="secondary" size="sm" (clicked)="showAddAssign.set(true)">+ {{ 'msg_add_first_assignment' | translate }}</app-btn>
               </div>
             </div>
           </app-container>
@@ -133,7 +133,7 @@
                 </div>
                 <app-btn variant="ghost" size="sm"
                   (clicked)="router.navigate(['/assignment-detail'], { queryParams: { assId: a.id } })">
-                  View
+                  {{ 'btn_view' | translate }}
                 </app-btn>
               </div>
             </app-container>
@@ -146,7 +146,7 @@
     @if (!selectedClass()) {
       <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
         @if (classes().length === 0) {
-          <div [ngStyle]="emptyStyle">No classes found for this organization.</div>
+          <div [ngStyle]="emptyStyle">{{ 'msg_no_classes' | translate }}</div>
         } @else {
           @for (c of classes(); track c.id) {
             <app-container [config]="flatConfig">
@@ -157,7 +157,7 @@
                     {{ c.name }}
                   </div>
                   <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                    {{ c.description || 'No description' }}
+                    {{ c.description || ('msg_no_description' | translate) }}
                   </div>
                   <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">
                     {{ c.assignmentCount }} assignment{{ c.assignmentCount === 1 ? '' : 's' }}
@@ -165,7 +165,7 @@
                   </div>
                 </div>
                 <span (click)="$event.stopPropagation()">
-                  <app-btn variant="secondary" size="sm" (clicked)="selectClass(c)">Open →</app-btn>
+                  <app-btn variant="secondary" size="sm" (clicked)="selectClass(c)">{{ 'btn_open' | translate }}</app-btn>
                 </span>
               </div>
             </app-container>
@@ -183,7 +183,7 @@
       <app-list
         [items]="members()"
         [trackBy]="memberTrackFn"
-        emptyMessage="No members found for this organization."
+        [emptyMessage]="'msg_no_members' | translate"
         [pageSize]="8">
         <ng-template let-m>
           <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
@@ -209,7 +209,7 @@
        ══════════════════════════════════════════════════════════ -->
   @if (activeTab() === 2) {
     <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
-      @for (a of analytics; track a.label) {
+      @for (a of analytics(); track a.label) {
         <app-container [config]="flatConfig">
           <div style="padding:18px 20px">
             <div [ngStyle]="{fontSize:'0.6875rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:a.color,marginBottom:'8px'}">

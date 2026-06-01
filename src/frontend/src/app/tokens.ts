@@ -90,12 +90,13 @@ export const BADGE_STYLES: Record<BadgeVariant, BadgeStyle> = {
   },
 };
 
-export const BADGE_LABELS: Record<BadgeVariant, string> = {
-  validated: "VALIDATED",
-  failed: "FAILED",
-  under_review: "UNDER REVIEW",
-  submitted: "SUBMITTED",
-  pending: "PENDING",
+
+export const BADGE_LABELS = {
+  validated: "badge_validated",
+  failed: "badge_failed",
+  under_review: "badge_under_review",
+  submitted: "badge_submitted",
+  pending: "badge_pending",
   violet: "",
   cyan: "",
 };

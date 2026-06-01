@@ -45,7 +45,7 @@ export class DashboardComponent implements OnInit {
     } else {
       this.auth.getMe().subscribe(() => this.getClasses());
     }
-     // 👇 waits for translations to fully load before building stats
+    
     this.translate.get('label_score_avg').subscribe(() => {
       this.stats = this.buildStats();
     });
