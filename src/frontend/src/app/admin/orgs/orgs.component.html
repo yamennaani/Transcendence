@@ -1,0 +1,111 @@
+<div [ngStyle]="pageStyle">
+  <div [ngStyle]="shellStyle">
+    <section [ngStyle]="heroStyle">
+      <div>
+        <div [ngStyle]="eyebrowStyle">Admin panel</div>
+        <h1 [ngStyle]="titleStyle">Organizations</h1>
+        <p [ngStyle]="subtitleStyle">
+          Create orgs, manage members by email, and keep everything scoped without making the platform feel heavy.
+        </p>
+      </div>
+
+      <app-btn variant="primary" (clicked)="showNew.set(!showNew())">
+        {{ showNew() ? 'Close form' : '+ New org' }}
+      </app-btn>
+    </section>
+
+    <section [ngStyle]="statGridStyle">
+      <div [ngStyle]="statCardStyle">
+        <div [ngStyle]="statLabelStyle">Organizations</div>
+        <div [ngStyle]="statValueStyle">{{ orgs()?.length ?? 0 }}</div>
+        <div [ngStyle]="statHintStyle">Available in the admin list</div>
+      </div>
+    </section>
+
+    @if (showNew()) {
+    <section [ngStyle]="cardStyle">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div [ngStyle]="pillStyle">New organization</div>
+          <h2 [ngStyle]="modalTitleStyle">Create an org</h2>
+          <p [ngStyle]="modalHintStyle">Give the org a clear name and a contact email. Tags are optional.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end">
+        <div>
+          <label [ngStyle]="labelStyle">Organization name</label>
+          <input [ngStyle]="inputStyle" placeholder="e.g. 42 Paris" [(ngModel)]="name" />
+        </div>
+        <div>
+          <label [ngStyle]="labelStyle">Contact email</label>
+          <input [ngStyle]="inputStyle" placeholder="admin@school.example" [(ngModel)]="email" />
+        </div>
+        <div>
+          <label [ngStyle]="labelStyle">Tag</label>
+          <input [ngStyle]="inputStyle" placeholder="optional" [(ngModel)]="tag" />
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px">
+        <div>
+          <label [ngStyle]="labelStyle">Short bio</label>
+          <input [ngStyle]="inputStyle" placeholder="Brief description" [(ngModel)]="bio" />
+        </div>
+        <div>
+          <label [ngStyle]="labelStyle">Phone</label>
+          <input [ngStyle]="inputStyle" placeholder="+33 1 23 45 67 89" [(ngModel)]="tel_num" />
+        </div>
+      </div>
+
+      @if (error) {
+        <div [ngStyle]="errorStyle">{{ error }}</div>
+      }
+
+      <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap">
+        <app-btn variant="ghost" (clicked)="showNew.set(false)">Cancel</app-btn>
+        <app-btn variant="primary" [disabled]="busy()" (clicked)="create()">
+          @if (busy()) {
+            Creating...
+          } @else {
+            Create organization
+          }
+        </app-btn>
+      </div>
+    </section>
+    }
+
+    <section [ngStyle]="tableWrapStyle">
+      <div [ngStyle]="tableHeaderStyle">
+        <div>Name</div>
+        <div>Contact</div>
+        <div>Tag</div>
+        <div style="text-align:right">Action</div>
+      </div>
+
+      @if ((orgs()?.length ?? 0) === 0) {
+        <div [ngStyle]="emptyStateStyle">No organizations yet. Create the first one to start grouping users.</div>
+      } @else {
+        @for (o of orgs() || []; track o.id) {
+          <div [ngStyle]="tableRowStyle">
+            <div [ngStyle]="nameStyle">
+              <div [ngStyle]="orgNameStyle">{{ o.name }}</div>
+              <div [ngStyle]="orgMetaStyle">ID {{ o.id }}</div>
+            </div>
+            <div>{{ o.email }}</div>
+            <div>
+              @if (o.tag) {
+                <span [ngStyle]="pillStyle">{{ o.tag }}</span>
+              } @else {
+                <span [ngStyle]="orgMetaStyle">-</span>
+              }
+            </div>
+            <div style="display:flex;justify-content:flex-end">
+              <app-btn variant="secondary" size="sm" (clicked)="openDetail(o.id)">Manage</app-btn>
+            </div>
+          </div>
+        }
+      }
+    </section>
+  </div>
+</div>
