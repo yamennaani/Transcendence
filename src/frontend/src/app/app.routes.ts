@@ -29,6 +29,14 @@ const bocalGuard = () => {
   });
 };
 
+const adminGuard = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const role = auth.role();
+  if (role === 'Admin') return true;
+  return router.parseUrl('/dashboard');
+};
+
 // Redirect logged-in users away from public pages
 const guestGuard = () => {
   const auth   = inject(AuthService);
@@ -90,6 +98,16 @@ export const routes: Routes = [
     path: 'bocal',
     canActivate: [authGuard, bocalGuard],
     loadComponent: () => import('./bocal-panel/bocal-panel.component').then(m => m.BocalPanelComponent),
+  },
+  {
+    path: 'admin/orgs',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./admin/orgs/orgs.component').then(m => m.AdminOrgsComponent),
+  },
+  {
+    path: 'admin/org/:id',
+    canActivate: [authGuard, adminGuard],
+    loadComponent: () => import('./admin/org-detail/org-detail.component').then(m => m.AdminOrgDetailComponent),
   },
   { path: '**', redirectTo: '' },
 ];

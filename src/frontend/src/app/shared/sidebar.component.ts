@@ -18,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student'], badge: 2 },
   { label: 'Progress',    route: '/progress',           icon: 'trending',   roles: ['Student'] },
   { label: 'Manage',      route: '/bocal',              icon: 'building',   roles: ['Bocal','Admin'] },
-  { label: 'Users',       route: '/users',              icon: 'users',      roles: ['Admin'] },
+  { label: 'Admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Admin'] },
 ];
 
 @Component({

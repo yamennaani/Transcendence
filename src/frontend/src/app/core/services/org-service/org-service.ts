@@ -34,7 +34,7 @@ export class OrgService {
         return this.http.get<any[]>(`${this.base}/${orgId}/members`)
     }
 
-    createOrgProfile(orgId: number, data: { name?: string, bio?: string, website?: string }) {
+    createOrgProfile(orgId: number, data: { name?: string, bio?: string, website?: string, tel_num?: string }) {
         return this.http.put(`${this.base}/${orgId}/profile`, data)
     }
 

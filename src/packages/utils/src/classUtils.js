@@ -42,10 +42,13 @@ const getAssignmentById = async(assignId, select = null, include = null)=>{
     if (!assignId || isNaN(assignId))
         throw new Error('Invalid assignment ID');
     const options = {where: {id: parseInt(assignId)}}
-    if(select)
+    if (select && include) {
+        options.select = { ...select, ...include }
+    } else if(select) {
         options.select = select
-    if(include)
+    } else if(include) {
         options.include = include
+    }
     return await prisma.assignment.findUnique(options)
 }
 

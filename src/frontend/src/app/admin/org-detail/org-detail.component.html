@@ -1,0 +1,139 @@
+<div [ngStyle]="pageStyle">
+  <div [ngStyle]="shellStyle">
+    <section [ngStyle]="heroStyle">
+      <div>
+        <div [ngStyle]="eyebrowStyle">Admin panel</div>
+        <h1 [ngStyle]="titleStyle">{{ org()?.name || 'Organization' }}</h1>
+        <p [ngStyle]="subtitleStyle">
+          Manage membership here without overcomplicating the flow. Add users by email and keep the org tidy.
+        </p>
+      </div>
+
+      <app-btn variant="ghost" (clicked)="goBack()">Back to organizations</app-btn>
+    </section>
+
+    <section [ngStyle]="statGridStyle">
+      <div [ngStyle]="statCardStyle">
+        <div [ngStyle]="statLabelStyle">Members</div>
+        <div [ngStyle]="statValueStyle">{{ members().length }}</div>
+        <div [ngStyle]="statHintStyle">Current users in the org</div>
+	  </div>
+    </section>
+
+    <section [ngStyle]="cardStyle">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div [ngStyle]="pillStyle">Members</div>
+          <h2 [ngStyle]="sectionTitleStyle">Roster</h2>
+          <p [ngStyle]="sectionHintStyle">These users already belong to the organization.</p>
+        </div>
+        <div [ngStyle]="badgeStyle">{{ members().length }} total</div>
+      </div>
+
+      @if (removeNotice) {
+        <div [ngStyle]="noticeStyle" style="margin-bottom:14px">{{ removeNotice }}</div>
+      }
+
+      <section [ngStyle]="tableWrapStyle">
+        <div [ngStyle]="tableHeaderStyle">
+          <div>Email</div>
+          <div>Username</div>
+          <div>Role</div>
+        </div>
+
+        @if (members().length === 0) {
+          <div [ngStyle]="emptyStateStyle">No members yet. Add the first user with their email address below.</div>
+        } @else {
+          @for (m of members(); track m.id) {
+            <div [ngStyle]="tableRowStyle">
+              <div>{{ m.email }}</div>
+              <div>{{ m.username }}</div>
+              <div>
+                <div [ngStyle]="roleCellStyle">
+                  <span [ngStyle]="pillStyle">{{ m.role }}</span>
+                  <app-btn
+                    variant="danger"
+                    size="sm"
+                    [disabled]="busy() || removingId() === m.id"
+                    (clicked)="removeMember(m)"
+                  >
+                    @if (removingId() === m.id) {
+                      Removing...
+                    } @else {
+                      Remove
+                    }
+                  </app-btn>
+                </div>
+              </div>
+            </div>
+          }
+        }
+      </section>
+    </section>
+
+    <section [ngStyle]="cardStyle">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div [ngStyle]="pillStyle">Invite by email</div>
+          <h2 [ngStyle]="sectionTitleStyle">Add users</h2>
+          <p [ngStyle]="sectionHintStyle">Add one user or paste a list of emails. Usernames are generated automatically when missing.</p>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.2fr 0.7fr auto;gap:14px;align-items:end">
+        <div>
+          <label [ngStyle]="labelStyle">Email</label>
+          <input [ngStyle]="inputStyle" placeholder="name@example.com" [(ngModel)]="email" />
+        </div>
+        <div>
+          <label [ngStyle]="labelStyle">Role</label>
+          <select [ngStyle]="inputStyle" [(ngModel)]="role">
+            <option>Student</option>
+            <option>Bocal</option>
+            <option>Admin</option>
+          </select>
+        </div>
+        <app-btn variant="primary" [disabled]="busy()" (clicked)="addOne()">
+          @if (busy()) {
+            Adding...
+          } @else {
+            Add user
+          }
+        </app-btn>
+      </div>
+
+      @if (singleNotice) {
+        <div [ngStyle]="noticeStyle">{{ singleNotice }}</div>
+      }
+    </section>
+
+    <section [ngStyle]="cardStyle">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div [ngStyle]="pillStyle">Bulk import</div>
+          <h2 [ngStyle]="sectionTitleStyle">Paste emails</h2>
+          <p [ngStyle]="sectionHintStyle">One email per line. This keeps onboarding fast for simple cohorts.</p>
+        </div>
+      </div>
+
+      <div>
+        <label [ngStyle]="labelStyle">Email list</label>
+        <textarea [ngStyle]="textareaStyle" rows="6" placeholder="student1@example.com&#10;student2@example.com" [(ngModel)]="csvText"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-top:14px">
+        <app-btn variant="secondary" [disabled]="busy()" (clicked)="importCSV()">
+          @if (busy()) {
+            Importing...
+          } @else {
+            Import users
+          }
+        </app-btn>
+      </div>
+
+      @if (bulkNotice) {
+        <div [ngStyle]="noticeStyle">{{ bulkNotice }}</div>
+      }
+    </section>
+  </div>
+</div>

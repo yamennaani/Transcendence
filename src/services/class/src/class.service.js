@@ -109,8 +109,14 @@ const getAssignments = async (classId)=>{
 
 const getAssignmentById = async (assignId)=>{
     const select = {id: true, classid: true, name: true, description: true, created_at: true,
-            groupSize: true, req_eval: true, max_score: true, pass_threshold: true }
-    const result = await utils.getAssignmentById(assignId, select)
+            groupSize: true, req_eval: true, max_score: true, pass_threshold: true, subtype: true }
+    const result = await utils.getAssignmentById(assignId, select, {
+        groups: {
+            include: {
+                members: true
+            }
+        }
+    })
     if(!result)
         throw new NotFoundError("Assignment not found")
     return result

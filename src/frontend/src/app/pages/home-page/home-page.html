@@ -1,0 +1,73 @@
+<main class="home-page">
+  <!-- Hero section removed -->
+
+  <!-- Error state: show error message if loading failed -->
+  @if (error()) {
+    <div class="error-message">
+      {{ error() }}
+    </div>
+  }
+
+  <!-- Loading state: show spinner while loading data -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading dashboard data...</p>
+    </div>
+  }
+
+  @if (!isLoading() && stats()) {
+    <section class="stats-panel">
+      <div class="stat-tile">
+        <p class="stat-label">Active classes</p>
+        <p class="stat-value">{{ stats()!.activeClasses }}</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">Total assignments</p>
+        <p class="stat-value">{{ stats()!.totalAssignments }}</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">Active users</p>
+        <p class="stat-value">{{ stats()!.activeUsers }}</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-label">Avg evaluators</p>
+        <p class="stat-value">{{ stats()!.averageRequiredEvaluators }}</p>
+      </div>
+    </section>
+
+    <p class="dashboard-tone">{{ dashboardTone() }} Workload signal: {{ totalWorkItems() }}.</p>
+  }
+
+  <!-- Loaded state: show quick actions -->
+  
+  <!-- User assignments: show stacked assignment cards -->
+  @if (!assignmentsLoading() && assignments().length > 0) {
+    <section class="assignments-list">
+      <header class="section-header">
+        <h2>Your assignments</h2>
+        <p>Assignments assigned to you (demo user)</p>
+      </header>
+
+      <div class="assignments-stack">
+        @for (a of assignments(); track a.id) {
+          <app-assignment-card [id]="a.id" [title]="a.title || a.name" [dueDate]="a.dueDate || a.due_date" [status]="a.status" [description]="a.description || a.summary"></app-assignment-card>
+        }
+      </div>
+    </section>
+  }
+
+  @if (assignmentsLoading()) {
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading your assignments...</p>
+    </div>
+  }
+
+  @if (!assignmentsLoading() && assignments().length === 0) {
+    <section class="empty-assignments">
+      <p>No assignments found for your account. Try the Assignments page.</p>
+    </section>
+  }
+
+</main>
