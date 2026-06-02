@@ -75,5 +75,8 @@
     "msg_no_description_dot": "Keine Beschreibung.",
 
     "btn_view": "Ansehen",
-    "btn_open": "Öffnen →"
+    "btn_open": "Öffnen →",
+
+    "btn_settings": "Einstellungen",
+    "btn_sign_out": "Abmelden"
 }
