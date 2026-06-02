@@ -17,6 +17,14 @@ services:
       - "80:80"
     
     depends_on:
+      - user_service
+      - auth_service
+      - org_service
+      - class_service
+      - enroll_service
+      - group_service
+      - submission_service
+      - eval_service
       - frontend
 
 networks:
