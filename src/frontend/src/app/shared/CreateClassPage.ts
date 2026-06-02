@@ -4,7 +4,7 @@ import { FieldType, SliderField } from "./field.types";
 import { FieldComponent } from "./field.component";
 import { TabListComponent, TabDirective } from "./tabs.component";
 import { BtnComponent } from "./btn.component";
-import { AuthService } from "../auth.service";
+import { AuthService } from "../services/auth.service";
 import { CourseService } from "../core/services/course-service/course-service";
 import { LoadingService } from "../core/services/loading-service/loading.service";
 

@@ -1,7 +1,8 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
+import { UserProfile } from '../tokens';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -11,6 +12,7 @@ export class AuthService {
 
   // Guards wait on this before deciding redirect — prevents flash to /login on page refresh
   readonly initialized = signal(false);
+  readonly role = computed(() => this.userSignal()?.role ?? null);
 
   constructor(private http: HttpClient, private router: Router) {
     // Silent token refresh on every page load using the httpOnly cookie.
@@ -69,6 +71,18 @@ export class AuthService {
   isLoggedIn(): boolean { return !!this.accessToken(); }
   getRole(): string | null { return this.user()?.role ?? null; }
 
+  updateUser(partial: { profile?: Partial<UserProfile> }): void {
+    this.userSignal.update(u => {
+      if (!u) return u;
+      return {
+        ...u,
+        profile: u.profile
+          ? { ...u.profile, ...partial.profile }
+          : partial.profile as UserProfile,
+      };
+    });
+  }
+
   register(email: string, password: string): Observable<any> {
     return this.http.post(`${this.api}/register`, { email, password });
   }
@@ -92,4 +106,5 @@ export class AuthService {
     if (token) { this.setToken(token); return true; }
     return false;
   }
+  
 }

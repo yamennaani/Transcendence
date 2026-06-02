@@ -85,7 +85,7 @@ export class SidebarComponent {
     return NAV_ITEMS.filter(i => i.roles.includes(role));
   });
 
-  logout() { this.auth.logout(); this.router.navigate(['/login']); }
+  logout() { this.auth.logout(); }
 
     // Create avatar settings computed from user data
   avatarSettings = computed<AppIconSettings>(() => ({
