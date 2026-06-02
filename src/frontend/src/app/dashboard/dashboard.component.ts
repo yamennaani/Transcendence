@@ -1,20 +1,14 @@
 import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { Course, DS } from '../tokens';
 import { BadgeComponent } from '../shared/badge.component';
 import { ProgressBarComponent } from '../shared/progress-bar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
 import { CourseService } from '../core/services/course-service/course-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
-
-const STATS = [
-  { label: 'Score avg',        value: '88', unit: '/100', sub: 'across 6 evaluations',  accent: false, warn: false },
-  { label: 'Progress',         value: '6',  unit: '/10',  sub: 'assignments done',       accent: false, warn: false },
-  { label: 'Evaluations given',value: '12', unit: '',     sub: 'this month',             accent: true,  warn: false },
-  { label: 'Pending reviews',  value: '2',  unit: '',     sub: 'waiting for you',        accent: false, warn: true  },
-];
+import { TranslateService } from '@ngx-translate/core';
 
 
 const RECENT = [
@@ -34,19 +28,42 @@ export class DashboardComponent implements OnInit {
 
   private auth   = inject(AuthService);
   private router = inject(Router);
-  private courseService = inject(CourseService)
-  private enrollService = inject(EnrollService)
+  private courseService = inject(CourseService);
+  private enrollService = inject(EnrollService);
+  private translate = inject(TranslateService);
 
   courses = signal<any[]>([])
+  stats: any[] = [];
   
   firstName = computed(() => this.auth.user()?.username ?? 'there')
-
   user    = this.auth.user;
-  stats   = STATS;
   recent  = RECENT;
 
-    ngOnInit(){
-    this.getClasses()
+  ngOnInit() {
+    if (this.user()?.id) {
+      this.getClasses();
+    } else {
+      this.auth.getMe().subscribe(() => this.getClasses());
+    }
+     // 👇 waits for translations to fully load before building stats
+    this.translate.get('label_score_avg').subscribe(() => {
+      this.stats = this.buildStats();
+    });
+
+    // rebuild on language change
+    this.translate.onLangChange.subscribe(() => {
+      this.stats = this.buildStats();
+    });
+
+  }
+
+  private buildStats() {
+    return [
+      { label: this.translate.instant('label_score_avg'),         value: '88', unit: '/100', sub: this.translate.instant('sub_evaluations'), accent: false, warn: false },
+      { label: this.translate.instant('label_progress'),          value: '6',  unit: '/10',  sub: this.translate.instant('sub_assignments'), accent: false, warn: false },
+      { label: this.translate.instant('label_evaluations_given'), value: '12', unit: '',     sub: this.translate.instant('sub_month'),       accent: true,  warn: false },
+      { label: this.translate.instant('label_pending_reviews'),   value: '2',  unit: '',     sub: this.translate.instant('sub_waiting'),     accent: false, warn: true  },
+    ];
   }
 
   getClasses(){
@@ -88,7 +105,7 @@ export class DashboardComponent implements OnInit {
   readonly sectionPanelStyle = { background: DS.colors.surface, border: `1px solid ${DS.colors.border}`, borderRadius: '12px', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px' };
   readonly linkStyle = { fontSize: '0.8125rem', color: DS.colors.violet, cursor: 'pointer' };
 
-  statCardStyle(s: typeof STATS[0]) {
+  statCardStyle(s: any) {
     return {
       background: DS.colors.surface,
       border: `1px solid ${s.accent ? DS.colors.violetBorder : s.warn ? DS.colors.amberBorder : DS.colors.border}`,
@@ -96,14 +113,14 @@ export class DashboardComponent implements OnInit {
       boxShadow: s.accent ? '0 0 24px oklch(64% 0.28 296 / 0.15)' : 'none',
     };
   }
-  statLabelStyle(s: typeof STATS[0]) {
+  statLabelStyle(s: any) {
     return {
       fontSize: '0.6875rem', fontWeight: '600', letterSpacing: '0.1em',
       textTransform: 'uppercase', marginBottom: '6px',
       color: s.warn ? DS.colors.amber : DS.colors.violet,
     };
   }
-  statNumStyle(s: typeof STATS[0]) {
+  statNumStyle(s: any) {
     return {
       fontFamily: DS.fonts.display, fontWeight: '700', lineHeight: '1', letterSpacing: '-0.03em', fontSize: '2.25rem',
       background: s.accent ? 'linear-gradient(90deg,oklch(72% 0.28 296),oklch(72% 0.15 200))' : 'none',

@@ -78,7 +78,7 @@ const deleteAllUserRefreshTokens = async (userId) => {
 };
 
 // ========== OAUTH ==========
-const findOrCreateOAuthUser = async (provider, providerUserId, email, name, picture) => {
+const findOrCreateOAuthUser = async (provider, providerUserId, email, name) => {
   let rows = await prisma.$queryRaw`
     SELECT u.id, u.email, u.username, ua.provider, ua.provider_user_id, ua.email_verified
     FROM "user" u
@@ -87,14 +87,31 @@ const findOrCreateOAuthUser = async (provider, providerUserId, email, name, pict
   `;
   let user = rows[0];
   if (!user) {
-    const existingEmail = await prisma.$queryRaw`
-      SELECT u.id FROM "user" u
+    // Check if this email is already registered under any provider
+    const existingRows = await prisma.$queryRaw`
+      SELECT u.id, u.email, u.username, ua.provider, ua.email_verified
+      FROM "user" u
       JOIN "userAuth" ua ON u.id = ua."userId"
-      WHERE u.email = ${email} AND ua.provider = 'local'
+      WHERE u.email = ${email}
     `;
-    if (existingEmail.length > 0) {
-      throw new Error('Email already registered with password. Please login using password.');
+    const existing = existingRows[0];
+
+    if (existing) {
+      if (existing.provider === 'local') {
+        throw new Error('Email already registered with password. Please log in using your password.');
+      }
+      // Email registered via a different OAuth provider — link by email, return existing user
+      return existing;
     }
+
+    // New user — must be on the invite list
+    const allowed = await isEmailAllowed(email);
+    if (!allowed) {
+      const err = new Error('Registration not permitted for this email address.');
+      err.code = 'INVITE_REQUIRED';
+      throw err;
+    }
+
     const username = await generateUsername(email);
     const userRows = await prisma.$queryRaw`
       INSERT INTO "user" (email, username, role, created_at)
@@ -103,10 +120,11 @@ const findOrCreateOAuthUser = async (provider, providerUserId, email, name, pict
     `;
     user = userRows[0];
     await prisma.$executeRaw`
-      INSERT INTO "userAuth" ("userId", provider, provider_user_id, email_verified, picture)
-      VALUES (${user.id}, ${provider}, ${providerUserId}, true, ${picture || null})
+      INSERT INTO "userAuth" ("userId", provider, provider_user_id, email_verified)
+      VALUES (${user.id}, ${provider}, ${providerUserId}, true)
     `;
     user.email_verified = true;
+    await markEmailAsUsed(email);
   }
   return user;
 };
@@ -192,9 +210,90 @@ const markEmailAsUsed = async (email) => {
   `;
 };
 
+const unmarkEmailAsUsed = async (email) => {
+  await prisma.$executeRaw`
+    UPDATE auth_allowed_emails SET used = false WHERE email = ${email}
+  `;
+};
+
+const deleteUserById = async (userId) => {
+  await prisma.$executeRaw`DELETE FROM "user" WHERE id = ${userId}`;
+};
+
+// ========== INVITATIONS ==========
+const addAllowedEmail = async (email, invitedBy) => {
+  const existing = await prisma.$queryRaw`
+    SELECT id, used FROM auth_allowed_emails WHERE email = ${email}
+  `;
+  if (existing.length > 0) {
+    const err = new Error(
+      existing[0].used ? 'Email is already registered.' : 'Email has already been invited.'
+    );
+    err.code = 'ALREADY_EXISTS';
+    throw err;
+  }
+  const rows = await prisma.$queryRaw`
+    INSERT INTO auth_allowed_emails (email, invited_by, created_at)
+    VALUES (${email}, ${invitedBy ?? null}, NOW())
+    RETURNING id, email, used, invited_by, created_at
+  `;
+  return rows[0];
+};
+
+const getAllowedEmails = async () => {
+  return await prisma.$queryRaw`
+    SELECT ae.id, ae.email, ae.used, ae.created_at,
+           u.username AS invited_by_username
+    FROM auth_allowed_emails ae
+    LEFT JOIN "user" u ON ae.invited_by = u.id
+    ORDER BY ae.created_at DESC
+  `;
+};
+
+const revokeAllowedEmail = async (id) => {
+  const rows = await prisma.$queryRaw`
+    SELECT id, used FROM auth_allowed_emails WHERE id = ${parseInt(id)}
+  `;
+  if (!rows[0]) {
+    const err = new Error('Invite not found.');
+    err.code = 'NOT_FOUND';
+    throw err;
+  }
+  if (rows[0].used) {
+    const err = new Error('Cannot revoke an already-used invite.');
+    err.code = 'ALREADY_USED';
+    throw err;
+  }
+  await prisma.$executeRaw`
+    DELETE FROM auth_allowed_emails WHERE id = ${parseInt(id)}
+  `;
+};
+
+const findUserById = async (userId) => {
+  const rows = await prisma.$queryRaw`
+    SELECT u.id, u.email, u.username, u.role, u.created_at, u."orgId",
+           up.bio, up.avatar
+    FROM "user" u
+    LEFT JOIN "userProfile" up ON u.id = up."userId"
+    WHERE u.id = ${userId}
+  `;
+  if (!rows[0]) return null;
+  const r = rows[0];
+  return {
+    id: r.id,
+    email: r.email,
+    username: r.username,
+    role: r.role,
+    created_at: r.created_at,
+    orgId: r.orgId,
+    profile: (r.bio !== null || r.avatar !== null) ? { bio: r.bio, avatar: r.avatar } : null,
+  };
+};
+
 module.exports = {
   createUser,
   findUserByEmail,
+  findUserById,
   findOrCreateOAuthUser,
   storeRefreshToken,
   findRefreshToken,
@@ -209,4 +308,9 @@ module.exports = {
   verifyEmail,
   isEmailAllowed,
   markEmailAsUsed,
+  unmarkEmailAsUsed,
+  deleteUserById,
+  addAllowedEmail,
+  getAllowedEmails,
+  revokeAllowedEmail,
 };

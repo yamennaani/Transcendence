@@ -2,7 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { CourseService } from '../core/services/course-service/course-service';
 import { AssignmentService, AssignmentResponse } from '../core/services/course-service/Assignment.service';
 import { GroupService } from '../core/services/group-service/group-service';

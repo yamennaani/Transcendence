@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { Course, DS } from '../tokens';
 import { CourseService } from '../core/services/course-service/course-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { LoadingService } from '../core/services/loading-service/loading.service';
 import { ListComponent, ListColumn, ListBadge, ListProgressData } from '../shared/list.component';
 import { SlicePipe } from '@angular/common';

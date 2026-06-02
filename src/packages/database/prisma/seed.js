@@ -1,5 +1,6 @@
 const { PrismaClient } = require('../generated/prisma')
 const prisma = new PrismaClient()
+require('dotenv').config({ path: '/home/aghanam/Desktop/lastdance/src/.env' });
 
 const passwordHash = 'fake-hashed-password-for-dev'
 
@@ -29,9 +30,6 @@ async function clearDatabase() {
 
 async function createUser({ email, username, role, orgId, bio }) {
   return prisma.user.create({
-  const passwordHash = 'fake-hashed-password-for-dev'
-
-  const org1 = await prisma.organization.create({
     data: {
       email,
       username,
@@ -49,6 +47,29 @@ async function createUser({ email, username, role, orgId, bio }) {
     }
   })
 }
+
+// async function createUser({ email, username, role, orgId, bio }) {
+//   return prisma.user.create({
+//   const passwordHash = 'fake-hashed-password-for-dev'
+
+//   const org1 = await prisma.organization.create({
+//     data: {
+//       email,
+//       username,
+//       role,
+//       orgId,
+//       userAuth: {
+//         create: { pass_hash: passwordHash }
+//       },
+//       profile: {
+//         create: {
+//           bio,
+//           last_update: new Date()
+//         }
+//       }
+//     }
+//   })
+// }
 
 async function createEvalSheet(assignmentId, sections) {
   return prisma.evalSheet.create({

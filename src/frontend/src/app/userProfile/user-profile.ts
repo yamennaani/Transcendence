@@ -1,6 +1,6 @@
 import { Component, computed, inject, signal } from "@angular/core";
 import { forkJoin } from "rxjs";
-import { AuthService } from "../auth.service";
+import { AuthService } from "../services/auth.service";
 import { UserService } from "../core/services/user-service/user-service";
 import { LoadingService } from "../core/services/loading-service/loading.service";
 import { FieldType } from "../shared/field.types";

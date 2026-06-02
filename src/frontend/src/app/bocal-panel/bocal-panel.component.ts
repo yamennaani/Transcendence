@@ -11,7 +11,7 @@ import { FieldComponent } from '../shared/field.component';
 import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { CreateClassPage } from '../shared/CreateClassPage';
 import { FieldType, SelectField } from '../shared/field.types';
-import { AuthService } from '../auth.service';
+import { AuthService } from '../services/auth.service';
 import { CourseService } from '../core/services/course-service/course-service';
 import { AssignmentService, AssignmentResponse } from '../core/services/course-service/Assignment.service';
 import { OrgService } from '../core/services/org-service/org-service';

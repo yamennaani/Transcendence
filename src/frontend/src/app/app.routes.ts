@@ -1,21 +1,32 @@
 import { Routes } from '@angular/router';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthService } from './auth.service';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, map, take } from 'rxjs';
+import { AuthService } from './services/auth.service';
+
+const waitForInit = (auth: AuthService, fn: () => boolean | ReturnType<Router['parseUrl']>) => {
+  if (auth.initialized()) return fn();
+  return toObservable(auth.initialized).pipe(
+    filter(Boolean),
+    take(1),
+    map(() => fn()),
+  );
+};
 
 const authGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
-  if (auth.isLoggedIn()) return true;
-  return router.parseUrl('/login');
+  return waitForInit(auth, () => auth.isLoggedIn() ? true : router.parseUrl('/login'));
 };
 
 const bocalGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
-  const role   = auth.role();
-  if (role === 'Bocal' || role === 'Admin') return true;
-  return router.parseUrl('/dashboard');
+  return waitForInit(auth, () => {
+    const role = auth.role();
+    return (role === 'Bocal' || role === 'Admin') ? true : router.parseUrl('/dashboard');
+  });
 };
 
 const adminGuard = () => {
@@ -30,9 +41,11 @@ const adminGuard = () => {
 const guestGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
-  if (!auth.isLoggedIn()) return true;
-  const role = auth.role();
-  return router.parseUrl(role === 'Admin' || role === 'Bocal' ? '/bocal' : '/dashboard');
+  return waitForInit(auth, () => {
+    if (!auth.isLoggedIn()) return true;
+    const role = auth.role();
+    return router.parseUrl(role === 'Admin' || role === 'Bocal' ? '/bocal' : '/dashboard');
+  });
 };
 
 export const routes: Routes = [

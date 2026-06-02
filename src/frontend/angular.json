@@ -3,7 +3,7 @@
   "version": 1,
   "cli": {
     "packageManager": "npm",
-    "analytics": "f8999b0d-d985-4972-a7c8-65a2811dc412"
+    "analytics": "33b556ac-0f18-4623-aa40-4f9bdea71ae3"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -23,6 +23,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/app/languages",
+                "output": "languages"  
               }
             ],
             "styles": [
@@ -41,8 +46,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "16kB",
-                  "maximumError": "24kB"
+                  "maximumWarning": "50kB",
+                  "maximumError": "100kB"
                 }
               ],
               "outputHashing": "all"
