@@ -1,0 +1,15 @@
+{
+    "label_score_avg": "Átlag pontszám",
+    "label_progress": "Haladás",
+    "label_evaluations_given": "Adott értékelések",
+    "label_pending_reviews": "Függőben lévő értékelések",
+    "sub_evaluations": "6 értékelés során",
+    "sub_assignments": "2 függőben lévő értékelésed van.",
+    "label_dashboard": "Műszerfal",
+    "label_my_classes": "Saját osztályok",
+    "label_assignments": "Feladatok",
+    "label_evaluations": "Értékelések",
+    "label_progress": "Haladás",
+    "label_manage": "Kezelés",
+    "label_users": "Felhasználók"
+}

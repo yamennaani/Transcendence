@@ -162,7 +162,7 @@
 
       <!-- ── Submission ────────────────────────────────────────── -->
       <app-container [config]="cardConfig">
-        <div class="card-inner">
+        <div class="card-inner submission-card">
           <div class="card-title">Submission</div>
 
           @if (!myGroup()) {
@@ -174,26 +174,66 @@
             <app-btn variant="primary" (clicked)="startSubmission()">Start submission</app-btn>
           }
 
-          @if (mySubmission()) {
-            <div class="sub-status-row">
-              <app-badge [variant]="subStatusVariant(mySubmission().status)"/>
-              <span class="hint-text">{{ mySubmission().status === 'Open' ? 'Open — you can still upload.' : 'Closed.' }}</span>
-            </div>
-
-            @if (mySubmission().status === 'Open') {
-              <div class="action-row">
-                <!-- File upload wrapper -->
-                <div class="upload-btn-wrap">
-                  <app-btn variant="secondary">Upload file</app-btn>
-                  <input class="file-input" type="file" (change)="onFileSelected($event)"/>
-                </div>
-                <app-btn variant="ghost" (clicked)="closeSubmission()">Close submission</app-btn>
+          @if (mySubmission(); as submission) {
+            @if (submissionError()) {
+              <div class="upload-error">
+                {{ submissionError() }}
               </div>
             }
 
-            @if (mySubmission().file) {
-              <div style="font-size:0.8125rem;color:oklch(72% 0.15 200)">
-                ✓ {{ mySubmission().file.name }}
+            <div class="sub-status-row">
+              <app-badge [variant]="subStatusVariant(submission.status)"/>
+              <span class="hint-text">{{ submission.status === 'Open' ? 'Open — you can still upload.' : 'Closed.' }}</span>
+            </div>
+
+            @if (submission.status === 'Open') {
+              <div class="upload-panel">
+                <div class="upload-label">Upload file</div>
+                <p class="upload-help">Choose one file for this submission. Allowed formats include PDF, ZIP, images, text files, and Word documents.</p>
+
+                <div class="upload-row">
+                  <div class="upload-picker">
+                    <app-btn variant="secondary" [disabled]="uploadingFile()">Choose file</app-btn>
+                    <input
+                      class="file-input"
+                      type="file"
+                      [disabled]="uploadingFile()"
+                      accept=".zip,.pdf,.txt,.doc,.docx,image/*"
+                      (change)="onFileSelected($event)"/>
+                  </div>
+
+                  @if (selectedFileLabel()) {
+                    <div class="selected-file">
+                      <span>✓</span>
+                      <span class="selected-file-name">{{ selectedFileLabel() }}</span>
+                    </div>
+                  } @else {
+                    <span class="hint-text">No file selected yet.</span>
+                  }
+                </div>
+
+                <div class="upload-row">
+                  <app-btn
+                    variant="primary"
+                    [disabled]="!selectedFile() || uploadingFile()"
+                    (clicked)="uploadSelectedFile()">
+                    {{ uploadingFile() ? 'Uploading…' : 'Upload file' }}
+                  </app-btn>
+                  <app-btn variant="ghost" [disabled]="uploadingFile()" (clicked)="closeSubmission()">Close submission</app-btn>
+                </div>
+
+                <div class="upload-meta">
+                  <span>Max size: 50 MB</span>
+                  <span>·</span>
+                  <span>One file at a time</span>
+                </div>
+              </div>
+            }
+
+            @if (submission.file) {
+              <div class="upload-meta" style="color:oklch(72% 0.15 200)">
+                <span>✓</span>
+                <span>Saved file: {{ submission.file.name }}</span>
               </div>
             }
           }
@@ -258,10 +298,10 @@
         <div class="sub-row">
           <div class="sub-row-left">
             <div>
-              <div class="sub-group-name">{{ sub.group?.name ?? 'Group #' + sub.groupId }}</div>
+              <div class="sub-group-name">{{ sub.group.name }}</div>
               <div class="sub-members">
-                @for (m of sub.group?.members ?? []; track m.id; let last = $last) {
-                  {{ m.user?.username }}@if (!last) { · }
+                @for (m of sub.group.members ?? []; track m.id; let last = $last) {
+                  {{ m.user.username }}@if (!last) { · }
                 }
               </div>
             </div>
