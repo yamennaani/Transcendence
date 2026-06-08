@@ -1,0 +1,95 @@
+<div [ngStyle]="pageStyle">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div style="margin-bottom:20px">
+    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <h1 [ngStyle]="h1Style">Students</h1>
+      <app-btn variant="primary" (clicked)="showAddMember.set(true)">+ Add member</app-btn>
+    </div>
+  </div>
+
+  <!-- ── Add member modal ───────────────────────────────────── -->
+  @if (showAddMember()) {
+    <div [ngStyle]="overlayStyle" (click)="closeMemberModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          Add member
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          @for (field of memberFields; track field.label) {
+            <app-field [field]="field" [isEditing]="true" (valueChanged)="onMemberFieldChanged($event)" />
+          }
+        </div>
+        @if (memberError()) {
+          <div [ngStyle]="errorStyle">{{ memberError() }}</div>
+        }
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn variant="ghost"   size="md" (clicked)="closeMemberModal()">Cancel</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onAddMember()">Add member</app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Filters ────────────────────────────────────────────── -->
+  <div [ngStyle]="filterBarStyle">
+    <input
+      [ngStyle]="inputStyle"
+      style="max-width:280px"
+      type="text"
+      placeholder="Search by username or email…"
+      [value]="searchQuery()"
+      (input)="searchQuery.set($any($event.target).value)" />
+
+    <select [ngStyle]="inputStyle" style="max-width:160px" [value]="roleFilter()" (change)="roleFilter.set($any($event.target).value)">
+      @for (r of roleOptions; track r) {
+        <option [value]="r">{{ r === 'All' ? 'All roles' : r }}</option>
+      }
+    </select>
+
+    <select [ngStyle]="inputStyle" style="max-width:200px" [value]="classFilter() ?? ''" (change)="onClassFilterChanged($any($event.target).value)">
+      <option value="">All classes</option>
+      @for (c of classes(); track c.id) {
+        <option [value]="c.id">{{ c.name }}</option>
+      }
+    </select>
+
+    <select [ngStyle]="inputStyle" style="max-width:200px" [value]="subjectFilter() ?? ''" [disabled]="!classFilter()" (change)="onSubjectFilterChanged($any($event.target).value)">
+      <option value="">All subjects</option>
+      @for (s of subjects(); track s.id) {
+        <option [value]="s.id">{{ s.name }}</option>
+      }
+    </select>
+
+    <span style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+      {{ filteredMembers().length }} of {{ members().length }} member{{ members().length === 1 ? '' : 's' }}
+    </span>
+  </div>
+
+  <app-list
+    [items]="filteredMembers()"
+    [trackBy]="memberTrackFn"
+    emptyMessage="No members match your filters."
+    [pageSize]="8">
+    <ng-template let-m>
+      <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:10px">
+          <app-avatar [name]="m.username" [size]="28"/>
+          <div>
+            <div style="font-weight:600;font-size:0.9375rem;color:oklch(94% 0.005 272)">{{ m.username }}</div>
+            <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">{{ m.email }}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px">
+          <span [ngStyle]="roleStyle(m.role)">{{ m.role }}</span>
+          <span style="font-size:0.8125rem;color:oklch(68% 0.01 272)">{{ m.created_at | date:'mediumDate' }}</span>
+          @if (classFilter()) {
+            <app-btn variant="ghost" size="sm" (clicked)="removeFromClass(m)">Remove from class</app-btn>
+          }
+        </div>
+      </div>
+    </ng-template>
+  </app-list>
+
+</div>

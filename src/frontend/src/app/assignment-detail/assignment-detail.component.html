@@ -16,10 +16,9 @@
 
   <!-- Breadcrumb -->
   <div class="crumb">
-    <span class="crumb-link" (click)="router.navigate(['/classes'])">My classes</span>
+    <span class="crumb-link" (click)="goToClasses()">{{ viewAsStaff() ? 'Manage classes' : 'My classes' }}</span>
     <span>/</span>
-    <span class="crumb-link"
-      (click)="router.navigate(['/assignment'], { queryParams: { classId: assignment()!.classid } })">
+    <span class="crumb-link" (click)="goToClass()">
       {{ className() ?? '…' }}
     </span>
     <span>/</span>
@@ -31,7 +30,7 @@
     <div class="hero-left">
       <h1 class="hero-title">{{ assignment()!.name }}</h1>
       <div class="hero-badges">
-        @if (!isStaff()) {
+        @if (!viewAsStaff()) {
           <app-badge [variant]="statusBadge()"/>
         }
         <span class="mono-tag">{{ assignment()!.max_score }} pts max</span>
@@ -74,10 +73,28 @@
     </div>
   </app-container>
 
+  <!-- ── Subject file ──────────────────────────────────────────── -->
+  @if (assignment()!.file) {
+    <app-container [config]="flatConfig">
+      <div class="subject-row">
+        <div class="subject-info">
+          <span class="subject-icon">📎</span>
+          <div style="min-width:0">
+            <div class="subject-name">{{ assignment()!.file!.name }}</div>
+            <div class="subject-meta">{{ formatFileSize(assignment()!.file!.size) }}</div>
+          </div>
+        </div>
+        <a [href]="assignment()!.file!.url" target="_blank" rel="noopener">
+          <app-btn variant="secondary" size="sm">View subject</app-btn>
+        </a>
+      </div>
+    </app-container>
+  }
+
   <!-- ════════════════════════════════════════════════════════════
        STUDENT VIEW
        ════════════════════════════════════════════════════════════ -->
-  @if (!isStaff()) {
+  @if (!viewAsStaff()) {
 
     <!-- Two-column: group + submission -->
     <div class="two-col">
@@ -226,7 +243,7 @@
   <!-- ════════════════════════════════════════════════════════════
        STAFF VIEW (Bocal / Admin)
        ════════════════════════════════════════════════════════════ -->
-  @if (isStaff()) {
+  @if (viewAsStaff()) {
 
     <!-- Stats row -->
     <div class="staff-stats">

@@ -1,0 +1,63 @@
+<div [ngStyle]="pageStyle">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div>
+    <div [ngStyle]="overlineStyle">
+      @if (filteredClassName()) {
+        <span [ngStyle]="crumbStyle" (click)="clearClassFilter()">← All assignments</span>
+      }
+      Assignments
+    </div>
+    <h1 [ngStyle]="h1Style">
+      @if (filteredClassName()) {
+        {{ filteredClassName() }}
+      } @else {
+        In progress
+      }
+    </h1>
+  </div>
+
+  <!-- ── Cards ──────────────────────────────────────────────── -->
+  @if (loaded() && displayedItems().length === 0) {
+    <app-container [config]="flatConfig">
+      <div [ngStyle]="emptyStyle">{{ emptyMessage() }}</div>
+    </app-container>
+  } @else {
+    <div [ngStyle]="gridStyle">
+      @for (item of displayedItems(); track item.assignment.id) {
+        <app-container [config]="flatConfig">
+          <div [ngStyle]="cardStyle">
+            <div>
+              @if (!filteredClassName()) {
+                <div [ngStyle]="classNameStyle">{{ item.className }}</div>
+              }
+              <div [ngStyle]="cardTitleStyle">{{ item.assignment.name }}</div>
+            </div>
+
+            <p [ngStyle]="descStyle">
+              {{ item.assignment.description | slice:0:140 }}{{ (item.assignment.description?.length ?? 0) > 140 ? '…' : '' }}
+            </p>
+
+            <div [ngStyle]="metaStyle">
+              <span>{{ item.assignment.max_score }} pts</span>
+              <span>{{ item.assignment.req_eval }} evals required</span>
+              @if (item.assignment.groupSize) { <span>groups of {{ item.assignment.groupSize }}</span> }
+              @if (item.assignment.pass_threshold) { <span>{{ item.assignment.pass_threshold }}% to pass</span> }
+              @if (item.assignment.file) {
+                <a [href]="item.assignment.file.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()" style="color:inherit">
+                  📎 {{ item.assignment.file.name }}
+                </a>
+              }
+            </div>
+
+            <div [ngStyle]="footerStyle">
+              <app-badge [variant]="statusMeta(item.status).variant" [customLabel]="statusMeta(item.status).label" />
+              <app-btn variant="secondary" size="sm" (clicked)="open(item)">Open →</app-btn>
+            </div>
+          </div>
+        </app-container>
+      }
+    </div>
+  }
+
+</div>

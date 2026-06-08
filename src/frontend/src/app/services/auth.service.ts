@@ -7,7 +7,8 @@ import { UserProfile } from '../tokens';
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private api = '/api/auth';
-  private accessToken = signal<string | null>(null);
+  private tokenKey = 'access_token';
+  private accessToken = signal<string | null>(localStorage.getItem(this.tokenKey));
   private userSignal  = signal<any>(null);
 
   // Guards wait on this before deciding redirect — prevents flash to /login on page refresh
@@ -15,18 +16,22 @@ export class AuthService {
   readonly role = computed(() => this.userSignal()?.role ?? null);
 
   constructor(private http: HttpClient, private router: Router) {
-    // Silent token refresh on every page load using the httpOnly cookie.
-    // No localStorage — the access token lives only in memory.
-    this.refreshToken().subscribe({
-      next: res => {
-        this.accessToken.set(res.accessToken);
-        this.getMe().subscribe({
-          next: () => this.initialized.set(true),
-          error: () => this.initialized.set(true),
-        });
-      },
-      error: () => this.initialized.set(true),
-    });
+    // Defer past construction: AuthInterceptor injects AuthService, so firing an
+    // HTTP request synchronously here triggers a circular-DI error (NG0200), which
+    // lands in the error handler below and wipes the token we just loaded.
+    queueMicrotask(() => this.restoreSession());
+  }
+
+  private restoreSession(): void {
+    // Reuse the token persisted in localStorage so a page reload doesn't force a re-login.
+    if (this.accessToken()) {
+      this.getMe().subscribe({
+        next: () => this.initialized.set(true),
+        error: () => { this.clearToken(); this.initialized.set(true); },
+      });
+    } else {
+      this.initialized.set(true);
+    }
   }
 
   get user() { return this.userSignal.asReadonly(); }
@@ -58,7 +63,7 @@ export class AuthService {
 
   setToken(token: string): void {
     this.accessToken.set(token);
-    this.getMe().subscribe();
+    localStorage.setItem(this.tokenKey, token);
   }
 
   getToken(): string | null  { return this.accessToken(); }
@@ -66,6 +71,7 @@ export class AuthService {
   clearToken(): void {
     this.accessToken.set(null);
     this.userSignal.set(null);
+    localStorage.removeItem(this.tokenKey);
   }
 
   isLoggedIn(): boolean { return !!this.accessToken(); }

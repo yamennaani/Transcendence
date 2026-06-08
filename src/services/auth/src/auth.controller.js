@@ -105,13 +105,13 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    /*const valid = await bcrypt.compare(password, user.pass_hash);
+    const valid = await bcrypt.compare(password, user.pass_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     if (!user.email_verified) {
       return res.status(403).json({ error: 'Please verify your email before logging in.' });
-    }*/
+    }
 
     const accessToken = generateAccessToken(user.id, user.email);
     const refreshToken = generateRefreshToken(user.id, user.email);
@@ -289,7 +289,7 @@ exports.resetPassword = async (req, res) => {
 const googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    `${process.env.BASE_URL}/api/auth/google/callback`
+    `${process.env.BASE_URL}api/auth/google/callback`
 );
 
 // Redirect user to Google consent screen
