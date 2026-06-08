@@ -244,6 +244,15 @@
       </div>
     </div>
 
+    <!-- Pairings action -->
+    <div class="action-row">
+      <app-btn
+        variant="secondary"
+        (clicked)="goToEvalAssignments()">
+        Manage evaluation pairings
+      </app-btn>
+    </div>
+
     <!-- Submissions list -->
     @if (allSubs().length === 0) {
       <app-container [config]="flatConfig">

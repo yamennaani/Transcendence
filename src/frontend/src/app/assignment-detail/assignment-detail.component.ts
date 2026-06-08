@@ -495,6 +495,13 @@ export class AssignmentDetailComponent implements OnInit {
     });
   }
 
+  goToEvalAssignments(): void {
+    const a = this.assignment();
+    if (!a) return;
+    this.router.navigate(['/eval-assignments'], { queryParams: { assignmentId: a.id },
+    });
+  }
+
   createGroup() {
     const a = this.assignment();
     const userId = this.user()?.id;
@@ -600,4 +607,5 @@ export class AssignmentDetailComponent implements OnInit {
     if (status === 'Open') return 'submitted';
     return 'under_review';
   }
+
 }
