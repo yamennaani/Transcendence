@@ -1,10 +1,10 @@
 <div [ngStyle]="pageStyle">
 
   <!-- Header -->
-  <div style="margin-bottom:28px">
-    <div [ngStyle]="overlineStyle">Student dashboard</div>
-    <h1 [ngStyle]="h1Style">Welcome back, {{ firstName()  }}.</h1>
-    <p [ngStyle]="subtitleStyle">You have 2 pending evaluations to complete.</p>
+    <div style="margin-bottom:28px">
+    <div [ngStyle]="overlineStyle">{{ 'label_dashboard' | translate }}</div>
+    <h1 [ngStyle]="h1Style">{{ 'dashboard.welcome' | translate:{name: firstName()} }}</h1>
+    <p [ngStyle]="subtitleStyle">{{ 'dashboard.pending_evals' | translate:{count: pendingCount()} }}</p>
   </div>
 
   <!-- Stats -->
@@ -25,8 +25,8 @@
     <!-- Class progress -->
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272)">Class progress</span>
-        <span [ngStyle]="linkStyle" (click)="goToClasses()">View all →</span>
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272)">{{ 'dashboard.class_progress' | translate }}</span>
+        <span [ngStyle]="linkStyle" (click)="goToClasses()">{{ 'dashboard.view_all' | translate }}</span>
       </div>
       <div [ngStyle]="sectionPanelStyle">
         @for (c of courses(); track c.name) {
@@ -38,15 +38,15 @@
     <!-- Recent assignments -->
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272)">Recent assignments</span>
-        <span [ngStyle]="linkStyle" (click)="goToAssignment()">View all →</span>
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272)">{{ 'dashboard.recent_assignments' | translate }}</span>
+        <span [ngStyle]="linkStyle" (click)="goToAssignment()">{{ 'dashboard.view_all' | translate }}</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        @for (r of recent; track r.title) {
+        @for (r of recent(); track r.id) {
           <div [ngStyle]="rowStyle(r.title)"
                (mouseenter)="rowHovered = r.title"
                (mouseleave)="rowHovered = null"
-               (click)="goToAssignment()">
+               (click)="goToAssignmentDetail(r.id)">
             <div>
               <div style="font-family:'Space Grotesk',sans-serif;font-size:0.9375rem;font-weight:600;color:oklch(94% 0.005 272)">{{ r.title }}</div>
               <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:2px">max {{ r.max }}pts</div>

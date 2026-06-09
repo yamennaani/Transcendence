@@ -218,16 +218,21 @@
                       accept=".zip,.pdf,.txt,.doc,.docx,image/*"
                       (change)="onFileSelected($event)"/>
                   </div>
-
-                  @if (selectedFileLabel()) {
-                    <div class="selected-file">
-                      <span>✓</span>
-                      <span class="selected-file-name">{{ selectedFileLabel() }}</span>
-                    </div>
-                  } @else {
+                  @if (!selectedFile()) {
                     <span class="hint-text">No file selected yet.</span>
                   }
                 </div>
+
+                @if (selectedFileMeta(); as meta) {
+                  <div class="file-preview">
+                    <div class="file-preview-ext">{{ meta.ext }}</div>
+                    <div class="file-preview-info">
+                      <span class="file-preview-name">{{ meta.name }}</span>
+                      <span class="file-preview-meta">{{ meta.size }} · {{ meta.type }}</span>
+                    </div>
+                    <button class="file-preview-clear" (click)="selectedFile.set(null)" title="Remove">✕</button>
+                  </div>
+                }
 
                 <div class="upload-row">
                   <app-btn
@@ -248,9 +253,12 @@
             }
 
             @if (submission.file) {
-              <div class="upload-meta" style="color:oklch(72% 0.15 200)">
-                <span>✓</span>
-                <span>Saved file: {{ submission.file.name }}</span>
+              <div class="file-preview">
+                <div class="file-preview-ext">{{ submission.file.name.includes('.') ? submission.file.name.split('.').pop()!.toUpperCase() : '?' }}</div>
+                <div class="file-preview-info">
+                  <span class="file-preview-name">{{ submission.file.name }}</span>
+                  <span class="file-preview-meta">{{ submission.file.size ? formatFileSize(submission.file.size) : '' }}{{ submission.file.mimiType ? ' · ' + submission.file.mimiType : '' }}</span>
+                </div>
               </div>
             }
           }

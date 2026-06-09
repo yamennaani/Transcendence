@@ -1,14 +1,15 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TranslateService } from "@ngx-translate/core";
+import { TranslateService, TranslateModule } from "@ngx-translate/core";
 
 
 @Component({
     selector: 'app-language-switcher',
     standalone: true,
-    imports: [],
+    imports: [TranslateModule],
     template: `
     <div class="language-switcher">
+      <label class="lang-label">{{ 'label_language' | translate }}</label>
       <button class="current-lang">{{ getFlag(currentLanguage) }} {{ currentLanguage }}</button>
       <div class="lang-options">
       @for (lang of languages; track lang.code) {
@@ -21,6 +22,14 @@ import { TranslateService } from "@ngx-translate/core";
         position: relative;
         display: block;
         width: 100%;
+      }
+      .lang-label {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        font-weight: 600;
       }
       .current-lang {
         background: none;
@@ -61,8 +70,7 @@ export class LanguageSwitcherComponent {
   languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'fe', name: 'Français', flag: '🇫🇷' },
-	{ code: 'hu', name: 'Magyar', flag: '🇭🇺' },
+    { code: 'hu', name: 'Magyar', flag: '🇭🇺' },
   ];
 
   currentLanguage = 'en';
