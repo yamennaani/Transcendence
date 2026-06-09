@@ -245,6 +245,15 @@
        ════════════════════════════════════════════════════════════ -->
   @if (viewAsStaff()) {
 
+    <!-- Pairings action -->
+    <div class="action-row">
+      <app-btn
+        variant="secondary"
+        (clicked)="goToEvalAssignments()">
+        Manage evaluation pairings
+      </app-btn>
+    </div>
+
     <!-- Stats row -->
     <div class="staff-stats">
       <div class="sstat">

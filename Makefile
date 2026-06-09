@@ -9,7 +9,7 @@ YELLOW = \033[0;33m
 BLUE   = \033[0;34m
 RESET  = \033[0m
 
-.PHONY: setup build up down clean restart run re dev prod check_env studio populateDB
+.PHONY: setup build up down clean restart run re dev prod check_env studio populateDB genPrismaClient
 
 setup: check_env
 	@echo "$(GREEN)Setup complete.$(RESET)"
@@ -47,6 +47,11 @@ migrate:
 	@echo "$(BLUE)Applying migrations...$(RESET)"
 	@cd src/packages/database && npx prisma migrate deploy
 	@echo "$(GREEN)Migrations applied.$(RESET)"
+
+genPrismaClient:
+	@echo "$(BLUE)Generating Prisma client...$(RESET)"
+	@cd src/packages/database && npm install && npx prisma generate
+	@echo "$(GREEN)Prisma client generated.$(RESET)"
 
 build: setup
 	@echo "$(GREEN)Building images...$(RESET)"

@@ -87,6 +87,11 @@ export const routes: Routes = [
     loadComponent: () => import('./assignment-detail/assignment-detail.component').then(m => m.AssignmentDetailComponent),
   },
   {
+    path: 'eval-assignments',
+    canActivate: [authGuard],
+    loadComponent: () => import('./eval-assignment-list/eval-assignment-list.component').then(m => m.EvalAssignmentListComponent),
+  },
+  {
     path: 'evaluation',
     canActivate: [authGuard],
     loadComponent: () => import('./evaluation-flow/evaluation-flow.component').then(m => m.EvaluationFlowComponent),
