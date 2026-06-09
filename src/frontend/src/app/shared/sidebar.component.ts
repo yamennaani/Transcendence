@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
@@ -17,19 +18,20 @@ const ACTIVE_ALIASES: Record<string, string[]> = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
-  { label: 'My classes',  route: '/classes',            icon: 'book',       roles: ['Student','Bocal','Admin'] },
-  { label: 'Assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },
-  { label: 'Evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student','Bocal','Admin'], badge: 2 },
-  { label: 'Progress',    route: '/progress',           icon: 'trending',   roles: ['Student','Bocal','Admin'] },
-  { label: 'Bocal',      route: '/bocal',              icon: 'building',   roles: ['Student','Bocal','Admin'] },
   { label: 'Admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Student','Bocal','Admin'] },
+  { label: 'label_dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
+  { label: 'label_my_classes',  route: '/classes',            icon: 'book',       roles: ['Student'] },
+  { label: 'label_assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },
+  { label: 'label_evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student'], badge: 2 },
+  { label: 'label_progress1',   route: '/progress',           icon: 'trending',   roles: ['Student'] },
+  { label: 'label_manage',      route: '/bocal',              icon: 'building',   roles: ['Bocal','Admin'] },
+  { label: 'label_users',       route: '/users',              icon: 'users',      roles: ['Admin'] },
 ];
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [NgStyle, LogoComponent, IconComponent, RouterLink, LanguageSwitcherComponent],
+  imports: [NgStyle, LogoComponent, IconComponent, RouterLink, LanguageSwitcherComponent, TranslateModule],
   template: `
     <nav [ngStyle]="navStyle">
       <!-- Logo -->
@@ -57,7 +59,7 @@ const NAV_ITEMS: NavItem[] = [
              (mouseenter)="hovered.set(item.route)"
              (mouseleave)="hovered.set('')">
             <span [innerHTML]="icons[item.icon]" style="display:flex;align-items:center;width:16px;height:16px;flex-shrink:0"></span>
-            <span style="flex:1">{{ item.label }}</span>
+            <span style="flex:1">{{ item.label | translate }}</span>
             @if (item.badge) {
               <span [ngStyle]="badgePillStyle">{{ item.badge }}</span>
             }
@@ -70,17 +72,18 @@ const NAV_ITEMS: NavItem[] = [
         <div [ngStyle]="itemStyle('')" style="text-decoration:none">
           <app-language-switcher/>
         </div>
-        <a [ngStyle]="itemStyle('/settings')" style="text-decoration:none" href="#">Settings</a>
-        <a [ngStyle]="itemStyle('/logout')" (click)="logout()" style="text-decoration:none;cursor:pointer">Sign out</a>
+        <a [ngStyle]="itemStyle('/settings')" style="text-decoration:none" href="#">{{ 'btn_settings' | translate }}</a>
+        <a [ngStyle]="itemStyle('/logout')" (click)="logout()" style="text-decoration:none;cursor:pointer">{{ 'btn_sign_out' | translate }}</a>
       </div>
     </nav>
   `,
   styles: [`a { text-decoration: none; }`],
 })
 export class SidebarComponent {
-  private auth      = inject(AuthService);
-  private router    = inject(Router);
-  private sanitizer = inject(DomSanitizer);
+  private auth   = inject(AuthService);
+  private router = inject(Router);
+  private translate = inject(TranslateService);
+   private sanitizer = inject(DomSanitizer);
 
   user    = this.auth.user;
   hovered = signal('');

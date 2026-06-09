@@ -451,6 +451,73 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     }
     .name-input::placeholder { color: ${DS.colors.fg3}; }
     .name-input:focus { border-color: ${DS.colors.violet}; }
+
+    /* File preview card */
+    .file-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: ${DS.radius.md};
+      border: 1px solid ${DS.colors.cyanBorder};
+      background: ${DS.colors.cyanSubtle};
+    }
+    .file-preview-ext {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: ${DS.colors.cyan};
+      color: ${DS.colors.bg};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: ${DS.fonts.mono};
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .file-preview-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+      flex: 1;
+    }
+    .file-preview-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: ${DS.colors.fg1};
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .file-preview-meta {
+      font-size: 0.75rem;
+      color: ${DS.colors.fg3};
+      font-family: ${DS.fonts.mono};
+    }
+    .file-preview-clear {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: 1px solid ${DS.colors.border};
+      color: ${DS.colors.fg3};
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 120ms;
+    }
+    .file-preview-clear:hover {
+      background: ${DS.colors.redSubtle};
+      border-color: ${DS.colors.redBorder};
+      color: ${DS.colors.red};
+    }
   `],
 })
 export class AssignmentDetailComponent implements OnInit {
@@ -526,6 +593,17 @@ export class AssignmentDetailComponent implements OnInit {
     const file = this.selectedFile();
     if (!file) return null;
     return `${file.name} · ${this.formatFileSize(file.size)}`;
+  });
+
+  selectedFileMeta = computed(() => {
+    const file = this.selectedFile();
+    if (!file) return null;
+    return {
+      name: file.name,
+      size: this.formatFileSize(file.size),
+      ext: file.name.includes('.') ? file.name.split('.').pop()!.toUpperCase() : '?',
+      type: file.type || 'unknown',
+    };
   });
 
   private currentUserId() {
