@@ -613,6 +613,8 @@ export class AssignmentDetailComponent implements OnInit {
                 this.loading.hide();
               }
             }
+          },
+        });
         const userId = this.user()?.id;
         const enrollment$ = (this.isStaff() && userId)
           ? this.enrollService.getStudenEnrolledClasses(userId)
@@ -859,10 +861,6 @@ export class AssignmentDetailComponent implements OnInit {
     return null;
   }
 
-  private formatFileSize(size: number) {
-    if (size < 1024) return `${size} B`;
-    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   // Staff managing this class land back on the bocal management view (their own URL);
   // students — and staff merely enrolled as participants — go to "My classes".
   goToClasses() {
