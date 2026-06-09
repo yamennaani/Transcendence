@@ -4,6 +4,12 @@ import { routes } from './app.routes';
 import { HttpClient, provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './services/auth-interceptor';
 
+// ── DEV FLAG ──────────────────────────────────────────────────────────────────
+// Set to true  → AuthInterceptor runs (attaches Bearer token to every request)
+// Set to false → no interceptor (useful while testing auth without a valid token)
+const USE_AUTH_INTERCEPTOR = true;
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { TranslateLoader, TranslateModule, TranslateService, MissingTranslationHandler } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { MyMissingTranslationHandler } from './languages/language.service';
@@ -32,8 +38,8 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withInterceptorsFromDi()),
-    { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+    provideHttpClient(...(USE_AUTH_INTERCEPTOR ? [withInterceptorsFromDi()] : [])),
+    ...(USE_AUTH_INTERCEPTOR ? [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }] : []),
     importProvidersFrom(
       TranslateModule.forRoot({
         loader: {

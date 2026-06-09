@@ -18,6 +18,14 @@ export class GroupService {
         return this.http.delete(`${this.base}/${id}`, { body: data })
     }
 
+    getGroupsForAssignment(assId: number) {
+        return this.http.get<any[]>(`${this.base}/assignment/${assId}`)
+    }
+
+    deleteGroup(id: number) {
+        return this.http.delete<{ message: string; id: number }>(`${this.base}/${id}/admin`)
+    }
+
     inviteMember(groupId: number, data: { leaderId: number, inviteeId: number }) {
         return this.http.post(`${this.base}/${groupId}/invite`, data)
     }

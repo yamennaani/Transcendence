@@ -143,7 +143,8 @@ model Assignment {
 
   name        String
   description String
-  groupSize   Int    @default(1) // solo or group 
+  groupSize   Int    @default(1) // solo or group
+  fileId     Int?
 
   req_eval            Int            @default(3)
   max_score           Int            @default(100)
@@ -273,7 +274,7 @@ model EvalSectionScore {
   sectionId  Int
   score      Int
   response   EvalResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
-  section    EvalSection  @relation(fields: [sectionId], references: [id])
+  section    EvalSection  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 
   @@unique([responseId, sectionId])
   @@map("evalSectionScore")

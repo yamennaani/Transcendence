@@ -34,6 +34,12 @@ export class CourseService {
     return this.http.get<Course[]>(`${this.base}/courses/${orgId}`);
   }
 
+  getClassStudents(classId: number) {
+    return this.http.get<{ id: number; username: string; email: string; role: string; created_at: string }[]>(
+      `${this.base}/${classId}/students`
+    );
+  }
+
   createClass(data: CoursePayload) {
     return this.http.post<Course>(`${this.base}/`, data);
   }

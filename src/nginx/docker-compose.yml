@@ -2,7 +2,9 @@ services:
   nginx:
     container_name: nginx
 
-    image: nginx:alpine
+    build:
+      context: .
+      dockerfile: Dockerfile
 
     command: ["nginx", "-g", "daemon off;"]
 
@@ -15,7 +17,8 @@ services:
 
     ports:
       - "80:80"
-    
+      - "443:443"
+
     depends_on:
       - frontend
 

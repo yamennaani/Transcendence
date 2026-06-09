@@ -1,24 +1,29 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
-import { AvatarComponent } from '../shared/avatar.component';
 import { IconComponent } from '../shared/icon.component';
 import { AppIconSettings } from './field.types';
 import { LanguageSwitcherComponent } from '../languages/language-switcher.component';
 
 interface NavItem { label: string; route: string; icon: string; roles: string[]; badge?: number; }
 
+// Routes that should keep a nav item highlighted even though they live under a different path
+const ACTIVE_ALIASES: Record<string, string[]> = {
+  '/assignment': ['/assignment-detail'],
+};
+
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
-  { label: 'My classes',  route: '/classes',            icon: 'book',       roles: ['Student'] },
+  { label: 'My classes',  route: '/classes',            icon: 'book',       roles: ['Student','Bocal','Admin'] },
   { label: 'Assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },
-  { label: 'Evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student'], badge: 2 },
-  { label: 'Progress',    route: '/progress',           icon: 'trending',   roles: ['Student'] },
-  { label: 'Manage',      route: '/bocal',              icon: 'building',   roles: ['Bocal','Admin'] },
-  { label: 'Admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Admin'] },
+  { label: 'Evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student','Bocal','Admin'], badge: 2 },
+  { label: 'Progress',    route: '/progress',           icon: 'trending',   roles: ['Student','Bocal','Admin'] },
+  { label: 'Bocal',      route: '/bocal',              icon: 'building',   roles: ['Student','Bocal','Admin'] },
+  { label: 'Admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Student','Bocal','Admin'] },
 ];
 
 @Component({
@@ -38,8 +43,7 @@ const NAV_ITEMS: NavItem[] = [
       style="cursor: pointer;">
         <!-- Replace app-avatar with app-icon -->
         <app-icon [settings]="avatarSettings()" 
-        [allowEdit]="false"
-        (iconChanged)="onAvatarChanged($event)"/>
+        [allowEdit]="false"/>
         <div style="flex:1;min-width:0">
           <div [ngStyle]="userNameStyle">{{ user()?.username }}</div>
           <div [ngStyle]="roleStyle()">{{ user()?.role }}</div>
@@ -74,8 +78,9 @@ const NAV_ITEMS: NavItem[] = [
   styles: [`a { text-decoration: none; }`],
 })
 export class SidebarComponent {
-  private auth   = inject(AuthService);
-  private router = inject(Router);
+  private auth      = inject(AuthService);
+  private router    = inject(Router);
+  private sanitizer = inject(DomSanitizer);
 
   user    = this.auth.user;
   hovered = signal('');
@@ -97,22 +102,20 @@ export class SidebarComponent {
     allowEdit: false, // Set to true if you want upload from sidebar
   }));
 
-  // Handle avatar change if you enable editing
-  onAvatarChanged(newIconUrl: string) {
-    // Update user avatar in your backend
-    console.log('Avatar changed:', newIconUrl);
-    // You would call an API to update the avatar here
-  }
-
   // Icon SVG strings (Lucide-compatible inline SVG, stroke 1.5)
-  readonly icons: Record<string, string> = {
-    dashboard: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
-    book:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`,
-    file:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-    star:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-    trending:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`,
-    building:  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>`,
-    users:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+  // Inline SVGs are static, locally-defined markup (not user input) — trust them
+  // directly so Angular's HTML sanitizer doesn't strip SVG-specific attributes
+  // (viewBox, stroke-width, …) and log a sanitization warning on every render.
+  private trust(svg: string): SafeHtml { return this.sanitizer.bypassSecurityTrustHtml(svg); }
+
+  readonly icons: Record<string, SafeHtml> = {
+    dashboard: this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`),
+    book:      this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>`),
+    file:      this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`),
+    star:      this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`),
+    trending:  this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`),
+    building:  this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>`),
+    users:     this.trust(`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`),
   };
 
   // Styles
@@ -145,8 +148,16 @@ export class SidebarComponent {
     };
   });
 
+  private matchesRoute(currentPath: string, route: string) {
+    return currentPath === route || currentPath.startsWith(route + '/');
+  }
+
   itemStyle(route: string) {
-    const active  = this.router.url === route;
+    const currentPath = this.router.url.split('?')[0].split('#')[0];
+    const active = route !== '' && (
+      this.matchesRoute(currentPath, route) ||
+      (ACTIVE_ALIASES[route] ?? []).some(alias => this.matchesRoute(currentPath, alias))
+    );
     const hovered = this.hovered() === route;
     return {
       display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 12px',

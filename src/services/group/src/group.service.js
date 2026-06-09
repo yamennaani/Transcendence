@@ -161,6 +161,34 @@ const respondToInvite = async(inviteId, {userId, status})=>{
     }
 }
 
+//list all groups for an assignment (staff management)
+const getGroupsForAssignment = async (assId)=>{
+    if(!assId)
+        throw new ValidationError('Invalid request')
+
+    const assignment = await utils.getAssignmentById(assId)
+    if(!assignment)
+        throw new NotFoundError('Assignment not found')
+
+    return await prisma.group.findMany({
+        where: {assId: parseInt(assId)},
+        include: {members: {include: {user: {select: {id: true, username: true, email: true}}}}}
+    })
+}
+
+//staff/admin removal of a group (members/submissions cascade per schema)
+const deleteGroup = async (groupId)=>{
+    if(!groupId)
+        throw new ValidationError('Invalid request')
+
+    const group = await utils.getGroupById(groupId)
+    if(!group)
+        throw new NotFoundError('Group not found')
+
+    await prisma.group.delete({where: {id: parseInt(groupId)}})
+    return {message: 'Group deleted successfully', id: groupId}
+}
+
 const getMyGroupForAssignment = async ({ userId, assId }) => {
     if (!userId || !assId)
         throw new ValidationError('Invalid request')
@@ -174,4 +202,5 @@ const getMyGroupForAssignment = async ({ userId, assId }) => {
     return membership?.group ?? null
 }
 
-module.exports = {createGroup, inviteMember, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites, getMyGroupForAssignment}
+module.exports = {createGroup, inviteMember, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites,
+    getMyGroupForAssignment, getGroupsForAssignment, deleteGroup}

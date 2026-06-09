@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from "@angular/core";
+import { Component, computed, inject, signal, OnInit } from "@angular/core";
 import { forkJoin } from "rxjs";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../core/services/user-service/user-service";
@@ -27,12 +27,16 @@ import { DS } from "../tokens";
                 </div>
             </app-container>
 
+            @if (errorMsg()) {
+                <div class="error-banner">{{ errorMsg() }}</div>
+            }
+
             <div class="actions">
                 @if (isEditing()) {
                     <app-btn variant="ghost"   size="lg" (clicked)="onCancel()">Cancel</app-btn>
                     <app-btn variant="primary" size="lg" (clicked)="onSave()">Save changes</app-btn>
                 } @else {
-                    <app-btn variant="primary" size="lg" (clicked)="isEditing.set(true)">
+                    <app-btn variant="primary" size="lg" (clicked)="startEditing()">
                         ✏️ Edit profile
                     </app-btn>
                 }
@@ -60,15 +64,24 @@ import { DS } from "../tokens";
             justify-content: flex-end;
             gap: ${DS.space[2]};
         }
+        .error-banner {
+            background: ${DS.colors.redSubtle};
+            border: 1px solid ${DS.colors.redBorder};
+            color: ${DS.colors.red};
+            border-radius: ${DS.radius.md};
+            padding: 10px 14px;
+            font-size: 0.8125rem;
+        }
     `]
 })
-export class UserProfileComponent {
+export class UserProfileComponent implements OnInit {
     private userAuth    = inject(AuthService);
     private userService = inject(UserService);
     private loading     = inject(LoadingService);
     private user        = this.userAuth.user;
 
     isEditing = signal(false);
+    errorMsg  = signal('');
     private changes = new Map<string, FieldType>();
     private files   = new Map<string, File>();
 
@@ -77,6 +90,12 @@ export class UserProfileComponent {
         height:     'auto',
         scrollable: false,
     };
+
+    ngOnInit() {
+        if (!this.user()?.id) {
+            this.userAuth.getMe().subscribe();
+        }
+    }
 
     fields = computed<FieldType[]>(() => [
         {
@@ -144,6 +163,13 @@ export class UserProfileComponent {
         },
     ]);
 
+    startEditing() {
+        this.changes.clear();
+        this.files.clear();
+        this.errorMsg.set('');
+        this.isEditing.set(true);
+    }
+
     onFieldChanged(field: FieldType) {
         this.changes.set(field.label, field);
     }
@@ -154,10 +180,13 @@ export class UserProfileComponent {
 
     onSave() {
         const userId = this.user()?.id;
-        if (!userId) return;
+        if (!userId) {
+            this.errorMsg.set('Could not identify user. Please refresh and try again.');
+            return;
+        }
 
-        const bioChange    = this.changes.get('Bio');
-        const avatarFile   = this.files.get('Avatar');
+        const bioChange     = this.changes.get('Bio');
+        const avatarFile    = this.files.get('Avatar');
         const avatarPreview = this.changes.get('Avatar')?.value as string | undefined;
 
         const calls: Record<string, any> = {};
@@ -173,6 +202,7 @@ export class UserProfileComponent {
             return;
         }
 
+        this.errorMsg.set('');
         this.loading.show();
         forkJoin(calls).subscribe({
             next: () => {
@@ -185,13 +215,17 @@ export class UserProfileComponent {
                 this.files.clear();
                 this.isEditing.set(false);
             },
-            error: () => this.loading.hide(),
+            error: (err) => {
+                this.loading.hide();
+                this.errorMsg.set(err?.error?.error ?? 'Failed to save profile. Please try again.');
+            },
         });
     }
 
     onCancel() {
         this.changes.clear();
         this.files.clear();
+        this.errorMsg.set('');
         this.isEditing.set(false);
     }
 }

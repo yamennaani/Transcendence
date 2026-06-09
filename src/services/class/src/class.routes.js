@@ -1,5 +1,6 @@
 const express = require('express')
 const classService = require('./class.service')
+const { uploader } = require('../packages/fileManager')
 const route = express.Router()
 
 route.get('/', async (req, res, next)=>{
@@ -38,9 +39,15 @@ route.delete('/:id', async (req, res, next)=>{
     } catch (error) {next(error)}
 })
 
-route.post('/:id/assignment', async(req, res, next)=>{
+route.post('/:id/assignment', uploader.single('file'), async(req, res, next)=>{
     try{
-        res.json( await classService.createAssignment(req.params.id, req.body)) // id passed = course id
+        res.json( await classService.createAssignment(req.params.id, req.body, req.file)) // id passed = course id
+    }catch(err){next(err)}
+})
+
+route.get('/:id/students', async (req, res, next)=>{
+    try{
+        res.json(await classService.getClassStudents(req.params.id)) // id passed = course id
     }catch(err){next(err)}
 })
 
@@ -56,9 +63,9 @@ route.get('/assignment/:id', async (req, res, next)=>{
     }catch(err){next(err)}
 })
 
-route.put('/assignment/:id', async (req, res, next)=>{
+route.put('/assignment/:id', uploader.single('file'), async (req, res, next)=>{
     try{
-        res.json(await classService.updateAssignment(req.params.id, req.body)) // id passed = assignment id
+        res.json(await classService.updateAssignment(req.params.id, req.body, req.file)) // id passed = assignment id
     }catch(err){next(err)}
 })
 

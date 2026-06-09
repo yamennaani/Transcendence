@@ -186,6 +186,7 @@ export interface Assignment {
   class?: Course;
   groups?: Group[];
   evalSheet?: EvalSheet;
+  fileId?: number | null;
 }
 
 // Enrollment related interfaces
