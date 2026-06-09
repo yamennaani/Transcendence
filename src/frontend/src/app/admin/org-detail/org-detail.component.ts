@@ -21,19 +21,21 @@ export class AdminOrgDetailComponent {
   private router = inject(Router)
   private http = inject(HttpClient)
   private orgBase = '/api/org'
+  private authBase = '/api/auth'
 
   org = signal<any | null>(null)
   members = signal<any[]>([])
+  allowedEmails = signal<any[]>([])
   busy = signal(false)
   removingId = signal<number | null>(null)
+  removingInviteId = signal<number | null>(null)
 
-  // add member form
   email: string = ''
-  role: string = 'Student'
   csvText: string = ''
   singleNotice: string = ''
   bulkNotice: string = ''
   removeNotice: string = ''
+  inviteNotice: string = ''
 
   constructor(){ this.load() }
 
@@ -42,6 +44,13 @@ export class AdminOrgDetailComponent {
     if(!id) return
     this.orgService.getOrg(id).subscribe({ next: (o:any)=> this.org.set(o) })
     this.orgService.listOrgMembers(id).subscribe({ next: (m:any[])=> this.members.set(m || []) })
+    this.loadAllowedEmails()
+  }
+
+  loadAllowedEmails(){
+    this.http.get<any[]>(`${this.authBase}/invites`).subscribe({
+      next: (invites:any[]) => this.allowedEmails.set(invites || []),
+    })
   }
 
   goBack() {
@@ -49,24 +58,48 @@ export class AdminOrgDetailComponent {
   }
 
   addOne(){
-    const id = Number(this.route.snapshot.paramMap.get('id'))
     const email = this.email.trim()
     this.singleNotice = ''
     if(!email) { this.singleNotice = 'Email required'; return }
     if(!this.validateEmail(email)) { this.singleNotice = 'Invalid email format'; return }
     this.busy.set(true)
-    const username = this.deriveUsername(email)
-    this.orgService.addMember(id, { email, username, role: this.role }).subscribe({
+    this.http.post(`${this.authBase}/invite`, { email }).subscribe({
       next: ()=>{
         this.busy.set(false)
         this.email = ''
-        this.singleNotice = `Added ${email}`
+        this.singleNotice = `Whitelisted ${email}`
         this.load()
       },
-      error: ()=>{
+      error: (err)=>{
         this.busy.set(false)
-        this.singleNotice = 'Failed to add user'
+        this.singleNotice = err?.error?.error ?? 'Failed to whitelist email'
       }
+    })
+  }
+
+  revokeInvite(invite: any) {
+    const id = Number(invite?.id)
+    const email = String(invite?.email ?? '').trim()
+    if (!id || !email) {
+      this.inviteNotice = 'Missing invite details'
+      return
+    }
+
+    if (!confirm(`Remove ${email} from the whitelist?`)) return
+
+    this.removingInviteId.set(id)
+    this.inviteNotice = ''
+
+    this.http.delete(`${this.authBase}/invite/${id}`).subscribe({
+      next: () => {
+        this.removingInviteId.set(null)
+        this.inviteNotice = `Removed ${email}`
+        this.loadAllowedEmails()
+      },
+      error: () => {
+        this.removingInviteId.set(null)
+        this.inviteNotice = `Failed to remove ${email}`
+      },
     })
   }
 
@@ -98,7 +131,6 @@ export class AdminOrgDetailComponent {
   }
 
   importCSV(){
-    const id = Number(this.route.snapshot.paramMap.get('id'))
     const lines = this.csvText.split('\n').map(l=>l.trim()).filter(Boolean)
     this.bulkNotice = ''
     if(lines.length === 0) { this.bulkNotice = 'No rows'; return }
@@ -106,28 +138,25 @@ export class AdminOrgDetailComponent {
     const valid = lines.filter(l=>this.validateEmail(l))
     const invalidCount = lines.length - valid.length
     const promises = valid.map((email) => new Promise<{ email: string; ok: boolean }>((resolve)=>{
-      const username = this.deriveUsername(email)
-      this.orgService.addMember(id, { email, username, role: 'Student' }).subscribe({ next: ()=>resolve({ email, ok:true }), error: ()=>resolve({ email, ok:false }) })
+      this.http.post(`${this.authBase}/invite`, { email }).subscribe({ next: ()=>resolve({ email, ok:true }), error: ()=>resolve({ email, ok:false }) })
     }))
     Promise.all(promises).then((results)=>{
       const added = results.filter((result) => result.ok).length
       const failed = results.filter((result) => !result.ok).length
       this.busy.set(false)
-      this.bulkNotice = `${added} added, ${failed} failed${invalidCount?`, ${invalidCount} invalid format` : ''}`
+      this.bulkNotice = `${added} whitelisted, ${failed} failed${invalidCount?`, ${invalidCount} invalid format` : ''}`
       this.csvText = ''
-      this.load()
+      this.loadAllowedEmails()
     })
-  }
-
-  // Derive a safe username from an email local-part
-  deriveUsername(email: string){
-    const local = String(email || '').split('@')[0] || 'user'
-    const sanitized = local.replace(/[^a-zA-Z0-9._-]/g, '')
-    return (sanitized && sanitized.length) ? sanitized : 'user'
   }
 
   validateEmail(email: string){
     return /.+@.+\..+/.test(String(email || ''))
+  }
+
+  formatInviteDate(value: string | Date | null | undefined) {
+    const date = new Date(value ?? '')
+    return Number.isNaN(date.getTime()) ? '—' : date.toLocaleDateString()
   }
 
   readonly pageStyle = {
@@ -267,6 +296,21 @@ export class AdminOrgDetailComponent {
   readonly tableRowStyle = {
     display: 'grid',
     gridTemplateColumns: '1.2fr 1fr 1fr',
+    gap: '12px',
+    alignItems: 'center',
+    padding: '16px 20px',
+    borderBottom: `1px solid ${DS.colors.borderSubtle}`,
+    color: DS.colors.fg2,
+  }
+
+  readonly inviteTableHeaderStyle = {
+    ...this.tableHeaderStyle,
+    gridTemplateColumns: '1.5fr 0.8fr 1fr 1fr auto',
+  }
+
+  readonly inviteTableRowStyle = {
+    display: 'grid',
+    gridTemplateColumns: '1.5fr 0.8fr 1fr 1fr auto',
     gap: '12px',
     alignItems: 'center',
     padding: '16px 20px',

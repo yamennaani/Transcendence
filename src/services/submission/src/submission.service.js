@@ -2,7 +2,15 @@ const {prisma} = require('../packages/database')
 const {NotFoundError, ValidationError, ConflictError, UnauthorizedError} = require('../packages/errors')
 const utils = require('../packages/utils')
 const { createStorage } = require('../packages/fileManager')
+const logger = require('../packages/logger')
 const storage = createStorage('submissions')
+
+const storageReady = (async () => {
+    await storage.ensureBucket()
+})().catch(err => {
+    logger.error('submission-service', 'Failed to initialize storage bucket', err)
+    throw err
+})
 
 
 const validateGroupMember = async (groupId, userId)=>{
@@ -169,5 +177,6 @@ const getSubmissionsForAssignment = async (assId)=>{
 
 module.exports = {
   getGroupSubmissions, createSubmission, closeSubmission,
-  uploadFile, getDownloadUrl, removeFile, getSubmissionsForAssignment
+    uploadFile, getDownloadUrl, removeFile, getSubmissionsForAssignment,
+    storageReady
 }

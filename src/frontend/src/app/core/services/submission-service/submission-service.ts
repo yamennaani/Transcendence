@@ -1,13 +1,16 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { Observable } from "rxjs";
+
+import { Submission, SubmissionType } from "../../../tokens";
 
 @Injectable({ providedIn: "root" })
 export class SubmissionService {
     private http = inject(HttpClient)
     private base = '/api/submission'
 
-    createSubmission(data: { groupId: number, assignmentId: number }) {
-        return this.http.post(`${this.base}/`, data)
+    createSubmission(data: { groupId: number, userId: number, type: SubmissionType }): Observable<Submission> {
+        return this.http.post<Submission>(`${this.base}/`, data)
     }
 
     getGroupSubmissions(groupId: number) {
@@ -15,18 +18,18 @@ export class SubmissionService {
     }
 
     getSubmissionsForAssignment(assignmentId: number) {
-        return this.http.get<any[]>(`${this.base}/assignment/${assignmentId}/`)
+        return this.http.get<Submission[]>(`${this.base}/assignment/${assignmentId}/`)
     }
 
-    closeSubmission(groupId: number, data: { evaluatorId: number }) {
-        return this.http.patch(`${this.base}/${groupId}/close`, data)
+    closeSubmission(groupId: number, data: { userId: number }): Observable<Submission> {
+        return this.http.patch<Submission>(`${this.base}/${groupId}/close`, data)
     }
 
-    uploadFile(groupId: number, userId: number, file: File) {
+    uploadFile(groupId: number, userId: number, file: File): Observable<Submission> {
         const form = new FormData()
         form.append('file', file)
         form.append('userId', String(userId))
-        return this.http.post(`${this.base}/${groupId}/file`, form)
+        return this.http.post<Submission>(`${this.base}/${groupId}/file`, form)
     }
 
     getDownloadUrl(groupId: number, userId: number) {

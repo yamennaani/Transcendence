@@ -10,7 +10,7 @@ import { GroupService } from '../core/services/group-service/group-service';
 import { SubmissionService } from '../core/services/submission-service/submission-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
 import { LoadingService } from '../core/services/loading-service/loading.service';
-import { Group, DS } from '../tokens';
+import { Group, DS, Submission } from '../tokens';
 
 import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { BadgeComponent } from '../shared/badge.component';
@@ -235,18 +235,85 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     .invite-btns { display: flex; gap: 6px; }
 
     /* Submission card */
+    .submission-card { gap: 16px; }
     .sub-status-row {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .upload-btn-wrap { position: relative; overflow: hidden; display: inline-flex; }
+    .upload-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px 16px;
+      border: 1px solid ${DS.colors.border};
+      border-radius: ${DS.radius.lg};
+      background: ${DS.colors.surface};
+    }
+    .upload-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: ${DS.colors.fg3};
+    }
+    .upload-help {
+      margin: 0;
+      font-size: 0.8125rem;
+      color: ${DS.colors.fg3};
+      line-height: 1.5;
+    }
+    .upload-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .upload-picker {
+      position: relative;
+      overflow: hidden;
+      display: inline-flex;
+    }
     .file-input {
       position: absolute;
       inset: 0;
       opacity: 0;
       cursor: pointer;
       font-size: 0;
+    }
+    .selected-file {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 12px;
+      border-radius: ${DS.radius.md};
+      border: 1px solid ${DS.colors.cyanBorder};
+      background: ${DS.colors.cyanSubtle};
+      color: ${DS.colors.cyan};
+      font-size: 0.8125rem;
+      min-width: 0;
+    }
+    .selected-file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+    .upload-error {
+      font-size: 0.8125rem;
+      color: ${DS.colors.red};
+      background: ${DS.colors.redSubtle};
+      border: 1px solid ${DS.colors.redBorder};
+      border-radius: ${DS.radius.md};
+      padding: 9px 12px;
+    }
+    .upload-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.8125rem;
+      color: ${DS.colors.fg3};
     }
 
     /* Eval progress */
@@ -387,6 +454,20 @@ import { ScorePillComponent } from '../shared/score-pill.component';
   `],
 })
 export class AssignmentDetailComponent implements OnInit {
+  private readonly allowedSubmissionMimeTypes = new Set([
+    'application/zip',
+    'application/x-zip-compressed',
+    'application/pdf',
+    'image/png',
+    'image/jpeg',
+    'image/gif',
+    'image/webp',
+    'text/plain',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ]);
+  private readonly maxSubmissionFileSize = 50 * 1024 * 1024;
+
   private auth         = inject(AuthService);
   private route        = inject(ActivatedRoute);
   router               = inject(Router);
@@ -412,13 +493,16 @@ export class AssignmentDetailComponent implements OnInit {
 
   // Student state
   myGroup      = signal<Group | null>(null);
-  mySubmission = signal<any | null>(null);
+  mySubmission = signal<Submission | null>(null);
   myInvites    = signal<any[]>([]);
   actionError  = signal<string | null>(null);
+  submissionError = signal<string | null>(null);
+  selectedFile = signal<File | null>(null);
+  uploadingFile = signal(false);
   groupName    = signal<string>('');
 
   // Staff state
-  allSubs      = signal<any[]>([]);
+  allSubs      = signal<Submission[]>([]);
 
   groupStatus = computed<'no-group' | 'has-invites' | 'in-group'>(() => {
     if (this.myGroup()) return 'in-group';
@@ -438,13 +522,23 @@ export class AssignmentDetailComponent implements OnInit {
 
   evalSlots     = computed(() => Array.from({ length: this.assignment()?.req_eval ?? 3 }, (_, i) => i));
   completedEvals = computed(() => this.mySubmission()?.responses?.length ?? 0);
+  selectedFileLabel = computed(() => {
+    const file = this.selectedFile();
+    if (!file) return null;
+    return `${file.name} · ${this.formatFileSize(file.size)}`;
+  });
 
-  staffGroupCount = computed(() => new Set(this.allSubs().map((s: any) => s.groupId)).size);
-  staffSubmittedCount = computed(() => this.allSubs().filter((s: any) => s.status === 'Close').length);
+  private currentUserId() {
+    const user = this.user() as { id?: number; userId?: number } | null;
+    return user?.id ?? user?.userId ?? null;
+  }
+
+  staffGroupCount = computed(() => new Set(this.allSubs().map((s) => s.groupId)).size);
+  staffSubmittedCount = computed(() => this.allSubs().filter((s) => s.status === 'Close').length);
   staffAvgScore = computed(() => {
-    const scored = this.allSubs().filter((s: any) => s.finalScore != null);
+    const scored = this.allSubs().filter((s) => s.finalScore != null);
     if (!scored.length) return null;
-    return Math.round(scored.reduce((a: number, s: any) => a + s.finalScore, 0) / scored.length);
+    return Math.round(scored.reduce((a: number, s) => a + (s.finalScore ?? 0), 0) / scored.length);
   });
 
   readonly flatConfig: ContainerConfig = { variant: 'flat', height: 'auto', scrollable: false };
@@ -479,6 +573,46 @@ export class AssignmentDetailComponent implements OnInit {
           error: () => {},
         });
 
+        this.subService.getSubmissionsForAssignment(id).subscribe({
+          next: (subs) => {
+            if (this.isStaff()) {
+              this.allSubs.set(subs);
+              this.loading.hide();
+            } else {
+              const userId = this.user()?.id;
+              const mine = subs.find(s => s.group?.members?.some((m: any) => m.userId === userId));
+              if (mine) {
+                this.myGroup.set(mine.group);
+                this.mySubmission.set(mine);
+                this.loading.hide();
+              } else if (userId) {
+                this.groupService.getMyGroupForAssignment(userId, id).subscribe({
+                  next: (group: any) => {
+                    if (group) {
+                      this.myGroup.set(group);
+                      const existingSubmission = subs.find(sub => sub.groupId === group.id);
+                      if (existingSubmission) {
+                        this.mySubmission.set(existingSubmission);
+                      }
+                      this.loading.hide();
+                    } else {
+                      this.groupService.getInvites({ userId }).subscribe({
+                        next: (invites) => { this.myInvites.set(invites); this.loading.hide(); },
+                        error: () => this.loading.hide(),
+                      });
+                    }
+                  },
+                  error: () => {
+                    this.groupService.getInvites({ userId }).subscribe({
+                      next: (invites) => { this.myInvites.set(invites); this.loading.hide(); },
+                      error: () => this.loading.hide(),
+                    });
+                  },
+                });
+              } else {
+                this.loading.hide();
+              }
+            }
         const userId = this.user()?.id;
         const enrollment$ = (this.isStaff() && userId)
           ? this.enrollService.getStudenEnrolledClasses(userId)
@@ -540,14 +674,15 @@ export class AssignmentDetailComponent implements OnInit {
 
   joinSoloAssignment() {
     const a = this.assignment();
-    const user = this.user();
-    if (!a || !user) return;
+    const userId = this.currentUserId();
+    if (!a || !userId) return;
     this.actionError.set(null);
+    this.submissionError.set(null);
     this.loading.show();
     this.groupService.createGroup({
       assId: a.id,
-      userId: user.id,
-      name: `${user.username}'s work`,
+      userId,
+      name: `${this.user()?.username ?? 'My'}'s work`,
       size: 1,
     }).subscribe({
       next: (group: any) => {
@@ -572,11 +707,12 @@ export class AssignmentDetailComponent implements OnInit {
 
   createGroup() {
     const a = this.assignment();
-    const userId = this.user()?.id;
+    const userId = this.currentUserId();
     const name = this.groupName().trim();
     if (!a || !userId) return;
     if (!name) { this.actionError.set('Please enter a group name.'); return; }
     this.actionError.set(null);
+    this.submissionError.set(null);
     this.loading.show();
     this.groupService.createGroup({
       assId: a.id,
@@ -599,9 +735,10 @@ export class AssignmentDetailComponent implements OnInit {
   }
 
   acceptInvite(inviteId: number) {
-    const userId = this.user()?.id;
+    const userId = this.currentUserId();
     if (!userId) return;
     this.actionError.set(null);
+    this.submissionError.set(null);
     this.loading.show();
     this.groupService.respondToInvite(inviteId, { userId, status: 'Accepted' }).subscribe({
       next: (res: any) => {
@@ -617,7 +754,7 @@ export class AssignmentDetailComponent implements OnInit {
   }
 
   declineInvite(inviteId: number) {
-    const userId = this.user()?.id;
+    const userId = this.currentUserId();
     if (!userId) return;
     this.groupService.respondToInvite(inviteId, { userId, status: 'Declined' }).subscribe({
       next: () => this.myInvites.update(inv => inv.filter(i => i.id !== inviteId)),
@@ -628,29 +765,67 @@ export class AssignmentDetailComponent implements OnInit {
   startSubmission() {
     const a = this.assignment();
     const group = this.myGroup();
-    if (!a || !group) return;
+    const userId = this.currentUserId();
+      if (!a || !group || !userId) return;
     this.actionError.set(null);
+    this.submissionError.set(null);
+    this.selectedFile.set(null);
     this.loading.show();
-    this.subService.createSubmission({ groupId: group.id, assignmentId: a.id }).subscribe({
-      next: (sub: any) => { this.mySubmission.set(sub); this.loading.hide(); },
+      console.debug('createSubmission payload', { groupId: group.id, userId, type: 'FILE' });
+    this.subService.createSubmission({ groupId: group.id, userId, type: 'FILE' }).subscribe({
+      next: (sub) => { this.mySubmission.set(sub); this.loading.hide(); },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? 'Failed to start submission.');
+        const body = err?.error ?? err?.message ?? err;
+        console.error('startSubmission error:', err);
+        this.actionError.set(typeof body === 'string' ? body : JSON.stringify(body));
         this.loading.hide();
       },
     });
   }
 
   onFileSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    const group = this.myGroup();
-    const userId = this.user()?.id;
-    if (!file || !group || !userId) return;
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    input.value = '';
+
+    if (!file) return;
+
     this.actionError.set(null);
+    this.submissionError.set(null);
+
+    const validationError = this.validateSubmissionFile(file);
+    if (validationError) {
+      this.selectedFile.set(null);
+      this.submissionError.set(validationError);
+      return;
+    }
+
+    this.selectedFile.set(file);
+  }
+
+  uploadSelectedFile() {
+    const file = this.selectedFile();
+    const group = this.myGroup();
+    const userId = this.currentUserId();
+    if (!file || !group || !userId) return;
+
+    this.actionError.set(null);
+    this.submissionError.set(null);
+    this.uploadingFile.set(true);
     this.loading.show();
+
     this.subService.uploadFile(group.id, userId, file).subscribe({
-      next: (sub: any) => { this.mySubmission.set(sub); this.loading.hide(); },
+      next: (sub) => {
+        this.mySubmission.set(sub);
+        this.selectedFile.set(null);
+        this.uploadingFile.set(false);
+        this.loading.hide();
+      },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? 'Failed to upload file.');
+        const body = err?.error ?? err?.message ?? err;
+        console.error('uploadSelectedFile error:', err);
+        this.submissionError.set(typeof body === 'string' ? body : JSON.stringify(body));
+        this.uploadingFile.set(false);
         this.loading.hide();
       },
     });
@@ -658,12 +833,13 @@ export class AssignmentDetailComponent implements OnInit {
 
   closeSubmission() {
     const group = this.myGroup();
-    const userId = this.user()?.id;
+    const userId = this.currentUserId();
     if (!group || !userId) return;
     this.actionError.set(null);
+    this.submissionError.set(null);
     this.loading.show();
-    this.subService.closeSubmission(group.id, { evaluatorId: userId }).subscribe({
-      next: (sub: any) => { this.mySubmission.set(sub); this.loading.hide(); },
+    this.subService.closeSubmission(group.id, { userId }).subscribe({
+      next: (sub) => { this.mySubmission.set(sub); this.loading.hide(); },
       error: (err) => {
         this.actionError.set(err?.error?.message ?? 'Failed to close submission.');
         this.loading.hide();
@@ -671,6 +847,22 @@ export class AssignmentDetailComponent implements OnInit {
     });
   }
 
+  private validateSubmissionFile(file: File) {
+    if (!this.allowedSubmissionMimeTypes.has(file.type)) {
+      return 'Unsupported file type. Please upload a PDF, ZIP, image, text file, or Word document.';
+    }
+
+    if (file.size > this.maxSubmissionFileSize) {
+      return 'File is too large. Maximum allowed size is 50 MB.';
+    }
+
+    return null;
+  }
+
+  private formatFileSize(size: number) {
+    if (size < 1024) return `${size} B`;
+    if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+    return `${(size / (1024 * 1024)).toFixed(1)} MB`;
   // Staff managing this class land back on the bocal management view (their own URL);
   // students — and staff merely enrolled as participants — go to "My classes".
   goToClasses() {

@@ -62,6 +62,7 @@ export class LanguageSwitcherComponent {
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
     { code: 'fe', name: 'Français', flag: '🇫🇷' },
+	{ code: 'hu', name: 'Magyar', flag: '🇭🇺' },
   ];
 
   currentLanguage = 'en';
