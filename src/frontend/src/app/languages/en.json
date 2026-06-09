@@ -79,4 +79,10 @@
 
     "btn_settings": "Settings",
     "btn_sign_out": "Sign out"
+    ,
+    "dashboard.welcome": "Welcome back, {{name}}.",
+    "dashboard.pending_evals": "You have {{count}} pending evaluations to complete.",
+    "dashboard.class_progress": "Class progress",
+    "dashboard.view_all": "View all →",
+    "dashboard.recent_assignments": "Recent assignments"
 }

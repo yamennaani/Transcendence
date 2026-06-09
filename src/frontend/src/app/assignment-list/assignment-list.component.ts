@@ -25,6 +25,7 @@ import { ListComponent, ListColumn } from '../shared/list.component';
     .page { flex: 1; overflow-y: auto; padding: 32px; }
   `],
 })
+
 export class AssignmentListComponent implements OnInit {
   private router = inject(Router);
   private route = inject(ActivatedRoute);

@@ -1,5 +1,5 @@
 {
-        "label_language": "Language",
+    "label_language": "Language",
     "label_score_avg": "Score avg",
     "label_progress": "Progress",
     "label_evaluations_given": "Evaluations given",
@@ -79,4 +79,10 @@
 
     "btn_settings": "Settings",
     "btn_sign_out": "Sign out"
+    ,
+    "dashboard.welcome": "Üdv újra, {{name}}.",
+    "dashboard.pending_evals": "{{count}} értékelés vár elkészítésre.",
+    "dashboard.class_progress": "Osztály előrehaladás",
+    "dashboard.view_all": "Összes megtekintése →",
+    "dashboard.recent_assignments": "Legutóbbi feladatok"
 }
