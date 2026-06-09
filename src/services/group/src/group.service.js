@@ -77,7 +77,7 @@ const getGroup = async(groupId)=>{
     if(!groupId)
         throw new ValidationError('Invalid request')
 
-    const group = await utils.getGroupById(groupId, {members: {include: {user: true}}})
+    const group = await utils.getGroupById(groupId, null, {members: {include: {user: true}}})
     if(!group)
         throw new NotFoundError('Group not found')
     return group
