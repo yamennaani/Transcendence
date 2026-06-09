@@ -50,12 +50,14 @@ route.get('/assignment/:id', async(req, res, next)=>{
 
 // Routes pertaining to EvalAssignment model/table
 
+// creates one EvalAssignment manually (POST /api/eval/eval-assignments) 
 route.post('/eval-assignments', async(req, res, next) => {
     try{
         res.json(await service.createEvalAssignment(req.body))
     }catch(err){next(err)}
 })
 
+// get all EvalAssignments for one assignment (GET /api/eval/assignment/:id/eval-assignments)
 route.get('/assignment/:id/eval-assignments', async (req, res, next) => {
   try {
     res.json(await service.getEvalAssignments(req.params.id))
@@ -64,6 +66,7 @@ route.get('/assignment/:id/eval-assignments', async (req, res, next) => {
   }
 })
 
+// get one EvalAssignment by its EvalAssignment-id (GET /api/eval/eval-assignments/:id)
 route.get('/eval-assignments/:id', async (req, res, next) => {
   try {
     res.json(await service.getEvalAssignmentById(req.params.id))
@@ -72,12 +75,14 @@ route.get('/eval-assignments/:id', async (req, res, next) => {
   }
 })
 
+// update one EvalAssignment (PUT /api/eval/eval-assignments/:id)
 route.put('/eval-assignments/:id', async(req, res, next) => {
     try{
         res.json(await service.updateEvalAssignment(req.params.id, req.body))
     }catch(err){next(err)}
 })
 
+// delete one EvalAssignment (DELETE /api/eval/eval-assignments/:id)
 route.delete('/eval-assignments/:id', async(req, res, next) => {
     try{
         res.json(await service.deleteEvalAssignment(req.params.id))

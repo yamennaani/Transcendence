@@ -1,0 +1,22 @@
+<div>
+  <div style="margin-bottom:20px">
+    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <h1 [ngStyle]="h1Style">Analytics</h1>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    @for (a of analytics; track a.label) {
+      <app-container [config]="flatConfig">
+        <div style="padding:18px 20px">
+          <div [ngStyle]="{fontSize:'0.6875rem',fontWeight:'600',letterSpacing:'0.1em',textTransform:'uppercase',color:a.color,marginBottom:'8px'}">
+            {{ a.label }}
+          </div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:2.5rem;font-weight:700;letter-spacing:-0.03em;color:oklch(94% 0.005 272);line-height:1">
+            {{ a.value }}
+          </div>
+          <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">{{ a.sub }}</div>
+        </div>
+      </app-container>
+    }
+  </div>
+</div>

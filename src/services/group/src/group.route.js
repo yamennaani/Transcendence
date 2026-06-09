@@ -17,6 +17,13 @@ route.get('/my-group', async(req, res, next)=>{
     }catch(err){next(err)}
 })
 
+// List all groups for an assignment (staff management)
+route.get('/assignment/:assId', async(req, res, next)=>{
+    try{
+        res.json(await groupService.getGroupsForAssignment(req.params.assId))
+    }catch(err){next(err)}
+})
+
 //Show list of pending invites
 route.get('/invite', async(req, res, next)=>{
     try{
@@ -47,6 +54,13 @@ route.post('/:id/invite', async (req, res, next)=>{
 route.delete('/:id', async (req, res, next)=>{
     try{
         res.json(await groupService.leaveGroup(req.params.id, req.body))
+    }catch(err){next(err)}
+})
+
+//staff/admin: force-remove a group entirely
+route.delete('/:id/admin', async (req, res, next)=>{
+    try{
+        res.json(await groupService.deleteGroup(req.params.id))
     }catch(err){next(err)}
 })
 

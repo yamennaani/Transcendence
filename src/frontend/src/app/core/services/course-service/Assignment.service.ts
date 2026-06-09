@@ -8,6 +8,8 @@ export interface CreateAssignmentPayload {
   description: string;
   maxScore: number;
   reqEval: number;
+  createdBy: number;
+  file?: File;
 }
 
 export interface UpdateAssignmentPayload {
@@ -18,6 +20,8 @@ export interface UpdateAssignmentPayload {
   reqEval: number;
   maxScore: number;
   passThreshold: number;
+  createdBy: number;
+  file?: File;
 }
 
 export interface AssignmentResponse {
@@ -30,6 +34,9 @@ export interface AssignmentResponse {
   groupSize?: number;
   pass_threshold?: number;
   created_at: string;
+  fileId?: number | null;
+  file?: { id: number; name: string; url: string; mimiType: string; size: number } | null;
+  groups?: { id: number; name: string; members?: { userId: number }[] }[];
 }
 
 @Injectable({ providedIn: "root" })
@@ -60,11 +67,17 @@ export class AssignmentService {
     data: CreateAssignmentPayload
   ): Observable<AssignmentResponse> {
     this.setLoading(true);
+
+    const { file, ...fields } = data;
+    const form = new FormData();
+    Object.entries(fields).forEach(([key, value]) => form.append(key, String(value)));
+    if (file) form.append('file', file);
+
     return new Observable((observer) => {
       this.http
         .post<AssignmentResponse>(
           `${this.baseClasses}/${classId}/assignment`,
-          data
+          form
         )
         .subscribe({
           next: (response) => {
@@ -146,9 +159,15 @@ export class AssignmentService {
     data: UpdateAssignmentPayload
   ): Observable<AssignmentResponse> {
     this.setLoading(true);
+
+    const { file, ...fields } = data;
+    const form = new FormData();
+    Object.entries(fields).forEach(([key, value]) => form.append(key, String(value)));
+    if (file) form.append('file', file);
+
     return new Observable((observer) => {
       this.http
-        .put<AssignmentResponse>(`${this.baseAssignments}/${assignmentId}`, data)
+        .put<AssignmentResponse>(`${this.baseAssignments}/${assignmentId}`, form)
         .subscribe({
           next: (response) => {
             this.assignments.update((assignments) =>

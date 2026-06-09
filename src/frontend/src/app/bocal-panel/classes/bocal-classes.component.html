@@ -1,0 +1,264 @@
+<div [ngStyle]="pageStyle">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div style="margin-bottom:20px">
+    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end">
+      <h1 [ngStyle]="h1Style">
+        @if (selectedClass()) {
+          <span [ngStyle]="crumbStyle" (click)="backToClasses()">← Classes</span>
+          {{ selectedClass()!.name }}
+        } @else {
+          Manage classes
+        }
+      </h1>
+
+      <!-- Context-sensitive action button -->
+      @if (!selectedClass()) {
+        <app-btn variant="primary" (clicked)="showNew.set(true)">+ New class</app-btn>
+      } @else {
+        <span style="display:flex;gap:8px">
+          <app-btn variant="secondary" (clicked)="openEditClass()">Edit class</app-btn>
+          <app-btn variant="ghost" (clicked)="deleteClass(selectedClass()!)">Delete class</app-btn>
+          <app-btn variant="primary" (clicked)="showAddAssign.set(true)">+ Assignment</app-btn>
+        </span>
+      }
+    </div>
+  </div>
+
+  <!-- ── Create class modal ─────────────────────────────────── -->
+  @if (showNew()) {
+    <div [ngStyle]="overlayStyle" (click)="showNew.set(false)">
+      <div (click)="$event.stopPropagation()">
+        <app-create-class (saved)="onClassCreated()" (cancelled)="showNew.set(false)" />
+      </div>
+    </div>
+  }
+
+  <!-- ── Add assignment modal ───────────────────────────────── -->
+  @if (showAddAssign()) {
+    <div [ngStyle]="overlayStyle" (click)="closeAssignModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          New assignment — {{ selectedClass()?.name }}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          @for (field of assignmentFields; track field.label) {
+            <app-field [field]="field" [isEditing]="true" (valueChanged)="onAssignmentFieldChanged($event)" (fileChosen)="onAssignmentFileChosen($event)" />
+          }
+        </div>
+        @if (assignmentError()) {
+          <div [ngStyle]="errorStyle">{{ assignmentError() }}</div>
+        }
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn variant="ghost"   size="md" (clicked)="closeAssignModal()">Cancel</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onAddAssignment()">Create</app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Edit class modal ───────────────────────────────────── -->
+  @if (showEditClass()) {
+    <div [ngStyle]="overlayStyle" (click)="closeEditClassModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          Edit class — {{ selectedClass()?.name }}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Class name</label>
+            <input [ngStyle]="inputStyle" type="text" [value]="editClassName()" (input)="editClassName.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Description</label>
+            <textarea [ngStyle]="textAreaStyle" [value]="editClassDesc()" (input)="editClassDesc.set($any($event.target).value)"></textarea>
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Pass threshold — {{ editClassThreshold() }}%</label>
+            <input type="range" min="50" max="100" [value]="editClassThreshold()" (input)="editClassThreshold.set(+$any($event.target).value)" style="width:100%" />
+          </div>
+        </div>
+        @if (editClassError()) {
+          <div [ngStyle]="errorStyle">{{ editClassError() }}</div>
+        }
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn variant="ghost"   size="md" (clicked)="closeEditClassModal()">Cancel</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onSaveClassEdit()">Save changes</app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Edit assignment modal ──────────────────────────────── -->
+  @if (editingAssignment()) {
+    <div [ngStyle]="overlayStyle" (click)="closeEditAssignmentModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          Edit assignment — {{ editingAssignment()?.name }}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Name</label>
+            <input [ngStyle]="inputStyle" type="text" [value]="editAssignName()" (input)="editAssignName.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Description</label>
+            <textarea [ngStyle]="textAreaStyle" [value]="editAssignDesc()" (input)="editAssignDesc.set($any($event.target).value)"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Group size</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" [value]="editAssignGroupSize()" (input)="editAssignGroupSize.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Max score</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" [value]="editAssignMaxScore()" (input)="editAssignMaxScore.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Required evals</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" [value]="editAssignReqEval()" (input)="editAssignReqEval.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Pass threshold (%)</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" max="100" [value]="editAssignThreshold()" (input)="editAssignThreshold.set(+$any($event.target).value)" />
+            </div>
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Subject file</label>
+            <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
+              {{ editAssignFileName() ?? 'No subject file attached.' }}
+            </div>
+            <input [ngStyle]="inputStyle" type="file"
+                   accept=".pdf,.zip,.doc,.docx,.txt"
+                   (change)="onEditAssignFilePicked($event)" />
+          </div>
+        </div>
+        @if (editAssignError()) {
+          <div [ngStyle]="errorStyle">{{ editAssignError() }}</div>
+        }
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn variant="ghost"   size="md" (clicked)="closeEditAssignmentModal()">Cancel</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onSaveAssignmentEdit()">Save changes</app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Class detail view -->
+  @if (selectedClass()) {
+    <div style="display:flex;flex-direction:column;gap:12px">
+
+      <!-- Class meta -->
+      <app-container [config]="flatConfig">
+        <div style="padding:16px 20px">
+          <p style="font-size:0.9rem;color:oklch(68% 0.01 272);margin:0 0 12px">
+            {{ selectedClass()!.description || 'No description.' }}
+          </p>
+          <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
+            {{ selectedClass()!.assignmentCount }} assignment{{ selectedClass()!.assignmentCount === 1 ? '' : 's' }}
+            · created {{ selectedClass()!.created_at | date:'mediumDate' }}
+          </div>
+        </div>
+      </app-container>
+
+      <!-- Assignments list -->
+      @if (classAssignments().length === 0) {
+        <app-container [config]="insetConfig">
+          <div [ngStyle]="emptyStyle">
+            No assignments yet.
+            <div style="margin-top:8px">
+              <app-btn variant="secondary" size="sm" (clicked)="showAddAssign.set(true)">+ Add first assignment</app-btn>
+            </div>
+          </div>
+        </app-container>
+      } @else {
+        @for (a of classAssignments(); track a.id) {
+          <app-container [config]="flatConfig">
+            <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-weight:600;color:oklch(94% 0.005 272);margin-bottom:3px">{{ a.name }}</div>
+                <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                  {{ a.max_score }} pts · {{ a.req_eval }} evals required
+                  @if (a.pass_threshold) { · {{ a.pass_threshold }}% threshold }
+                  @if (a.file) { · 📎 {{ a.file.name }} }
+                </div>
+              </div>
+              <span style="display:flex;align-items:center;gap:8px">
+                @if (a.file) {
+                  <a [href]="a.file.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
+                    <app-btn variant="ghost" size="sm">Subject</app-btn>
+                  </a>
+                }
+                <app-btn variant="ghost" size="sm" (clicked)="toggleGroups(a)">
+                  {{ expandedAssignment() === a.id ? 'Hide groups' : 'Groups' }}
+                </app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="openEditAssignment(a)">Edit</app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="viewAssignment(a)">
+                  View ↗
+                </app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="deleteAssignment(a)">Delete</app-btn>
+              </span>
+            </div>
+
+            @if (expandedAssignment() === a.id) {
+              <div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:6px;border-top:1px solid oklch(22% 0.025 272)">
+                @if (groupsFor(a).length === 0) {
+                  <div style="padding-top:12px;font-size:0.8125rem;color:oklch(48% 0.01 272)">No groups yet.</div>
+                } @else {
+                  @for (g of groupsFor(a); track g.id) {
+                    <div style="padding-top:12px;display:flex;justify-content:space-between;align-items:center">
+                      <div>
+                        <div style="font-size:0.875rem;font-weight:600;color:oklch(94% 0.005 272)">{{ g.name }}</div>
+                        <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
+                          @for (m of g.members; track m.id; let last = $last) {
+                            {{ m.user?.username }}@if (m.userId === g.leaderId) { (leader) }@if (!last) { · }
+                          }
+                        </div>
+                      </div>
+                      <app-btn variant="ghost" size="sm" (clicked)="removeGroup(a, g)">Remove</app-btn>
+                    </div>
+                  }
+                }
+              </div>
+            }
+          </app-container>
+        }
+      }
+    </div>
+  }
+
+  <!-- Class list -->
+  @if (!selectedClass()) {
+    <div style="display:flex;flex-direction:column;gap:10px">
+      @if (classes().length === 0) {
+        <div [ngStyle]="emptyStyle">No classes found for this organization.</div>
+      } @else {
+        @for (c of classes(); track c.id) {
+          <app-container [config]="flatConfig">
+            <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;cursor:pointer"
+                 (click)="selectClass(c)">
+              <div>
+                <div style="font-family:'Space Grotesk',sans-serif;font-size:1rem;font-weight:600;color:oklch(94% 0.005 272);margin-bottom:3px">
+                  {{ c.name }}
+                </div>
+                <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                  {{ c.description || 'No description' }}
+                </div>
+                <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">
+                  {{ c.assignmentCount }} assignment{{ c.assignmentCount === 1 ? '' : 's' }}
+                  · {{ c.created_at | date:'mediumDate' }}
+                </div>
+              </div>
+              <span style="display:flex;gap:8px" (click)="$event.stopPropagation()">
+                <app-btn variant="ghost" size="sm" (clicked)="deleteClass(c)">Delete</app-btn>
+                <app-btn variant="secondary" size="sm" (clicked)="selectClass(c)">Open →</app-btn>
+              </span>
+            </div>
+          </app-container>
+        }
+      }
+    </div>
+  }
+
+</div>

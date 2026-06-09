@@ -1,12 +1,14 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
+import { of } from 'rxjs';
 
 import { AuthService } from '../services/auth.service';
 import { CourseService } from '../core/services/course-service/course-service';
 import { AssignmentService, AssignmentResponse } from '../core/services/course-service/Assignment.service';
 import { GroupService } from '../core/services/group-service/group-service';
 import { SubmissionService } from '../core/services/submission-service/submission-service';
+import { EnrollService } from '../core/services/enroll-service/enroll-service';
 import { LoadingService } from '../core/services/loading-service/loading.service';
 import { Group, DS, Submission } from '../tokens';
 
@@ -111,6 +113,40 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       font-size: 1.125rem;
       font-weight: 600;
       color: ${DS.colors.cyan};
+    }
+
+    /* Subject file */
+    .subject-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 20px;
+    }
+    .subject-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .subject-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: ${DS.radius.md};
+      background: ${DS.colors.violetSubtle};
+      border: 1px solid ${DS.colors.violetBorder};
+      color: ${DS.colors.violet};
+      flex-shrink: 0;
+    }
+    .subject-name {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: ${DS.colors.fg1};
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .subject-meta {
+      font-size: 0.75rem;
+      color: ${DS.colors.fg3};
     }
 
     /* Description */
@@ -439,11 +475,17 @@ export class AssignmentDetailComponent implements OnInit {
   private courseService = inject(CourseService);
   private groupService = inject(GroupService);
   private subService   = inject(SubmissionService);
+  private enrollService = inject(EnrollService);
   private loading      = inject(LoadingService);
 
   readonly role    = this.auth.role;
   readonly user    = this.auth.user;
   readonly isStaff = computed(() => this.role() === 'Bocal' || this.role() === 'Admin');
+
+  // A Bocal/Admin can also be enrolled as a participant in a class they don't manage
+  // (e.g. another org's class) — in that case show them the student view for it.
+  isEnrolled  = signal(false);
+  viewAsStaff = computed(() => this.isStaff() && !this.isEnrolled());
 
   assignment   = signal<AssignmentResponse | null>(null);
   className    = signal<string | null>(null);
@@ -512,6 +554,17 @@ export class AssignmentDetailComponent implements OnInit {
 
   private load(id: number) {
     this.loading.show();
+
+    // Reset per-assignment state so stale data from a previously viewed assignment
+    // doesn't leak in and hide the join/submission UI.
+    this.myGroup.set(null);
+    this.mySubmission.set(null);
+    this.myInvites.set([]);
+    this.allSubs.set([]);
+    this.actionError.set(null);
+    this.groupName.set('');
+    this.isEnrolled.set(false);
+
     this.assService.getAssignmentById(id).subscribe({
       next: (a) => {
         this.assignment.set(a);
@@ -560,11 +613,62 @@ export class AssignmentDetailComponent implements OnInit {
                 this.loading.hide();
               }
             }
+        const userId = this.user()?.id;
+        const enrollment$ = (this.isStaff() && userId)
+          ? this.enrollService.getStudenEnrolledClasses(userId)
+          : of([]);
+
+        enrollment$.subscribe({
+          next: (courses) => {
+            if (this.isStaff()) this.isEnrolled.set(courses.some(c => c.id === a.classid));
+            this.loadSubmissions(id);
           },
-          error: () => this.loading.hide(),
+          error: () => this.loadSubmissions(id),
         });
       },
       error: () => { this.notFound.set(true); this.loading.hide(); },
+    });
+  }
+
+  private loadSubmissions(id: number) {
+    this.subService.getSubmissionsForAssignment(id).subscribe({
+      next: (subs: any[]) => {
+        if (this.viewAsStaff()) {
+          this.allSubs.set(subs);
+          this.loading.hide();
+        } else {
+          const userId = this.user()?.id;
+          const mine = subs.find(s => s.group?.members?.some((m: any) => m.userId === userId));
+          if (mine) {
+            this.myGroup.set(mine.group);
+            this.mySubmission.set(mine);
+            this.loading.hide();
+          } else if (userId) {
+            this.groupService.getMyGroupForAssignment(userId, id).subscribe({
+              next: (group: any) => {
+                if (group) {
+                  this.myGroup.set(group);
+                  this.loading.hide();
+                } else {
+                  this.groupService.getInvites({ userId }).subscribe({
+                    next: (invites) => { this.myInvites.set(invites); this.loading.hide(); },
+                    error: () => this.loading.hide(),
+                  });
+                }
+              },
+              error: () => {
+                this.groupService.getInvites({ userId }).subscribe({
+                  next: (invites) => { this.myInvites.set(invites); this.loading.hide(); },
+                  error: () => this.loading.hide(),
+                });
+              },
+            });
+          } else {
+            this.loading.hide();
+          }
+        }
+      },
+      error: () => this.loading.hide(),
     });
   }
 
@@ -591,6 +695,13 @@ export class AssignmentDetailComponent implements OnInit {
         this.actionError.set(err?.error?.message ?? 'Failed to join assignment. Make sure you are enrolled in this class.');
         this.loading.hide();
       },
+    });
+  }
+
+  goToEvalAssignments(): void {
+    const a = this.assignment();
+    if (!a) return;
+    this.router.navigate(['/eval-assignments'], { queryParams: { assignmentId: a.id },
     });
   }
 
@@ -752,10 +863,29 @@ export class AssignmentDetailComponent implements OnInit {
     if (size < 1024) return `${size} B`;
     if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
     return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+  // Staff managing this class land back on the bocal management view (their own URL);
+  // students — and staff merely enrolled as participants — go to "My classes".
+  goToClasses() {
+    if (this.viewAsStaff()) this.router.navigate(['/bocal/classes']);
+    else this.router.navigate(['/classes']);
+  }
+
+  goToClass() {
+    const a = this.assignment();
+    if (!a) return;
+    if (this.viewAsStaff()) this.router.navigate(['/bocal/classes'], { queryParams: { classId: a.classid } });
+    else this.router.navigate(['/assignment'], { queryParams: { classId: a.classid } });
+  }
+
+  formatFileSize(bytes: number): string {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   }
 
   subStatusVariant(status: string): 'submitted' | 'validated' | 'under_review' | 'pending' {
     if (status === 'Open') return 'submitted';
     return 'under_review';
   }
+
 }

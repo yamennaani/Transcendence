@@ -43,7 +43,7 @@ const dropStudent = async ({classId, studentId})=>{
     const existing = await utils.getEnrollment(studentId, classId)
     if(!existing) throw new ConflictError('Student is not enrolled')
 
-    return await prisma.enrollment.update({
+    const result = await prisma.enrollment.update({
         where: { id: existing.id },
         data: { status: 'Dropped' },
         select: {
@@ -54,6 +54,34 @@ const dropStudent = async ({classId, studentId})=>{
             enrollDate: true
         }
     })
+
+    // Consequence: a dropped student can no longer take part in this class's
+    // assignment groups — leave their groups, promoting a new leader (or
+    // deleting the group entirely) when they were the sole member/leader.
+    await leaveClassGroups(studentId, classId)
+
+    return result
+}
+
+const leaveClassGroups = async (studentId, classId)=>{
+    const memberships = await prisma.groupMember.findMany({
+        where: { userId: parseInt(studentId), group: { assignment: { classid: parseInt(classId) } } },
+        include: { group: { include: { members: true } } }
+    })
+
+    for (const membership of memberships) {
+        const group = membership.group
+        const remaining = group.members.filter(m => m.userId !== parseInt(studentId))
+
+        if (remaining.length === 0) {
+            await prisma.group.delete({ where: { id: group.id } })
+            continue
+        }
+        if (group.leaderId === parseInt(studentId)) {
+            await prisma.group.update({ where: { id: group.id }, data: { leaderId: remaining[0].userId } })
+        }
+        await prisma.groupMember.delete({ where: { id: membership.id } })
+    }
 }
 
 const getEnrollement = async(studentId)=>{
