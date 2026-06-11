@@ -1,5 +1,6 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { NgStyle, DatePipe } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS } from '../../tokens';
 import { AvatarComponent } from '../../shared/avatar.component';
 import { BtnComponent } from '../../shared/btn.component';
@@ -31,6 +32,7 @@ const ROLE_OPTIONS = ['All', 'Student', 'Bocal', 'Admin'];
   imports: [
     NgStyle, DatePipe,
     AvatarComponent, BtnComponent, FieldComponent, ListComponent,
+    TranslateModule,
   ],
   templateUrl: './bocal-students.component.html',
 })
@@ -41,6 +43,7 @@ export class BocalStudentsComponent implements OnInit {
   private assignService = inject(AssignmentService);
   private enrollService = inject(EnrollService);
   private loading       = inject(LoadingService);
+  private translate     = inject(TranslateService);
 
   // ── Modal visibility ───────────────────────────────────────
   showAddMember = signal(false);
@@ -85,12 +88,12 @@ export class BocalStudentsComponent implements OnInit {
   // ── Form field changes ─────────────────────────────────────
   private memberChanges = new Map<string, FieldType>();
 
-  // ── Add member fields ──────────────────────────────────────
-  readonly memberFields: FieldType[] = [
-    { type: 'text',   label: 'Email',    icon: 'email',  required: true, allowEdit: true, value: undefined },
-    { type: 'text',   label: 'Username', icon: 'person', required: true, allowEdit: true, value: undefined },
-    { type: 'select', label: 'Role', icon: 'badge', required: true, allowEdit: true, value: 'Student', options: ['Student', 'Bocal', 'Admin'] } as SelectField,
-  ];
+  // ── Add member fields (translatable, rebuilt on lang change) ──
+  memberFields: FieldType[] = [];
+
+  // ── Role filter options (translatable) ─────────────────────
+  roleFilterOptions: string[] = [];
+  roleSelectOptions: string[] = [];
 
   // ── Container configs ──────────────────────────────────────
 
@@ -99,6 +102,31 @@ export class BocalStudentsComponent implements OnInit {
   ngOnInit() {
     this.loadMembers();
     this.loadClasses();
+
+    this.buildTranslatedData();
+    this.translate.onLangChange.subscribe(() => {
+      this.buildTranslatedData();
+    });
+  }
+
+  private buildTranslatedData() {
+    this.roleFilterOptions = [
+      this.translate.instant('role_all'),
+      this.translate.instant('role_student'),
+      this.translate.instant('role_bocal'),
+      this.translate.instant('role_admin'),
+    ];
+    this.roleSelectOptions = [
+      this.translate.instant('role_student'),
+      this.translate.instant('role_bocal'),
+      this.translate.instant('role_admin'),
+    ];
+
+    this.memberFields = [
+      { type: 'text',   label: this.translate.instant('label_email'),    icon: 'email',  required: true, allowEdit: true, value: undefined },
+      { type: 'text',   label: this.translate.instant('label_username'), icon: 'person', required: true, allowEdit: true, value: undefined },
+      { type: 'select', label: this.translate.instant('label_role'), icon: 'badge', required: true, allowEdit: true, value: this.translate.instant('role_student'), options: this.roleSelectOptions } as SelectField,
+    ];
   }
 
   loadMembers() {
@@ -130,7 +158,7 @@ export class BocalStudentsComponent implements OnInit {
     const classId = this.classFilter();
     const cls = this.classes().find(c => c.id === classId);
     if (!classId || !cls) return;
-    if (!confirm(`Remove ${member.username} from "${cls.name}"? They will also be removed from any groups in this class.`)) return;
+    if (!confirm(this.translate.instant('confirm_remove_from_class', { username: member.username, className: cls.name }))) return;
 
     this.loading.show();
     this.enrollService.dropStudent({ classId, studentId: member.id }).subscribe({
@@ -201,13 +229,13 @@ export class BocalStudentsComponent implements OnInit {
 
   onAddMember() {
     const orgId    = this.orgId;
-    const email    = (this.getMemberValue('Email') as string)?.trim();
-    const username = (this.getMemberValue('Username') as string)?.trim();
-    const role     = (this.getMemberValue('Role') as string) ?? 'Student';
+    const email    = (this.getMemberValue(this.translate.instant('label_email')) as string)?.trim();
+    const username = (this.getMemberValue(this.translate.instant('label_username')) as string)?.trim();
+    const role     = (this.getMemberValue(this.translate.instant('label_role')) as string) ?? this.translate.instant('role_student');
 
-    if (!email)    { this.memberError.set('Email is required.');    return; }
-    if (!username) { this.memberError.set('Username is required.'); return; }
-    if (!orgId)    { this.memberError.set('No organization found.'); return; }
+    if (!email)    { this.memberError.set(this.translate.instant('error_email_required'));    return; }
+    if (!username) { this.memberError.set(this.translate.instant('error_username_required')); return; }
+    if (!orgId)    { this.memberError.set(this.translate.instant('error_no_organization'));   return; }
 
     this.memberError.set(null);
     this.loading.show();
@@ -219,7 +247,7 @@ export class BocalStudentsComponent implements OnInit {
         this.loadMembers();
       },
       error: (err) => {
-        this.memberError.set(err?.error?.message ?? 'Failed to add member.');
+        this.memberError.set(err?.error?.message ?? this.translate.instant('error_add_member_failed'));
         this.loading.hide();
       },
     });
