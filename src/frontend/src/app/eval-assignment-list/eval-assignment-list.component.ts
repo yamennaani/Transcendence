@@ -65,6 +65,8 @@ interface EvalAssignmentDisplayRow {
             (clicked)="generateSimplePairings()">
             Generate simple pairings
           </app-btn>
+
+          
         </div>
       </div>
 
@@ -182,6 +184,28 @@ columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
         this.loadingService.hide();
       },
     });
+  }
+
+  deleteEvalAssignment(row: EvalAssignmentDisplayRow): void {
+    const ok = window.confirm(`Are you sure you want to delete this pairing?\n\n` +
+      `${row.evalueeGroupName} evaluated by ${row.evaluatorName}`);
+    if (!ok) return;
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.loadingService.show();
+
+    this.evalService.deleteEvalAssignment(row.id).subscribe({
+      next: () => { 
+        this.evalAssignments.update(rows => rows.filter(ea => ea.id !== row.id) );
+        this.loading.set(false);
+        this.loadingService.hide(); 
+      },
+      error: err => {
+        this.error.set(err?.error?.message ?? 'Failed to delete evaluation pairing.' );
+        this.loading.set(false);
+        this.loadingService.hide();         
+      }, });
   }
 
   goBackToAssignment(): void {
