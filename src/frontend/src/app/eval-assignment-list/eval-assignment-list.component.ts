@@ -173,6 +173,7 @@ export class EvalAssignmentListComponent implements OnInit {
     });
   }
 
+  // delete one EvalAssignment-pairing 
   deleteEvalAssignment(row: EvalAssignmentDisplayRow): void {
     const ok = window.confirm(`Are you sure you want to delete this pairing?\n\n` +
       `${row.evalueeGroupName} evaluated by ${row.evaluatorName}`);
@@ -195,13 +196,41 @@ export class EvalAssignmentListComponent implements OnInit {
       }, });
   }
 
+  // delete all EvalAssignment-pairings
+  deleteAllEvalAssignments(): void {
+    const id = this.assignmentId();
+    
+    if (!id) { this.error.set('Cannot delete pairings without an assignment id.'); return; }
+    if (this.evalAssignments().length === 0) { return; }
+
+    const ok = window.confirm('Are you sure you want to delete all evaluation pairings for this assignment?' );
+    if (!ok) return;
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.loadingService.show();
+
+    this.evalService.deleteEvalAssignments(id).subscribe({
+      next: () => {
+        this.evalAssignments.set([]);
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+      error: err => {
+        this.error.set(
+          err?.error?.message ?? 'Failed to delete evaluation pairings.'
+        );
+
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+    });
+  }  
+
   goBackToAssignment(): void {
     const id = this.assignmentId();
 
-    if (!id) {
-      this.router.navigate(['/assignment']);
-      return;
-    }
+    if (!id) { this.router.navigate(['/assignment']); return; }
 
     this.router.navigate(['/assignment-detail'], {
       queryParams: { assId: id },

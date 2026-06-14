@@ -107,6 +107,7 @@ const removeSection = async (sheetId, {secId})=>{
 
 // methods pertaining to EvalAssignment model/table:
 
+// get all EvalAssignments for one particular assignment.id
 const getEvalAssignments = async (assignmentId)=>{
   const assignmentIdInt = parseInt(assignmentId)
 
@@ -118,6 +119,20 @@ const getEvalAssignments = async (assignmentId)=>{
                    evaluatorUserId: true, round: true, status: true, submissionId: true,
                    evalResponseId: true, createdAt: true }
   return await utils.getEvalAssignments(assignmentIdInt, select)
+}
+
+// delete all EvalAssignments for one particular assignment.id
+const deleteEvalAssignments = async (assignmentId) => {
+  const assignmentIdInt = parseInt(assignmentId)
+  if (!assignmentIdInt)
+    throw new ValidationError('Invalid assignment id')
+
+  const assignment = await prisma.assignment.findUnique({ where: { id: assignmentIdInt } })
+  if (!assignment)
+    throw new NotFoundError('Assignment not found')
+
+  const result = await prisma.evalAssignment.deleteMany({ where: { assignmentId: assignmentIdInt } })
+  return { message: 'Eval assignments deleted successfully', assignmentId: assignmentIdInt, count: result.count }
 }
 
 const getEvalAssignmentById = async (evalAssignmentId) => {
@@ -319,6 +334,6 @@ const generateSimpleEvalAssignmentPairings = async (assignmentId) => {
 
 module.exports = {getEvalSheetById, getEvalSheetByAssId, getAssignment, createEvalSheet, createEvalSection,
     updateEvalSheetSection, removeSection, 
-    getEvalAssignments, getEvalAssignmentById, createEvalAssignment, updateEvalAssignment, deleteEvalAssignment,
-    generateSimpleEvalAssignmentPairings
+    getEvalAssignments, deleteEvalAssignments, getEvalAssignmentById, createEvalAssignment, 
+    updateEvalAssignment, deleteEvalAssignment, generateSimpleEvalAssignmentPairings
 }

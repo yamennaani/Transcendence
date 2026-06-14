@@ -29,7 +29,14 @@
         variant="primary"
         [disabled]="!assignmentId() || loading()"
         (clicked)="generateSimplePairings()">
-        Generate simple pairings
+        Generate pairings
+      </app-btn>
+
+      <app-btn
+        variant="ghost"
+        [disabled]="!assignmentId() || loading() || evalAssignments().length === 0"
+        (clicked)="deleteAllEvalAssignments()">
+        Delete all pairings
       </app-btn>
     </div>
   </div>
