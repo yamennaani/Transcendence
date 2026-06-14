@@ -1,7 +1,9 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
+//import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvalAssignment, EvalService} from '../core/services/eval-service/eval-service';
-import { ListComponent, ListColumn } from '../shared/list.component';
+//import { ListComponent, ListColumn } from '../shared/list.component';
+import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { BtnComponent } from '../shared/btn.component';
 import { LoadingService } from '../core/services/loading-service/loading.service';
 
@@ -9,6 +11,9 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { CourseService } from '../core/services/course-service/course-service';
 import { GroupService } from '../core/services/group-service/group-service';
+
+import { NgStyle } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 
 // as a frontend display shape I want: 
@@ -27,72 +32,28 @@ interface EvalAssignmentDisplayRow {
   evaluatorGroupName: string;
 }
 
+// display interface for Assignment-Group (for edit-functionality)
+interface AssignmentGroup {
+  id: number;
+  name: string;
+  leaderId: number;
+  members: {
+    id: number;
+    userId: number;
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  }[];
+}
+
 @Component({
   selector: 'app-eval-assignment-list',
   standalone: true,
-  imports: [ListComponent, BtnComponent],
-  template: `
-    <div class="page">
-      <div class="header-row">
-        <div>
-          <div class="overline">Peer evaluation</div>
-          <h1>Evaluation pairings</h1>
-
-          @if (assignmentName()) {
-            <p class="subline">
-              Assignment: <strong>{{ assignmentName() }}</strong>
-              @if (courseName()) {
-                · Course: <strong>{{ courseName() }}</strong>
-              }
-            </p>
-          } @else if (assignmentId()) {
-            <p class="subline">Assignment ID: {{ assignmentId() }}</p>
-          } @else {
-            <p class="subline">No assignment selected.</p>
-          }
-        </div>
-
-        <div class="actions">
-          <app-btn
-            variant="secondary"
-            (clicked)="goBackToAssignment()">
-            Back to assignment
-          </app-btn>
-
-          <app-btn
-            variant="primary"
-            [disabled]="!assignmentId() || loading()"
-            (clicked)="generateSimplePairings()">
-            Generate simple pairings
-          </app-btn>
-
-          
-        </div>
-      </div>
-
-      @if (error()) {
-        <div class="error-banner">
-          {{ error() }}
-        </div>
-      }
-
-      @if (loading()) {
-        <div class="loading">
-          Loading evaluation pairings…
-        </div>
-      }
-
-      <app-list
-        [items]="evalAssignments()"
-        [trackBy]="trackFn"
-        [columns]="columns()"
-        title="EvalAssignments"
-        overline="Generated pairings"
-        emptyMessage="No evaluation pairings found for this assignment."
-        [pageSize]="10">
-      </app-list>
-    </div>
-  `,
+  //imports: [ListComponent, BtnComponent],
+  imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
+  templateUrl: './eval-assignment-list.component.html',
   styles: [`
     .page { flex: 1; overflow-y: auto; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
 
@@ -110,6 +71,28 @@ interface EvalAssignmentDisplayRow {
       border-radius: 8px; padding: 10px 14px; font-size: 0.875rem; }
 
     .loading { font-size: 0.875rem; opacity: 0.75; }
+
+    .modal-overlay { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.7); 
+      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+      z-index: 100; }
+
+    .modal-card { background: #0d0f1a; border: 1px solid #2a2f45; border-radius: 16px; padding: 28px;
+      width: 440px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.8); }
+
+    .modal-title { font-size: 1.125rem; font-weight: 600; }
+
+    .modal-body { display: flex; flex-direction: column; gap: 14px; }
+
+    .field-label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em;
+      text-transform: uppercase; opacity: 0.65; margin-bottom: 4px; }
+
+    .input { width: 100%; box-sizing: border-box; padding: 9px 12px; background: #050712;
+      border: 1px solid #2a2f45; border-radius: 8px; color: white; font-size: 0.875rem; }
+
+    .readonly-field { font-size: 0.875rem; opacity: 0.8; border: 1px solid #2a2f45;
+      border-radius: 8px; padding: 9px 12px; }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
   `],
 })
 export class EvalAssignmentListComponent implements OnInit {
@@ -127,37 +110,41 @@ export class EvalAssignmentListComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
 
-  readonly trackFn = (ea: EvalAssignmentDisplayRow) => ea.id;
+  // Assignment groups for edit-functionality:
+  assignmentGroups = signal<AssignmentGroup[]>([]);
+  editingPairing = signal<EvalAssignmentDisplayRow | null>(null);
+  editEvaluatorGroupId = signal<number | null>(null);
+  editEvaluatorUserId = signal<number | null>(null);
+  editPairingError = signal<string | null>(null);
 
-columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
-  { label: 'Evaluee',
-    render: ea => `Evaluee: ${ea.evalueeGroupName}: ${ea.evalueeMembers}`, },
-  { label: 'Evaluator', 
-    render: ea => `Evaluator: ${ea.evaluatorName} from ${ea.evaluatorGroupName}`, },
-  { label: 'Round',
-    render: ea => `Round: ${ea.round}`, },
-  { label: 'Status',
-    render: ea => ea.status, },
-]);
+  // ── Container configs ──────────────────────────────────────
+  readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
+  
+  // ── Styles ─────────────────────────────────────────────────
+  readonly overlayStyle = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)',
+    backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100', };
+  readonly modalStyle = { background: 'oklch(13% 0.025 272)',  border: '1px solid oklch(28% 0.025 272)',
+    borderRadius: '16px', padding: '28px', width: '440px', display: 'flex', flexDirection: 'column' as const,
+    gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
+  readonly fieldLabelStyle = { fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase' as const,
+    color: 'oklch(48% 0.01 272)', marginBottom: '4px', display: 'block', };
+  readonly inputStyle = { width: '100%', boxSizing: 'border-box' as const, padding: '9px 12px', background: 'oklch(8% 0.025 272)',
+    border: '1px solid oklch(28% 0.025 272)', borderRadius: '8px', color: 'oklch(94% 0.005 272)', 
+    fontSize: '0.875rem', outline: 'none', };
+  readonly readonlyFieldStyle = { ...this.inputStyle, color: 'oklch(68% 0.01 272)', };
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const raw = params['assignmentId'] ?? params['assId'];
 
-      if (!raw) {
-        this.error.set('Missing assignmentId in the URL.');
-        return;
-      }
+      if (!raw) { this.error.set('Missing assignmentId in the URL.'); return; }
 
       const id = parseInt(raw, 10);
-
-      if (Number.isNaN(id)) {
-        this.error.set('Invalid assignmentId in the URL.');
-        return;
-      }
+      if (Number.isNaN(id)) { this.error.set('Invalid assignmentId in the URL.'); return; }
 
       this.assignmentId.set(id);
       this.loadEvalAssignmentHeader(id);
+      this.loadGroupsForAssignment(id);
       this.loadEvalAssignments(id);
     });
   }
@@ -321,5 +308,105 @@ columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
     });
   }
 
+  availableEvaluatorGroups = computed(() => {
+    const row = this.editingPairing();
+    if (!row) { return this.assignmentGroups(); }
+    return this.assignmentGroups().filter(group => group.id !== row.evalueeGroupId);
+  });
+
+  availableEvaluatorMembers = computed(() => {
+    const groupId = this.editEvaluatorGroupId();
+    if (!groupId) { return []; }
+    return this.assignmentGroups().find(group => group.id === groupId)?.members ?? [];
+  });
+
+  private loadGroupsForAssignment(assignmentId: number): void {
+    this.groupService.getGroupsForAssignment(assignmentId).subscribe({
+      next: groups => {
+        this.assignmentGroups.set(groups as AssignmentGroup[]);
+      },
+      error: () => {
+        this.assignmentGroups.set([]);
+      },
+    });
+  }
+
+  openEditPairing(row: EvalAssignmentDisplayRow): void {
+    console.log('openEditPairing clicked', row);
+    this.editingPairing.set(row);
+    this.editEvaluatorGroupId.set(row.evaluatorGroupId);
+    this.editPairingError.set(null);
+    const evaluatorGroup = this.assignmentGroups().find(group => group.id === row.evaluatorGroupId);
+    const evaluatorIsInGroup = evaluatorGroup?.members.some(member => member.userId === row.evaluatorUserId);
+    if (evaluatorIsInGroup) {
+      this.editEvaluatorUserId.set(row.evaluatorUserId);
+    } else {
+      this.editEvaluatorUserId.set(evaluatorGroup?.members?.[0]?.userId ?? null);
+    }
+  }
+
+  onEditEvaluatorGroupChanged(rawValue: string): void {
+    const groupId = parseInt(rawValue, 10);
+    if (Number.isNaN(groupId)) {
+      this.editEvaluatorGroupId.set(null);
+      this.editEvaluatorUserId.set(null);
+      return;
+    }
+    this.editEvaluatorGroupId.set(groupId);
+    const group = this.assignmentGroups().find(g => g.id === groupId);
+    const firstMember = group?.members?.[0];
+    this.editEvaluatorUserId.set(firstMember?.userId ?? null);
+  }
+
+  closeEditPairingModal(): void {
+    this.editingPairing.set(null);
+    this.editEvaluatorGroupId.set(null);
+    this.editEvaluatorUserId.set(null);
+    this.editPairingError.set(null);
+  }  
+
+  saveEditPairing(): void {
+    const row = this.editingPairing();
+    const assignmentId = this.assignmentId();
+    const evaluatorGroupId = this.editEvaluatorGroupId();
+    const evaluatorUserId = this.editEvaluatorUserId();
+
+    if (!row || !assignmentId) { return; }
+    if (!evaluatorGroupId || !evaluatorUserId) { this.editPairingError.set('Please select an evaluator group and evaluator.'); return; }
+    if (evaluatorGroupId === row.evalueeGroupId) { this.editPairingError.set('A group cannot evaluate itself.'); return; }
+
+    this.editPairingError.set(null);
+    this.loading.set(true);
+    this.loadingService.show();
+    this.evalService.updateEvalAssignment(row.id, {
+      assignmentId,
+      evalueeGroupId: row.evalueeGroupId,
+      evaluatorGroupId,
+      evaluatorUserId,
+      round: row.round,
+      status: row.status as any,
+      submissionId: null,
+      evalResponseId: null,
+    }).subscribe({
+      next: () => {
+        this.closeEditPairingModal();
+        this.loadEvalAssignments(assignmentId);
+
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+      error: err => {
+        console.error('Failed to update pairing:', err);
+        console.error('Backend error body:', err?.error);
+
+        this.editPairingError.set(
+          err?.error?.message ?? 'Failed to update evaluation pairing.'
+        );
+
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+    });
+  }  
 
 }

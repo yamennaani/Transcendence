@@ -246,8 +246,8 @@ const updateEvalAssignment = async (evalAssignmentId, { assignmentId, evalueeGro
 
   const existingEvalAssignment = await prisma.evalAssignment.findFirst({
     where: { assignmentId: assignmentIdInt, evalueeGroupId: evalueeGroupIdInt,
-             evaluatorUserId: evaluatorUserIdInt, round: roundInt },
-             NOT: { id: evalAssignmentIdInt } })
+             evaluatorUserId: evaluatorUserIdInt, round: roundInt,
+             NOT: { id: evalAssignmentIdInt } } })
   if (existingEvalAssignment)
     throw new ConflictError('Eval assignment already exists')  
 
