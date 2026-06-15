@@ -1,5 +1,4 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
-//import { Component, inject, signal, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvalAssignment, EvalService} from '../core/services/eval-service/eval-service';
 //import { ListComponent, ListColumn } from '../shared/list.component';
@@ -52,10 +51,11 @@ interface AssignmentGroup {
   selector: 'app-eval-assignment-list',
   standalone: true,
   //imports: [ListComponent, BtnComponent],
-  imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
+  //imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
+  imports: [ContainerComponent, BtnComponent, FormsModule],
   templateUrl: './eval-assignment-list.component.html',
   styles: [`
-    .page { flex: 1; overflow-y: auto; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
+    .page { flex: 1; height: 100vh; overflow-y: auto; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; }
 
     .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
 
@@ -117,6 +117,31 @@ export class EvalAssignmentListComponent implements OnInit {
   editEvaluatorUserId = signal<number | null>(null);
   editPairingError = signal<string | null>(null);
 
+  pairingsByRound = computed(() => {
+    const map = new Map<number, EvalAssignmentDisplayRow[]>();
+    for (const row of this.evalAssignments()) {
+      const existing = map.get(row.round) ?? [];
+      existing.push(row);
+      map.set(row.round, existing);
+    }
+    return Array.from(map.entries())
+    .sort(([roundA], [roundB]) => roundA - roundB)
+    .map(([round, rows]) => ({
+      round,
+      rows: [...rows].sort((a, b) => a.evalueeGroupName.localeCompare(b.evalueeGroupName)),
+    }));
+  });
+
+  selectedRound = signal<number | null>(null);
+  roundNumbers = computed(() => this.pairingsByRound().map(group => group.round));
+  selectedRoundGroup = computed(() => {
+    const groups = this.pairingsByRound();
+    if (groups.length === 0) { return null; }
+    const selected = this.selectedRound();
+    if (selected === null) { return groups[0]; }
+    return groups.find(group => group.round === selected) ?? groups[0];
+  });
+
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
   
@@ -164,13 +189,21 @@ export class EvalAssignmentListComponent implements OnInit {
         this.loadEvalAssignments(id);
       },
       error: err => {
-        this.error.set(
-          err?.error?.message ?? 'Failed to generate simple pairings.'
-        );
+        this.error.set(this.errorMessage(err, 'Failed to generate pairings.'));
         this.loading.set(false);
         this.loadingService.hide();
       },
     });
+  }
+
+  // errorMessage helper function (for passing on error message from the backend)
+  private errorMessage(err: any, fallback: string): string {
+    return (
+      err?.error?.message ??
+      err?.error?.error ??
+      err?.message ??
+      fallback
+    );
   }
 
   // delete one EvalAssignment-pairing 
@@ -277,9 +310,9 @@ export class EvalAssignmentListComponent implements OnInit {
 
     this.evalService.getEvalAssignments(assignmentId).pipe(
       switchMap((rows: EvalAssignment[]) => {
-        if (rows.length === 0) {
-          return of([]);
-        }
+        //console.log('Raw eval assignments from backend:', rows);
+        //console.log('Rounds received:', rows.map(row => row.round));
+        if (rows.length === 0) { return of([]); }
 
         const displayRowRequests = rows.map(row =>
           forkJoin({
@@ -326,6 +359,9 @@ export class EvalAssignmentListComponent implements OnInit {
     ).subscribe({
       next: displayRows => {
         this.evalAssignments.set(displayRows);
+        const rounds = Array.from(new Set(displayRows.map(row => row.round)))
+          .sort((a, b) => a - b);
+        if (rounds.length > 0 && !this.selectedRound()) { this.selectedRound.set(rounds[0]); }
         this.loading.set(false);
       },
       error: err => {

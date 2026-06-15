@@ -140,7 +140,7 @@
   <div style="display:flex;flex-direction:column;gap:12px">
     <div>
       <div class="overline">Generated pairings</div>
-      <h2 style="margin:0;font-size:1.75rem">EvalAssignments</h2>
+      <h2 style="margin:0;font-size:1.75rem">Scheduled evaluation assignments</h2>
     </div>
 
     @if (evalAssignments().length === 0 && !loading()) {
@@ -150,40 +150,60 @@
         </div>
       </app-container>
     } @else {
-      @for (ea of evalAssignments(); track ea.id) {
-        <app-container [config]="flatConfig">
-          <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px">
-            <div>
-              <div style="font-weight:600;color:oklch(94% 0.005 272);margin-bottom:4px">
-                Evaluee: {{ ea.evalueeGroupName }}: {{ ea.evalueeMembers }}
+      <!-- round selector buttons -->
+      @if (pairingsByRound().length > 0) {
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          @for (roundGroup of pairingsByRound(); track roundGroup.round) {
+            <app-btn
+              [variant]="selectedRound() === roundGroup.round ? 'primary' : 'ghost'"
+              size="sm"
+              (clicked)="selectedRound.set(roundGroup.round)">
+              Round {{ roundGroup.round }}
+            </app-btn>
+          }
+        </div>
+      }
+
+      <!-- selected round only -->
+      @if (selectedRoundGroup(); as roundGroup) {
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <h3 style="margin:12px 0 0;font-size:1.1rem">Round {{ roundGroup.round }}</h3>
+          @for (ea of roundGroup.rows; track ea.id) {
+            <app-container [config]="flatConfig">
+              <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px">
+                <div>
+                  <div style="font-weight:600;color:oklch(94% 0.005 272);margin-bottom:4px">
+                    Evaluee: {{ ea.evalueeGroupName }}: {{ ea.evalueeMembers }}
+                  </div>
+
+                  <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                    Evaluator: {{ ea.evaluatorName }} from {{ ea.evaluatorGroupName }}
+                    · Round: {{ ea.round }}
+                    · {{ ea.status }}
+                  </div>
+                </div>
+
+                <span style="display:flex;align-items:center;gap:8px">
+                  <app-btn
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="loading()"
+                    (clicked)="openEditPairing(ea)">
+                    Edit
+                  </app-btn>
+
+                  <app-btn
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="loading()"
+                    (clicked)="deleteEvalAssignment(ea)">
+                    Delete
+                  </app-btn>
+                </span>
               </div>
-
-              <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                Evaluator: {{ ea.evaluatorName }} from {{ ea.evaluatorGroupName }}
-                · Round: {{ ea.round }}
-                · {{ ea.status }}
-              </div>
-            </div>
-
-            <span style="display:flex;align-items:center;gap:8px">
-              <app-btn
-                variant="ghost"
-                size="sm"
-                [disabled]="loading()"
-                (clicked)="openEditPairing(ea)">
-                Edit
-              </app-btn>
-
-              <app-btn
-                variant="ghost"
-                size="sm"
-                [disabled]="loading()"
-                (clicked)="deleteEvalAssignment(ea)">
-                Delete
-              </app-btn>
-            </span>
-          </div>
-        </app-container>
+            </app-container>
+          }
+        </div>
       }
     }
   </div>
