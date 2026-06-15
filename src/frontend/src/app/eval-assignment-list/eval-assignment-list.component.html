@@ -1,24 +1,24 @@
-<div class="page">
-  <div class="header-row">
+<div [ngStyle]="pageStyle">
+  <div [ngStyle]="headerRowStyle">
     <div>
-      <div class="overline">Peer evaluation</div>
-      <h1>Evaluation pairings</h1>
+      <div [ngStyle]="overlineStyle">Peer evaluation</div>
+      <h1 [ngStyle]="h1Style">Evaluation pairings</h1>
 
       @if (assignmentName()) {
-        <p class="subline">
+        <p [ngStyle]="sublineStyle">
           Assignment: <strong>{{ assignmentName() }}</strong>
           @if (courseName()) {
             · Course: <strong>{{ courseName() }}</strong>
           }
         </p>
       } @else if (assignmentId()) {
-        <p class="subline">Assignment ID: {{ assignmentId() }}</p>
+        <p [ngStyle]="sublineStyle">Assignment ID: {{ assignmentId() }}</p>
       } @else {
-        <p class="subline">No assignment selected.</p>
+        <p [ngStyle]="sublineStyle">No assignment selected.</p>
       }
     </div>
 
-    <div class="actions">
+    <div [ngStyle]="actionsStyle">
       <app-btn
         variant="secondary"
         (clicked)="goBackToAssignment()">
@@ -42,39 +42,39 @@
   </div>
 
   @if (error()) {
-    <div class="error-banner">
+    <div [ngStyle]="errorBannerStyle">
       {{ error() }}
     </div>
   }
 
   @if (loading()) {
-    <div class="loading">
+    <div [ngStyle]="loadingStyle">
       Loading evaluation pairings…
     </div>
   }
 
   @if (editingPairing()) {
-    <div class="modal-overlay" (click)="closeEditPairingModal()">
-      <div class="modal-card" (click)="$event.stopPropagation()">
-        <div class="modal-title">
+    <div [ngStyle]="overlayStyle" (click)="closeEditPairingModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div [ngStyle]="modalTitleStyle">
           Edit pairing — {{ editingPairing()?.evalueeGroupName }}
         </div>
 
-        <div class="modal-body">
+        <div [ngStyle]="modalBodyStyle">
           <div>
-            <label class="field-label">Evaluee</label>
-            <div class="readonly-field">
+            <label [ngStyle]="fieldLabelStyle">Evaluee</label>
+            <div [ngStyle]="readonlyFieldStyle">
               {{ editingPairing()?.evalueeGroupName }}:
               {{ editingPairing()?.evalueeMembers }}
             </div>
           </div>
 
           <div>
-            <label class="field-label">Evaluator group</label>
+            <label [ngStyle]="fieldLabelStyle">Evaluator group</label>
             <select
-            class="input"
-            [ngModel]="editEvaluatorGroupId()"
-            (ngModelChange)="onEditEvaluatorGroupChanged($event)">
+              [ngStyle]="inputStyle"
+              [ngModel]="editEvaluatorGroupId()"
+              (ngModelChange)="onEditEvaluatorGroupChanged($event)">
               @for (group of availableEvaluatorGroups(); track group.id) {
                 <option [ngValue]="group.id">
                   {{ group.name }}
@@ -84,11 +84,11 @@
           </div>
 
           <div>
-            <label class="field-label">Evaluator</label>
+            <label [ngStyle]="fieldLabelStyle">Evaluator</label>
             <select
-            class="input"
-            [ngModel]="editEvaluatorUserId()"
-            (ngModelChange)="editEvaluatorUserId.set($event)">
+              [ngStyle]="inputStyle"
+              [ngModel]="editEvaluatorUserId()"
+              (ngModelChange)="editEvaluatorUserId.set($event)">
               @for (member of availableEvaluatorMembers(); track member.id) {
                 <option [ngValue]="member.userId">
                   {{ member.user?.username ?? ('user #' + member.userId) }}
@@ -98,13 +98,13 @@
           </div>
 
           @if (editPairingError()) {
-            <div class="error-banner">
+            <div [ngStyle]="errorBannerStyle">
               {{ editPairingError() }}
             </div>
           }
         </div>
 
-        <div class="modal-actions">
+        <div [ngStyle]="modalActionsStyle">
           <app-btn
             variant="ghost"
             size="md"
@@ -124,35 +124,22 @@
     </div>
   }
 
-  <!--
-  <app-list
-    [items]="evalAssignments()"
-    [trackBy]="trackFn"
-    [columns]="columns()"
-    title="EvalAssignments"
-    overline="Generated pairings"
-    emptyMessage="No evaluation pairings found for this assignment."
-    [pageSize]="10">
-  </app-list>
-  -->
-
   <!-- Display pairings list with container card functionality and buttons in each item -->
-  <div style="display:flex;flex-direction:column;gap:12px">
+  <div [ngStyle]="pairingsListStyle">
     <div>
-      <div class="overline">Generated pairings</div>
-      <h2 style="margin:0;font-size:1.75rem">Scheduled evaluation assignments</h2>
+      <div [ngStyle]="overlineStyle">Generated pairings</div>
+      <h2 [ngStyle]="sectionHeadingStyle">Scheduled evaluation assignments</h2>
     </div>
 
     @if (evalAssignments().length === 0 && !loading()) {
       <app-container [config]="flatConfig">
-        <div style="padding:18px 20px;font-size:0.9rem;opacity:0.65">
+        <div [ngStyle]="emptyStateStyle">
           No evaluation pairings found for this assignment.
         </div>
       </app-container>
     } @else {
-      <!-- round selector buttons -->
       @if (pairingsByRound().length > 0) {
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <div [ngStyle]="roundButtonRowStyle">
           @for (roundGroup of pairingsByRound(); track roundGroup.round) {
             <app-btn
               [variant]="selectedRound() === roundGroup.round ? 'primary' : 'ghost'"
@@ -164,26 +151,28 @@
         </div>
       }
 
-      <!-- selected round only -->
       @if (selectedRoundGroup(); as roundGroup) {
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <h3 style="margin:12px 0 0;font-size:1.1rem">Round {{ roundGroup.round }}</h3>
+        <div [ngStyle]="selectedRoundListStyle">
+          <h3 [ngStyle]="roundHeadingStyle">
+            Round {{ roundGroup.round }}
+          </h3>
+
           @for (ea of roundGroup.rows; track ea.id) {
             <app-container [config]="flatConfig">
-              <div style="padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px">
+              <div [ngStyle]="cardContentStyle">
                 <div>
-                  <div style="font-weight:600;color:oklch(94% 0.005 272);margin-bottom:4px">
+                  <div [ngStyle]="cardTitleStyle">
                     Evaluee: {{ ea.evalueeGroupName }}: {{ ea.evalueeMembers }}
                   </div>
 
-                  <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                  <div [ngStyle]="cardSubtitleStyle">
                     Evaluator: {{ ea.evaluatorName }} from {{ ea.evaluatorGroupName }}
                     · Round: {{ ea.round }}
                     · {{ ea.status }}
                   </div>
                 </div>
 
-                <span style="display:flex;align-items:center;gap:8px">
+                <span [ngStyle]="cardActionsStyle">
                   <app-btn
                     variant="ghost"
                     size="sm"

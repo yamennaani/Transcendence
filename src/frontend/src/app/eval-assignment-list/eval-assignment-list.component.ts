@@ -51,49 +51,8 @@ interface AssignmentGroup {
   selector: 'app-eval-assignment-list',
   standalone: true,
   //imports: [ListComponent, BtnComponent],
-  //imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
-  imports: [ContainerComponent, BtnComponent, FormsModule],
+  imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
   templateUrl: './eval-assignment-list.component.html',
-  styles: [`
-    .page { flex: 1; height: 100vh; overflow-y: auto; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px; }
-
-    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
-
-    h1 { margin: 0; font-size: 1.75rem; }
-
-    .overline { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75; margin-bottom: 6px; }
-
-    .subline { margin: 6px 0 0; opacity: 0.75; font-size: 0.9rem; }
-
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .error-banner { border: 1px solid #f0aaaa; background: #fff0f0; color: #9f1d1d;
-      border-radius: 8px; padding: 10px 14px; font-size: 0.875rem; }
-
-    .loading { font-size: 0.875rem; opacity: 0.75; }
-
-    .modal-overlay { position: fixed; inset: 0; background: oklch(0% 0 0 / 0.7); 
-      backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
-      z-index: 100; }
-
-    .modal-card { background: #0d0f1a; border: 1px solid #2a2f45; border-radius: 16px; padding: 28px;
-      width: 440px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 8px 32px oklch(0% 0 0 / 0.8); }
-
-    .modal-title { font-size: 1.125rem; font-weight: 600; }
-
-    .modal-body { display: flex; flex-direction: column; gap: 14px; }
-
-    .field-label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em;
-      text-transform: uppercase; opacity: 0.65; margin-bottom: 4px; }
-
-    .input { width: 100%; box-sizing: border-box; padding: 9px 12px; background: #050712;
-      border: 1px solid #2a2f45; border-radius: 8px; color: white; font-size: 0.875rem; }
-
-    .readonly-field { font-size: 0.875rem; opacity: 0.8; border: 1px solid #2a2f45;
-      border-radius: 8px; padding: 9px 12px; }
-
-    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
-  `],
 })
 export class EvalAssignmentListComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -146,17 +105,42 @@ export class EvalAssignmentListComponent implements OnInit {
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
   
   // ── Styles ─────────────────────────────────────────────────
-  readonly overlayStyle = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)',
-    backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100', };
-  readonly modalStyle = { background: 'oklch(13% 0.025 272)',  border: '1px solid oklch(28% 0.025 272)',
-    borderRadius: '16px', padding: '28px', width: '440px', display: 'flex', flexDirection: 'column' as const,
-    gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
-  readonly fieldLabelStyle = { fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase' as const,
-    color: 'oklch(48% 0.01 272)', marginBottom: '4px', display: 'block', };
-  readonly inputStyle = { width: '100%', boxSizing: 'border-box' as const, padding: '9px 12px', background: 'oklch(8% 0.025 272)',
-    border: '1px solid oklch(28% 0.025 272)', borderRadius: '8px', color: 'oklch(94% 0.005 272)', 
-    fontSize: '0.875rem', outline: 'none', };
-  readonly readonlyFieldStyle = { ...this.inputStyle, color: 'oklch(68% 0.01 272)', };
+  readonly pageStyle = {flex: '1', height: '100vh', overflowY: 'auto', padding: '32px', boxSizing: 'border-box' as const, 
+    display: 'flex', flexDirection: 'column' as const, gap: '20px', };
+  readonly headerRowStyle = {display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', 
+    gap: '20px', flexWrap: 'wrap' as const, };
+  readonly h1Style = { margin: '0', fontSize: '1.75rem', };
+  readonly overlineStyle = { fontSize: '0.75rem', textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+    opacity: '0.75', marginBottom: '6px', };
+  readonly sublineStyle = { margin: '6px 0 0', opacity: '0.75', fontSize: '0.9rem', };
+  readonly actionsStyle = { display: 'flex', gap: '10px', flexWrap: 'wrap' as const, };
+  readonly errorBannerStyle = { border: '1px solid #f0aaaa', background: '#fff0f0', color: '#9f1d1d',
+    borderRadius: '8px', padding: '10px 14px', fontSize: '0.875rem', };
+  readonly loadingStyle = { fontSize: '0.875rem', opacity: '0.75', };
+  readonly overlayStyle = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)', backdropFilter: 'blur(8px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100', };
+  readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px',
+    width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
+  readonly modalTitleStyle = { fontSize: '1.125rem', fontWeight: '600', };
+  readonly modalBodyStyle = { display: 'flex', flexDirection: 'column' as const, gap: '14px', };
+  readonly fieldLabelStyle = { display: 'block', fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const, opacity: '0.65', marginBottom: '4px', };
+  readonly inputStyle = { width: '100%', boxSizing: 'border-box' as const, padding: '9px 12px', background: '#050712',
+    border: '1px solid #2a2f45', borderRadius: '8px', color: 'white', fontSize: '0.875rem', };
+  readonly readonlyFieldStyle = { fontSize: '0.875rem', opacity: '0.8', border: '1px solid #2a2f45', 
+    borderRadius: '8px', padding: '9px 12px', };
+  readonly modalActionsStyle = { display: 'flex', justifyContent: 'flex-end', gap: '8px', };
+  readonly pairingsListStyle = { display: 'flex', flexDirection: 'column' as const, gap: '12px', };
+  readonly roundButtonRowStyle = { display: 'flex', gap: '8px', flexWrap: 'wrap' as const, };
+  readonly selectedRoundListStyle = { display: 'flex', flexDirection: 'column' as const, gap: '10px', };
+  readonly roundHeadingStyle = { margin: '12px 0 0', fontSize: '1.1rem', };
+  readonly sectionHeadingStyle = { margin: '0', fontSize: '1.75rem', };
+  readonly emptyStateStyle = { padding: '18px 20px', fontSize: '0.9rem', opacity: '0.65', };
+  readonly cardContentStyle = { padding: '16px 20px', display: 'flex', justifyContent: 'space-between',
+    alignItems: 'center', gap: '16px', };
+  readonly cardTitleStyle = { fontWeight: '600', color: 'oklch(94% 0.005 272)', marginBottom: '4px', };
+  readonly cardSubtitleStyle = { fontSize: '0.8125rem', color: 'oklch(48% 0.01 272)', };
+  readonly cardActionsStyle = { display: 'flex', alignItems: 'center', gap: '8px', };
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
