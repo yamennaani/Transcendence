@@ -105,13 +105,13 @@ exports.login = async (req, res) => {
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    /*const valid = await bcrypt.compare(password, user.pass_hash);
+    const valid = await bcrypt.compare(password, user.pass_hash);
     if (!valid) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     if (!user.email_verified) {
       return res.status(403).json({ error: 'Please verify your email before logging in.' });
-    }*/
+    }
 
     const accessToken = generateAccessToken(user.id, user.email);
     const refreshToken = generateRefreshToken(user.id, user.email);

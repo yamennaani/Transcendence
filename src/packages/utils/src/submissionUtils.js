@@ -55,11 +55,13 @@ const getAssignment = async(assId, select = null, include = null)=>{
     return await prisma.assignment.findUnique(options)
 }
 
-const getSubmissionsBy = async (where)=>{
+const getSubmissionsBy = async (where, include = null)=>{
     if(!where)
         return null
     const options = {}
     options.where = where
+    if(include)
+        options.include = include
     return await prisma.submission.findMany(options)
 }
 

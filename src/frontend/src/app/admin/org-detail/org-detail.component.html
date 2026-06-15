@@ -5,7 +5,7 @@
         <div [ngStyle]="eyebrowStyle">Admin panel</div>
         <h1 [ngStyle]="titleStyle">{{ org()?.name || 'Organization' }}</h1>
         <p [ngStyle]="subtitleStyle">
-          Manage membership here without overcomplicating the flow. Add users by email and keep the org tidy.
+          Manage membership here without overcomplicating the flow. Add email addresses to the whitelist and keep the org tidy.
         </p>
       </div>
 
@@ -74,30 +74,22 @@
     <section [ngStyle]="cardStyle">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
-          <div [ngStyle]="pillStyle">Invite by email</div>
-          <h2 [ngStyle]="sectionTitleStyle">Add users</h2>
-          <p [ngStyle]="sectionHintStyle">Add one user or paste a list of emails. Usernames are generated automatically when missing.</p>
+          <div [ngStyle]="pillStyle">Whitelist by email</div>
+          <h2 [ngStyle]="sectionTitleStyle">Add email addresses</h2>
+          <p [ngStyle]="sectionHintStyle">Add one email or paste a list of addresses. The frontend sends them to the auth whitelist, not to the org members table.</p>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1.2fr 0.7fr auto;gap:14px;align-items:end">
+      <div style="display:grid;grid-template-columns:1.4fr auto;gap:14px;align-items:end">
         <div>
           <label [ngStyle]="labelStyle">Email</label>
           <input [ngStyle]="inputStyle" placeholder="name@example.com" [(ngModel)]="email" />
-        </div>
-        <div>
-          <label [ngStyle]="labelStyle">Role</label>
-          <select [ngStyle]="inputStyle" [(ngModel)]="role">
-            <option>Student</option>
-            <option>Bocal</option>
-            <option>Admin</option>
-          </select>
         </div>
         <app-btn variant="primary" [disabled]="busy()" (clicked)="addOne()">
           @if (busy()) {
             Adding...
           } @else {
-            Add user
+            Whitelist email
           }
         </app-btn>
       </div>
@@ -111,8 +103,8 @@
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
           <div [ngStyle]="pillStyle">Bulk import</div>
-          <h2 [ngStyle]="sectionTitleStyle">Paste emails</h2>
-          <p [ngStyle]="sectionHintStyle">One email per line. This keeps onboarding fast for simple cohorts.</p>
+          <h2 [ngStyle]="sectionTitleStyle">Paste whitelist emails</h2>
+          <p [ngStyle]="sectionHintStyle">One email per line. This bulk-adds entries to AuthAllowedEmail through the auth service.</p>
         </div>
       </div>
 
@@ -126,7 +118,7 @@
           @if (busy()) {
             Importing...
           } @else {
-            Import users
+            Whitelist emails
           }
         </app-btn>
       </div>
@@ -134,6 +126,60 @@
       @if (bulkNotice) {
         <div [ngStyle]="noticeStyle">{{ bulkNotice }}</div>
       }
+    </section>
+
+    <section [ngStyle]="cardStyle">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div [ngStyle]="pillStyle">AuthAllowedEmail</div>
+          <h2 [ngStyle]="sectionTitleStyle">Whitelisted emails</h2>
+          <p [ngStyle]="sectionHintStyle">These rows match the database table used by the auth service for registration access.</p>
+        </div>
+        <div [ngStyle]="badgeStyle">{{ allowedEmails().length }} total</div>
+      </div>
+
+      @if (inviteNotice) {
+        <div [ngStyle]="noticeStyle" style="margin-bottom:14px">{{ inviteNotice }}</div>
+      }
+
+      <section [ngStyle]="tableWrapStyle">
+        <div [ngStyle]="inviteTableHeaderStyle">
+          <div>Email</div>
+          <div>Status</div>
+          <div>Invited by</div>
+          <div>Created</div>
+          <div>Action</div>
+        </div>
+
+        @if (allowedEmails().length === 0) {
+          <div [ngStyle]="emptyStateStyle">No whitelist entries yet. Add the first email above.</div>
+        } @else {
+          @for (invite of allowedEmails(); track invite.id) {
+            <div [ngStyle]="inviteTableRowStyle">
+              <div>{{ invite.email }}</div>
+              <div>
+                <span [ngStyle]="invite.used ? badgeStyle : pillStyle">{{ invite.used ? 'Used' : 'Pending' }}</span>
+              </div>
+              <div>{{ invite.invited_by_username || 'System' }}</div>
+              <div>{{ formatInviteDate(invite.created_at) }}</div>
+              <div>
+                <app-btn
+                  variant="danger"
+                  size="sm"
+                  [disabled]="busy() || removingInviteId() === invite.id"
+                  (clicked)="revokeInvite(invite)"
+                >
+                  @if (removingInviteId() === invite.id) {
+                    Removing...
+                  } @else {
+                    Revoke
+                  }
+                </app-btn>
+              </div>
+            </div>
+          }
+        }
+      </section>
     </section>
   </div>
 </div>
