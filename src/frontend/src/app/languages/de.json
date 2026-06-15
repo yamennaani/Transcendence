@@ -1,11 +1,11 @@
 {
     "label_language": "Sprache",
-    "label_score_avg": "Ø Punktzahl",
+    "label_score_avg": "Durchschnittliche Punktzahl",
     "label_progress": "Fortschritt",
     "label_evaluations_given": "Abgegebene Bewertungen",
     "label_pending_reviews": "Ausstehende Überprüfungen",
     "sub_evaluations": "über 6 Bewertungen",
-    "sub_assignments": "Du hast 2 ausstehende Bewertungen abzuschließen.",
+    "sub_assignments": "Sie haben 2 ausstehende Bewertungen.",
     "badge_validated": "Validiert",
     "badge_failed": "Fehlgeschlagen",
     "badge_under_review": "In Überprüfung",
@@ -19,6 +19,8 @@
     "label_progress1": "Fortschritt",
     "label_manage": "Verwalten",
     "label_users": "Benutzer",
+    "label_bocal": "Bocal",
+    "label_admin": "Administrator",
 
     "bocal_panel": "Bocal-Panel",
     "manage_classes": "Kurse verwalten",

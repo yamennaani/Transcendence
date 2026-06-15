@@ -1,5 +1,5 @@
 {
-    "label_language": "Language",
+    "label_language": "Nyelv",
     "label_score_avg": "Score avg",
     "label_progress": "Progress",
     "label_evaluations_given": "Evaluations given",
@@ -19,6 +19,8 @@
     "label_progress1": "Progress",
     "label_manage": "Manage",
     "label_users": "Users",
+    "label_bocal": "Bocal",
+    "label_admin": "Admin",
 
     "bocal_panel": "Bocal panel",
     "manage_classes": "Manage classes",
@@ -78,8 +80,8 @@
     "btn_open": "Open →",
 
     "btn_settings": "Settings",
-    "btn_sign_out": "Sign out"
-    ,
+    "btn_sign_out": "Sign out",
+
     "dashboard.welcome": "Üdv újra, {{name}}.",
     "dashboard.pending_evals": "{{count}} értékelés vár elkészítésre.",
     "dashboard.class_progress": "Osztály előrehaladás",

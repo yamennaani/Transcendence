@@ -33,34 +33,14 @@
         @if (!viewAsStaff()) {
           <app-badge [variant]="statusBadge()"/>
         }
-        <span class="mono-tag">{{ assignment()!.max_score }} pts max</span>
+        <span class="mono-tag mono-tag-cyan">{{ assignment()!.max_score }} pts max</span>
         @if (assignment()!.pass_threshold) {
-          <span class="mono-tag">{{ assignment()!.pass_threshold }}% threshold</span>
+          <span class="mono-tag mono-tag-amber">{{ assignment()!.pass_threshold }}% threshold</span>
         }
-        <span class="mono-tag">{{ assignment()!.req_eval }} eval{{ assignment()!.req_eval === 1 ? '' : 's' }} required</span>
+        <span class="mono-tag mono-tag-violet">{{ assignment()!.req_eval }} eval{{ assignment()!.req_eval === 1 ? '' : 's' }} required</span>
         @if (assignment()!.groupSize && assignment()!.groupSize! > 1) {
-          <span class="mono-tag">group ≤ {{ assignment()!.groupSize }}</span>
+          <span class="mono-tag mono-tag-green">group ≤ {{ assignment()!.groupSize }}</span>
         }
-      </div>
-    </div>
-
-    <!-- Stats grid -->
-    <div class="stats-grid">
-      <div class="stat-cell">
-        <span class="stat-label">Max score</span>
-        <span class="stat-value">{{ assignment()!.max_score }}</span>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-label">Req. evals</span>
-        <span class="stat-value">{{ assignment()!.req_eval }}</span>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-label">Group size</span>
-        <span class="stat-value">{{ assignment()!.groupSize ?? 1 }}</span>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-label">Threshold</span>
-        <span class="stat-value">{{ assignment()!.pass_threshold ?? '—' }}{{ assignment()!.pass_threshold ? '%' : '' }}</span>
       </div>
     </div>
   </div>
@@ -188,7 +168,9 @@
 
           @if (myGroup() && !mySubmission()) {
             <p class="hint-text">No submission started yet.</p>
-            <app-btn variant="primary" (clicked)="startSubmission()">Start submission</app-btn>
+            <div class="action-row">
+              <app-btn variant="primary" (clicked)="startSubmission()">Start submission</app-btn>
+            </div>
           }
 
           @if (mySubmission(); as submission) {
@@ -203,14 +185,26 @@
               <span class="hint-text">{{ submission.status === 'Open' ? 'Open — you can still upload.' : 'Closed.' }}</span>
             </div>
 
+            @if (submittedFileMeta(submission); as meta) {
+              <div class="file-preview">
+                <div class="file-preview-ext">{{ meta.ext }}</div>
+                <div class="file-preview-info">
+                  <span class="file-preview-name">{{ meta.name }}</span>
+                  <span class="file-preview-meta">{{ meta.size }} · {{ meta.type }}</span>
+                </div>
+              </div>
+            }
+
             @if (submission.status === 'Open') {
               <div class="upload-panel">
                 <div class="upload-label">Upload file</div>
-                <p class="upload-help">Choose one file for this submission. Allowed formats include PDF, ZIP, images, text files, and Word documents.</p>
+                <p class="upload-help">PDF, ZIP, image, text, or Word file · max 50 MB</p>
 
                 <div class="upload-row">
                   <div class="upload-picker">
-                    <app-btn variant="secondary" [disabled]="uploadingFile()">Choose file</app-btn>
+                    <app-btn variant="secondary" [disabled]="uploadingFile()">
+                      {{ submittedFileMeta(submission) ? 'Replace file' : 'Choose file' }}
+                    </app-btn>
                     <input
                       class="file-input"
                       type="file"
@@ -218,46 +212,15 @@
                       accept=".zip,.pdf,.txt,.doc,.docx,image/*"
                       (change)="onFileSelected($event)"/>
                   </div>
-                  @if (!selectedFile()) {
+                  @if (uploadingFile()) {
+                    <span class="hint-text">Uploading…</span>
+                  } @else if (!submittedFileMeta(submission)) {
                     <span class="hint-text">No file selected yet.</span>
                   }
                 </div>
 
-                @if (selectedFileMeta(); as meta) {
-                  <div class="file-preview">
-                    <div class="file-preview-ext">{{ meta.ext }}</div>
-                    <div class="file-preview-info">
-                      <span class="file-preview-name">{{ meta.name }}</span>
-                      <span class="file-preview-meta">{{ meta.size }} · {{ meta.type }}</span>
-                    </div>
-                    <button class="file-preview-clear" (click)="selectedFile.set(null)" title="Remove">✕</button>
-                  </div>
-                }
-
                 <div class="upload-row">
-                  <app-btn
-                    variant="primary"
-                    [disabled]="!selectedFile() || uploadingFile()"
-                    (clicked)="uploadSelectedFile()">
-                    {{ uploadingFile() ? 'Uploading…' : 'Upload file' }}
-                  </app-btn>
                   <app-btn variant="ghost" [disabled]="uploadingFile()" (clicked)="closeSubmission()">Close submission</app-btn>
-                </div>
-
-                <div class="upload-meta">
-                  <span>Max size: 50 MB</span>
-                  <span>·</span>
-                  <span>One file at a time</span>
-                </div>
-              </div>
-            }
-
-            @if (submission.file) {
-              <div class="file-preview">
-                <div class="file-preview-ext">{{ submission.file.name.includes('.') ? submission.file.name.split('.').pop()!.toUpperCase() : '?' }}</div>
-                <div class="file-preview-info">
-                  <span class="file-preview-name">{{ submission.file.name }}</span>
-                  <span class="file-preview-meta">{{ submission.file.size ? formatFileSize(submission.file.size) : '' }}{{ submission.file.mimiType ? ' · ' + submission.file.mimiType : '' }}</span>
                 </div>
               </div>
             }

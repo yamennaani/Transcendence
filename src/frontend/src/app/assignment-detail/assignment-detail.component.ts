@@ -26,6 +26,7 @@ import { ScorePillComponent } from '../shared/score-pill.component';
   styles: [`
     .page {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
       padding: 32px;
       max-width: 860px;
@@ -81,38 +82,25 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       border-radius: 6px;
       padding: 2px 8px;
     }
-
-    /* Stats grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1px;
-      background: ${DS.colors.border};
-      border: 1px solid ${DS.colors.border};
-      border-radius: ${DS.radius.lg};
-      overflow: hidden;
-      flex-shrink: 0;
-      min-width: 220px;
-    }
-    .stat-cell {
-      background: ${DS.colors.surface};
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 3px;
-    }
-    .stat-label {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: ${DS.colors.fg3};
-    }
-    .stat-value {
-      font-family: ${DS.fonts.mono};
-      font-size: 1.125rem;
-      font-weight: 600;
+    .mono-tag-cyan {
       color: ${DS.colors.cyan};
+      background: ${DS.colors.cyanSubtle};
+      border-color: ${DS.colors.cyanBorder};
+    }
+    .mono-tag-amber {
+      color: ${DS.colors.amber};
+      background: ${DS.colors.amberSubtle};
+      border-color: ${DS.colors.amberBorder};
+    }
+    .mono-tag-violet {
+      color: ${DS.colors.violet};
+      background: ${DS.colors.violetSubtle};
+      border-color: ${DS.colors.violetBorder};
+    }
+    .mono-tag-green {
+      color: ${DS.colors.green};
+      background: ${DS.colors.greenSubtle};
+      border-color: ${DS.colors.greenBorder};
     }
 
     /* Subject file */
@@ -171,6 +159,15 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
+      align-items: stretch;
+    }
+    .two-col app-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .two-col app-container ::ng-deep > div {
+      flex: 1;
+      min-height: 0;
     }
 
     /* Card body (inside container) */
@@ -181,6 +178,9 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       gap: 14px;
       height: 100%;
       box-sizing: border-box;
+    }
+    .card-inner .action-row {
+      margin-top: auto;
     }
     .card-title {
       font-size: 0.6875rem;
@@ -249,6 +249,7 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       border: 1px solid ${DS.colors.border};
       border-radius: ${DS.radius.lg};
       background: ${DS.colors.surface};
+      margin-top: auto;
     }
     .upload-label {
       font-size: 0.6875rem;
@@ -307,15 +308,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       border-radius: ${DS.radius.md};
       padding: 9px 12px;
     }
-    .upload-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      font-size: 0.8125rem;
-      color: ${DS.colors.fg3};
-    }
-
     /* Eval progress */
     .eval-inner {
       padding: 16px 20px;
@@ -566,6 +558,7 @@ export class AssignmentDetailComponent implements OnInit {
   submissionError = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
   uploadingFile = signal(false);
+  uploadedFileMeta = signal<{ name: string; size: string; ext: string; type: string } | null>(null);
   groupName    = signal<string>('');
 
   // Staff state
@@ -609,6 +602,19 @@ export class AssignmentDetailComponent implements OnInit {
   private currentUserId() {
     const user = this.user() as { id?: number; userId?: number } | null;
     return user?.id ?? user?.userId ?? null;
+  }
+
+  submittedFileMeta(submission: Submission | null) {
+    const local = this.uploadedFileMeta();
+    if (local) return local;
+    const file = submission?.file;
+    if (!file) return null;
+    return {
+      name: file.name,
+      size: this.formatFileSize(file.size),
+      ext: file.name.includes('.') ? file.name.split('.').pop()!.toUpperCase() : '?',
+      type: file.mimiType || 'unknown',
+    };
   }
 
   staffGroupCount = computed(() => new Set(this.allSubs().map((s) => s.groupId)).size);
@@ -728,6 +734,10 @@ export class AssignmentDetailComponent implements OnInit {
               next: (group: any) => {
                 if (group) {
                   this.myGroup.set(group);
+                  const existingSubmission = subs.find(sub => sub.groupId === group.id);
+                  if (existingSubmission) {
+                    this.mySubmission.set(existingSubmission);
+                  }
                   this.loading.hide();
                 } else {
                   this.groupService.getInvites({ userId }).subscribe({
@@ -846,12 +856,11 @@ export class AssignmentDetailComponent implements OnInit {
     const a = this.assignment();
     const group = this.myGroup();
     const userId = this.currentUserId();
-      if (!a || !group || !userId) return;
+    if (!a || !group || !userId) return;
     this.actionError.set(null);
     this.submissionError.set(null);
     this.selectedFile.set(null);
     this.loading.show();
-      console.debug('createSubmission payload', { groupId: group.id, userId, type: 'FILE' });
     this.subService.createSubmission({ groupId: group.id, userId, type: 'FILE' }).subscribe({
       next: (sub) => { this.mySubmission.set(sub); this.loading.hide(); },
       error: (err) => {
@@ -881,6 +890,7 @@ export class AssignmentDetailComponent implements OnInit {
     }
 
     this.selectedFile.set(file);
+    this.uploadSelectedFile();
   }
 
   uploadSelectedFile() {
@@ -889,6 +899,7 @@ export class AssignmentDetailComponent implements OnInit {
     const userId = this.currentUserId();
     if (!file || !group || !userId) return;
 
+    const meta = this.selectedFileMeta();
     this.actionError.set(null);
     this.submissionError.set(null);
     this.uploadingFile.set(true);
@@ -898,6 +909,7 @@ export class AssignmentDetailComponent implements OnInit {
       next: (sub) => {
         this.mySubmission.set(sub);
         this.selectedFile.set(null);
+        this.uploadedFileMeta.set(meta);
         this.uploadingFile.set(false);
         this.loading.hide();
       },
@@ -915,6 +927,7 @@ export class AssignmentDetailComponent implements OnInit {
     const group = this.myGroup();
     const userId = this.currentUserId();
     if (!group || !userId) return;
+    if (!confirm('Are you sure you want to close this submission? You won\'t be able to upload further files afterwards.')) return;
     this.actionError.set(null);
     this.submissionError.set(null);
     this.loading.show();

@@ -19,6 +19,8 @@
     "label_progress1": "Progress",
     "label_manage": "Manage",
     "label_users": "Users",
+    "label_bocal": "Bocal",
+    "label_admin": "Admin",
 
     "bocal_panel": "Bocal panel",
     "manage_classes": "Manage classes",
@@ -78,8 +80,8 @@
     "btn_open": "Open →",
 
     "btn_settings": "Settings",
-    "btn_sign_out": "Sign out"
-    ,
+    "btn_sign_out": "Sign out",
+
     "dashboard.welcome": "Welcome back, {{name}}.",
     "dashboard.pending_evals": "You have {{count}} pending evaluations to complete.",
     "dashboard.class_progress": "Class progress",
