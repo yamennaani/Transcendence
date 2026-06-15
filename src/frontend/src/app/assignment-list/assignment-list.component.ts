@@ -35,6 +35,7 @@ const STATUS_META: Record<AssignmentStatus, { variant: BadgeVariant; label: stri
   imports: [NgStyle, SlicePipe, BadgeComponent, BtnComponent, ContainerComponent],
   templateUrl: './assignment-list.component.html',
 })
+
 export class AssignmentListComponent implements OnInit {
   private router        = inject(Router);
   private route         = inject(ActivatedRoute);
