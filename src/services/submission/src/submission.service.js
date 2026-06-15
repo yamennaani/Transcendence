@@ -110,23 +110,28 @@ const uploadFile = async (groupId, userId, reqFile)=>{
     if(existingSub.file)
     {
         await deleteExistingFile(existingSub.file.url);
-        return await prisma.file.update(
+        await prisma.file.update(
             {
                 where: {id: existingSub.file.id},
-                data:{name: reqFile.originalname, size: reqFile.size, 
+                data:{name: reqFile.originalname, size: reqFile.size,
                     mimiType: reqFile.mimetype, url: fileName,
                 uploadedBy: parseInt(userId)}
             })
+        return await prisma.submission.findUnique({
+            where: {id: existingSub.id},
+            include: {file: true}
+        })
     }
 
     const newFile = await prisma.file.create({
-        data: {name: reqFile.originalname, size: reqFile.size, 
-            mimiType: reqFile.mimetype, url: fileName, 
+        data: {name: reqFile.originalname, size: reqFile.size,
+            mimiType: reqFile.mimetype, url: fileName,
             uploadedBy : parseInt(userId)}
     })
     return await prisma.submission.update({
         where: {id: parseInt(existingSub.id)},
-        data:{fileId: newFile.id}})
+        data:{fileId: newFile.id},
+        include: {file: true}})
 }
 
 const getDownloadUrl = async(groupId, userId)=>{
@@ -164,7 +169,10 @@ const getSubmissionsForAssignment = async (assId)=>{
     const ass = await utils.getAssignment(assId)
     if(!ass)
         throw new NotFoundError('Assignment not found')
-    return utils.getSubmissionsBy({group:{assId: parseInt(assId)}})
+    return utils.getSubmissionsBy(
+        {group:{assId: parseInt(assId)}},
+        {file: true, group: {include: {members: {include: {user: true}}}}}
+    )
 }
 
 module.exports = {

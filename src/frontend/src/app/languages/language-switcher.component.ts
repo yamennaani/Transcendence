@@ -1,19 +1,26 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { TranslateService } from "@ngx-translate/core";
-
+import { TranslateService, TranslateModule } from "@ngx-translate/core";
 
 @Component({
     selector: 'app-language-switcher',
     standalone: true,
-    imports: [],
+    imports: [TranslateModule],
     template: `
     <div class="language-switcher">
-      <button class="current-lang">{{ getFlag(currentLanguage) }} {{ currentLanguage }}</button>
+      <span class="lang-label">{{ 'label_language' | translate }}</span>
+      <button class="current-lang">
+        {{ getFlag(currentLanguage) }}&nbsp;{{ getCurrentName() }}
+        <span class="chevron">▲</span>
+      </button>
       <div class="lang-options">
-      @for (lang of languages; track lang.code) {
-        <button (click)="switchLanguage(lang.code)">{{ lang.flag }} {{ lang.name }}</button>
-      }
+        @for (lang of languages; track lang.code) {
+          <button
+            class="lang-option"
+            [class.active]="lang.code === currentLanguage"
+            (click)="switchLanguage(lang.code)">
+            {{ lang.flag }}&nbsp;{{ lang.name }}
+          </button>
+        }
       </div>
     </div>`,
     styles: `
@@ -22,46 +29,81 @@ import { TranslateService } from "@ngx-translate/core";
         display: block;
         width: 100%;
       }
+      .lang-label {
+        display: block;
+        font-size: 0.625rem;
+        color: oklch(48% 0.01 272);
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+      }
       .current-lang {
+        display: flex;
+        align-items: center;
+        gap: 6px;
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 16px;
-        color: white;
+        font-size: 0.875rem;
+        color: oklch(84% 0.01 272);
         width: 100%;
         text-align: left;
         padding: 0;
+        font-family: inherit;
+      }
+      .chevron {
+        margin-left: auto;
+        font-size: 0.5rem;
+        color: oklch(48% 0.01 272);
       }
       .lang-options {
         display: none;
         position: absolute;
-        top: 100%;
+        bottom: calc(100% + 6px);
         left: 0;
-        background-color: white;
-        border: 1px solid #ccc;
-        z-index: 1;
+        right: 0;
+        background: oklch(16% 0.02 272);
+        border: 1px solid oklch(26% 0.02 272);
+        border-radius: 8px;
+        overflow: hidden;
+        z-index: 200;
+        box-shadow: 0 -8px 24px oklch(0% 0 0 / 40%);
       }
       .language-switcher:hover .lang-options {
         display: block;
       }
-      .lang-options button {
-        display: block;
+      .lang-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
         width: 100%;
-        padding: 5px 10px;
+        padding: 9px 12px;
         background: none;
         border: none;
+        color: oklch(72% 0.01 272);
+        font-size: 0.875rem;
+        font-family: inherit;
         text-align: left;
         cursor: pointer;
+        transition: background 120ms, color 120ms;
+      }
+      .lang-option:hover {
+        background: oklch(22% 0.02 272);
+        color: oklch(94% 0.005 272);
+      }
+      .lang-option.active {
+        color: oklch(72% 0.28 296);
+        background: oklch(20% 0.04 296);
       }
     `
 })
-
-/* Language switcher component to toggle between English and Spanish */
 export class LanguageSwitcherComponent {
   languages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
     { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'fe', name: 'Français', flag: '🇫🇷' },
+    { code: 'hu', name: 'Magyar', flag: '🇭🇺' },
+    { code: 'ar', name: 'العربية', flag: '🇸🇦' },
   ];
 
   currentLanguage = 'en';
@@ -77,10 +119,15 @@ export class LanguageSwitcherComponent {
     this.currentLanguage = languageCode;
     this.translate.use(languageCode);
     localStorage.setItem('language', languageCode);
+    document.documentElement.dir = languageCode === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = languageCode;
   }
 
   getFlag(languageCode: string): string {
-    const language = this.languages.find((lang) => lang.code === languageCode);
-    return language ? language.flag : '';
+    return this.languages.find(l => l.code === languageCode)?.flag ?? '';
+  }
+
+  getCurrentName(): string {
+    return this.languages.find(l => l.code === this.currentLanguage)?.name ?? this.currentLanguage;
   }
 }
