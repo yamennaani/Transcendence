@@ -1,30 +1,41 @@
 import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS } from '../tokens';
 import { AvatarComponent } from '../shared/avatar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
 import { BtnComponent } from '../shared/btn.component';
-
-const CHECKLIST = [
-  'Does the code compile without warnings?',
-  'Are all required functions implemented (malloc, free, calloc, realloc)?',
-  'Does it handle NULL pointer edge cases correctly?',
-];
 
 const SUBMISSION = {
   student: 'Jordan Lee', assignment: 'C memory management',
   repo: 'https://github.com/jordan/malloc', submittedAt: '2026-04-18',
 };
 
+// Translation keys for the "before you begin" intro list
+const INTRO_ITEM_KEYS = [
+  'eval_intro_item_1',
+  'eval_intro_item_2',
+  'eval_intro_item_3',
+  'eval_intro_item_4',
+];
+
+// Translation keys for the evaluation checklist
+const CHECKLIST_KEYS = [
+  'eval_check_compile',
+  'eval_check_functions',
+  'eval_check_null',
+];
+
 @Component({
   selector: 'app-evaluation-flow',
   standalone: true,
-  imports: [NgStyle, AvatarComponent, ScorePillComponent, BtnComponent],
+  imports: [NgStyle, AvatarComponent, ScorePillComponent, BtnComponent, TranslateModule],
   templateUrl: './evaluation-flow.component.html',
 })
 export class EvaluationFlowComponent {
   router  = inject(Router);
+  private translate = inject(TranslateService);
 
   step     = signal<0 | 1 | 2 | 3 | 4>(0);
   answers  = signal<Record<number, boolean>>({});
@@ -32,9 +43,22 @@ export class EvaluationFlowComponent {
   feedback = signal('');
 
   sub = SUBMISSION;
-  checklist = CHECKLIST;
 
-  allAnswered = computed(() => CHECKLIST.every((_, i) => this.answers()[i] != null));
+  // ── Translatable lists (rebuilt on language change) ────────
+  introItems = signal<string[]>([]);
+  checklist  = signal<string[]>([]);
+
+  constructor() {
+    this.buildTranslatedLists();
+    this.translate.onLangChange.subscribe(() => this.buildTranslatedLists());
+  }
+
+  private buildTranslatedLists() {
+    this.introItems.set(INTRO_ITEM_KEYS.map(k => this.translate.instant(k)));
+    this.checklist.set(CHECKLIST_KEYS.map(k => this.translate.instant(k)));
+  }
+
+  allAnswered = computed(() => CHECKLIST_KEYS.every((_, i) => this.answers()[i] != null));
   feedbackOk  = computed(() => this.feedback().trim().length >= 20);
 
   setAnswer(i: number, val: boolean) {
