@@ -79,10 +79,9 @@ const NAV_ITEMS: NavItem[] = [
   styles: [`a { text-decoration: none; }`],
 })
 export class SidebarComponent {
-  private auth   = inject(AuthService);
-  private router = inject(Router);
-  private translate = inject(TranslateService);
-   private sanitizer = inject(DomSanitizer);
+  private auth      = inject(AuthService);
+  private router    = inject(Router);
+  private sanitizer = inject(DomSanitizer);
 
   user    = this.auth.user;
   hovered = signal('');

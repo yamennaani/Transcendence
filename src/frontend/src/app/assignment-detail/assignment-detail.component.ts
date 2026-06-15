@@ -657,48 +657,6 @@ export class AssignmentDetailComponent implements OnInit {
           error: () => {},
         });
 
-        this.subService.getSubmissionsForAssignment(id).subscribe({
-          next: (subs) => {
-            if (this.isStaff()) {
-              this.allSubs.set(subs);
-              this.loading.hide();
-            } else {
-              const userId = this.user()?.id;
-              const mine = subs.find(s => s.group?.members?.some((m: any) => m.userId === userId));
-              if (mine) {
-                this.myGroup.set(mine.group);
-                this.mySubmission.set(mine);
-                this.loading.hide();
-              } else if (userId) {
-                this.groupService.getMyGroupForAssignment(userId, id).subscribe({
-                  next: (group: any) => {
-                    if (group) {
-                      this.myGroup.set(group);
-                      const existingSubmission = subs.find(sub => sub.groupId === group.id);
-                      if (existingSubmission) {
-                        this.mySubmission.set(existingSubmission);
-                      }
-                      this.loading.hide();
-                    } else {
-                      this.groupService.getInvites({ userId }).subscribe({
-                        next: (invites) => { this.myInvites.set(invites); this.loading.hide(); },
-                        error: () => this.loading.hide(),
-                      });
-                    }
-                  },
-                  error: () => {
-                    this.groupService.getInvites({ userId }).subscribe({
-                      next: (invites) => { this.myInvites.set(invites); this.loading.hide(); },
-                      error: () => this.loading.hide(),
-                    });
-                  },
-                });
-              } else {
-                this.loading.hide();
-              }
-            }
-          },
-        });
         const userId = this.user()?.id;
         const enrollment$ = (this.isStaff() && userId)
           ? this.enrollService.getStudenEnrolledClasses(userId)
