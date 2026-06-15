@@ -91,7 +91,7 @@ const updateEvalSheetSection = async (sheetId, {secId, name, description, marks,
 const removeSection = async (sheetId, {secId})=>{
     if(!sheetId || !secId)
         throw new ValidationError('invalid request')
-    console.log('HI')
+    //console.log('HI')
     const sheet =  await utils.getEvalSheetById(sheetId, null, {sections:true})
     if(!sheet)
         throw new NotFoundError('Evalsheet not found')
@@ -107,6 +107,7 @@ const removeSection = async (sheetId, {secId})=>{
 
 // methods pertaining to EvalAssignment model/table:
 
+// get all EvalAssignments for one particular assignment.id
 const getEvalAssignments = async (assignmentId)=>{
   const assignmentIdInt = parseInt(assignmentId)
 
@@ -118,6 +119,20 @@ const getEvalAssignments = async (assignmentId)=>{
                    evaluatorUserId: true, round: true, status: true, submissionId: true,
                    evalResponseId: true, createdAt: true }
   return await utils.getEvalAssignments(assignmentIdInt, select)
+}
+
+// delete all EvalAssignments for one particular assignment.id
+const deleteEvalAssignments = async (assignmentId) => {
+  const assignmentIdInt = parseInt(assignmentId)
+  if (!assignmentIdInt)
+    throw new ValidationError('Invalid assignment id')
+
+  const assignment = await prisma.assignment.findUnique({ where: { id: assignmentIdInt } })
+  if (!assignment)
+    throw new NotFoundError('Assignment not found')
+
+  const result = await prisma.evalAssignment.deleteMany({ where: { assignmentId: assignmentIdInt } })
+  return { message: 'Eval assignments deleted successfully', assignmentId: assignmentIdInt, count: result.count }
 }
 
 const getEvalAssignmentById = async (evalAssignmentId) => {
@@ -246,8 +261,8 @@ const updateEvalAssignment = async (evalAssignmentId, { assignmentId, evalueeGro
 
   const existingEvalAssignment = await prisma.evalAssignment.findFirst({
     where: { assignmentId: assignmentIdInt, evalueeGroupId: evalueeGroupIdInt,
-             evaluatorUserId: evaluatorUserIdInt, round: roundInt },
-             NOT: { id: evalAssignmentIdInt } })
+             evaluatorUserId: evaluatorUserIdInt, round: roundInt,
+             NOT: { id: evalAssignmentIdInt } } })
   if (existingEvalAssignment)
     throw new ConflictError('Eval assignment already exists')  
 
@@ -274,9 +289,33 @@ const deleteEvalAssignment = async (evalAssignmentId) => {
     id: evalAssignmentIdInt }
 }
 
-// implement simple circular pairings (groups 0 -> 1, 1 -> 2, 2 -> 3, ..., n-1 -> 0)
-// to test that workflow of creating the pairing in the DB works
-// choose round = 1, evaluator is 1st user in group
+// Pairing algorithm: simple circular multi-round pairings
+// Round 1: evaluee i <- evaluator i+1,
+// Round 2: evaluee i <- evaluator i+2,
+// Round 3: evaluee i <- evaluator i+3, ...
+// Groups are shuffled once at the beginning so the result does not simply depend on creation order.
+// helper function 1: 
+const seededRandom = (seed) => {
+  let value = seed % 2147483647
+  if (value <= 0) value += 2147483646
+  return () => { 
+    value = value * 16807 % 2147483647
+    return (value - 1) / 2147483646
+  }
+}
+// helper function 2: 
+const shuffleWithSeed = (array, seed) => {
+  const result = [...array]
+  const random = seededRandom(seed)
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    const temp = result[i]
+    result[i] = result[j]
+    result[j] = temp
+  }
+  return result
+}
+// pairing algorithm: generate circular offset pairings across rounds.
 const generateSimpleEvalAssignmentPairings = async (assignmentId) => {
   const assignmentIdInt = parseInt(assignmentId)
 
@@ -287,30 +326,69 @@ const generateSimpleEvalAssignmentPairings = async (assignmentId) => {
   const groups = await utils.getEligibleGroupsForAssignment(assignmentIdInt)
 
   if (groups.length < 2)
-    throw new ValidationError('At least 2 groups required')
+    throw new ValidationError(
+    `At least 2 groups with members are required to generate pairings. ` +
+    `Please add students to groups first.`)
+
+  const requiredRounds = parseInt(assignment.req_eval)
+  //console.log('assignment:', assignment)
+  //console.log('assignment.req_eval:', assignment.req_eval)
+  //console.log('requiredRounds:', requiredRounds)
+  if (!requiredRounds || requiredRounds <= 0)
+    throw new ValidationError('Assignment has invalid required eval count')
+
+  if (requiredRounds > groups.length - 1)
+    throw new ValidationError(
+    `This assignment requires ${requiredRounds} evaluation rounds, but there are only ${groups.length} groups. ` +
+    `With ${groups.length} groups, at most ${groups.length - 1} non-repeating evaluator rounds are possible. ` +
+    `Please either reduce the required evaluations to ${groups.length - 1} or add more groups.`)
+
+  // Sort first so the shuffle is reproducible independent of DB return order.
+  const sortedGroups = [...groups].sort((a, b) => a.id - b.id)
+  // Seed by assignment id so the same assignment gets the same generated schedule.
+  const shuffledGroups = shuffleWithSeed(sortedGroups, assignmentIdInt)
 
   const createdEvalAssignments = []
-  for (let i = 0; i < groups.length; i++) {
-    const evalueeGroup = groups[i]
-    const evaluatorGroup = groups[(i + 1) % groups.length]
 
-    const evaluatorUser = evaluatorGroup.members[0].user
+  for (let round = 1; round <= requiredRounds; round++) {
+    const shift = round
 
-    const evalAssignment = await createEvalAssignment({
-      assignmentId: assignmentIdInt,
-      evalueeGroupId: evalueeGroup.id,
-      evaluatorGroupId: evaluatorGroup.id,
-      evaluatorUserId: evaluatorUser.id,
-      round: 1
-    })
+    for (let i = 0; i < shuffledGroups.length; i++) {
+      const evalueeGroup = shuffledGroups[i]
+      const evaluatorGroup = shuffledGroups[(i + shift) % shuffledGroups.length]
 
-    createdEvalAssignments.push(evalAssignment)
+      if (evalueeGroup.id === evaluatorGroup.id)
+        throw new ValidationError('Generated invalid self-evaluation pairing')
+
+      const evaluatorMembers = evaluatorGroup.members ?? []
+
+      if (evaluatorMembers.length === 0)
+        throw new ValidationError('Evaluator group has no members')
+
+      // Rotate evaluator user across rounds.
+      // For group size 2, round 1 uses member 0, round 2 uses member 1, round 3 uses member 0 again.
+      const evaluatorMember = evaluatorMembers[(round - 1) % evaluatorMembers.length]
+      const evaluatorUser = evaluatorMember.user
+
+      if (!evaluatorUser)
+        throw new ValidationError('Evaluator member has no user')
+
+      const evalAssignment = await createEvalAssignment({
+        assignmentId: assignmentIdInt,
+        evalueeGroupId: evalueeGroup.id,
+        evaluatorGroupId: evaluatorGroup.id,
+        evaluatorUserId: evaluatorUser.id,
+        round
+      })
+
+      createdEvalAssignments.push(evalAssignment)
+    }
   }
 
   return {
-    message: 'Simple eval assignment pairings generated successfully',
+    message: 'Eval assignment pairings generated successfully',
     assignmentId: assignmentIdInt,
-    round: 1,
+    rounds: requiredRounds,
     count: createdEvalAssignments.length,
     evalAssignments: createdEvalAssignments
   }
@@ -319,6 +397,6 @@ const generateSimpleEvalAssignmentPairings = async (assignmentId) => {
 
 module.exports = {getEvalSheetById, getEvalSheetByAssId, getAssignment, createEvalSheet, createEvalSection,
     updateEvalSheetSection, removeSection, 
-    getEvalAssignments, getEvalAssignmentById, createEvalAssignment, updateEvalAssignment, deleteEvalAssignment,
-    generateSimpleEvalAssignmentPairings
+    getEvalAssignments, deleteEvalAssignments, getEvalAssignmentById, createEvalAssignment, 
+    updateEvalAssignment, deleteEvalAssignment, generateSimpleEvalAssignmentPairings
 }

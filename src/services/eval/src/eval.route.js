@@ -34,7 +34,7 @@ route.patch('/sheet/:id/section', async(req, res, next)=>{
 
 
 route.delete('/sheet/:id/section', async(req, res, next)=>{
-    console.log(req.body)
+    //console.log(req.body)
     try{
         res.json(await service.removeSection(req.params.id, req.body))
     }catch(err){next(err)}
@@ -59,8 +59,18 @@ route.post('/eval-assignments', async(req, res, next) => {
 
 // get all EvalAssignments for one assignment (GET /api/eval/assignment/:id/eval-assignments)
 route.get('/assignment/:id/eval-assignments', async (req, res, next) => {
+  //console.log('DELETE all eval assignments route reached, assignment id:', req.params.id)
   try {
     res.json(await service.getEvalAssignments(req.params.id))
+  } catch (err) {
+    next(err)
+  }
+})
+
+// delete all EvalAssignments for one assignment (DELETE /api/eval/assignment/:id/eval-assignments)
+route.delete('/assignment/:id/eval-assignments', async (req, res, next) => {
+  try {
+    res.json(await service.deleteEvalAssignments(req.params.id))
   } catch (err) {
     next(err)
   }

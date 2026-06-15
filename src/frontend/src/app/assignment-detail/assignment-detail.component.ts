@@ -137,6 +137,40 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       color: ${DS.colors.fg3};
     }
 
+    /* Subject file */
+    .subject-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 20px;
+    }
+    .subject-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .subject-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: ${DS.radius.md};
+      background: ${DS.colors.violetSubtle};
+      border: 1px solid ${DS.colors.violetBorder};
+      color: ${DS.colors.violet};
+      flex-shrink: 0;
+    }
+    .subject-name {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: ${DS.colors.fg1};
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .subject-meta {
+      font-size: 0.75rem;
+      color: ${DS.colors.fg3};
+    }
+
     /* Description */
     .desc-body { padding: 18px 20px; }
     .desc-label {
