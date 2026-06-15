@@ -182,4 +182,20 @@
     "eval_final_score": "final score",
     "btn_submit_evaluation": "Submit evaluation",
     "btn_edit": "Edit"
+    ,
+    "page_my_classes": "My classes",
+    "page_enrolled": "Enrolled",
+    "empty_no_enrolled_classes": "You haven't enrolled in any class yet.",
+    "badge_passed": "PASSED",
+    "class_list_assignment_singular": "{{count}} assignment",
+    "class_list_assignment_plural": "{{count}} assignments",
+    "class_list_threshold": "{{threshold}}% threshold",
+    "btn_hide_assignments": "Hide assignments",
+    "btn_assignments": "Assignments",
+    "class_list_assignment_meta": "{{max_score}} pts · {{req_eval}} evals required",
+    "page_browse_classes": "Browse classes",
+    "page_available": "Available",
+    "class_list_assignments_count": "{{count}} assignments",
+    "btn_enroll": "Enroll →",
+    "error_enroll_failed": "Failed to enroll. Please try again."
 }
