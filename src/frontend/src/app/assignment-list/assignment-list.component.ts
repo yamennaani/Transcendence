@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgStyle, SlicePipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS, BadgeVariant } from '../tokens';
 import { AssignmentResponse } from '../core/services/course-service/Assignment.service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
@@ -21,18 +22,26 @@ interface AssignmentItem {
   status: AssignmentStatus;
 }
 
-const STATUS_META: Record<AssignmentStatus, { variant: BadgeVariant; label: string }> = {
-  not_started:     { variant: 'pending',      label: 'Not started' },
-  in_progress:     { variant: 'submitted',    label: 'In progress' },
-  awaiting_review: { variant: 'under_review', label: 'Awaiting review' },
-  failed:          { variant: 'failed',       label: 'Not passed yet' },
-  passed:          { variant: 'validated',    label: 'Passed' },
+const STATUS_VARIANTS: Record<AssignmentStatus, BadgeVariant> = {
+  not_started:     'pending',
+  in_progress:     'submitted',
+  awaiting_review: 'under_review',
+  failed:          'failed',
+  passed:          'validated',
+};
+
+const STATUS_LABEL_KEYS: Record<AssignmentStatus, string> = {
+  not_started:     'status_not_started',
+  in_progress:     'status_in_progress',
+  awaiting_review: 'status_awaiting_review',
+  failed:          'status_not_passed_yet',
+  passed:          'status_passed',
 };
 
 @Component({
   selector: 'app-assignment-list',
   standalone: true,
-  imports: [NgStyle, SlicePipe, BadgeComponent, BtnComponent, ContainerComponent],
+  imports: [NgStyle, SlicePipe, BadgeComponent, BtnComponent, ContainerComponent, TranslateModule],
   templateUrl: './assignment-list.component.html',
 })
 
@@ -43,6 +52,7 @@ export class AssignmentListComponent implements OnInit {
   private subService    = inject(SubmissionService);
   private auth          = inject(AuthService);
   private loading       = inject(LoadingService);
+  private translate     = inject(TranslateService);
 
   classFilter = signal<number | null>(null);
   items       = signal<AssignmentItem[]>([]);
@@ -113,10 +123,15 @@ export class AssignmentListComponent implements OnInit {
 
   emptyMessage = computed(() =>
     this.classFilter()
-      ? 'No assignments in this class yet.'
-      : "You're all caught up — no assignments left to do.");
+      ? this.translate.instant('empty_no_assignments_in_class')
+      : this.translate.instant('empty_all_caught_up'));
 
-  statusMeta(status: AssignmentStatus) { return STATUS_META[status]; }
+  statusMeta(status: AssignmentStatus) {
+    return {
+      variant: STATUS_VARIANTS[status],
+      label: this.translate.instant(STATUS_LABEL_KEYS[status]),
+    };
+  }
 
   open(item: AssignmentItem) {
     this.router.navigate(['/assignment-detail'], { queryParams: { assId: item.assignment.id } });

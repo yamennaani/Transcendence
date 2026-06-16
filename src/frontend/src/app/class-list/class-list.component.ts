@@ -1,5 +1,6 @@
 import { Component, inject, computed, signal, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Course, DS } from '../tokens';
 import { AssignmentResponse } from '../core/services/course-service/Assignment.service';
 import { CourseService } from '../core/services/course-service/course-service';
@@ -16,7 +17,7 @@ import { hasPassedCourse, getProgressLabel, getAssignmentCount } from '../utilit
 @Component({
   selector: 'app-class-list',
   standalone: true,
-  imports: [ListComponent, BtnComponent, BadgeComponent, ProgressBarComponent, SlicePipe],
+  imports: [ListComponent, BtnComponent, BadgeComponent, ProgressBarComponent, SlicePipe, TranslateModule],
   template: `
     <div class="page">
 
@@ -24,9 +25,9 @@ import { hasPassedCourse, getProgressLabel, getAssignmentCount } from '../utilit
       <app-list
         [items]="userCourses()"
         [trackBy]="trackFn"
-        title="My classes"
-        overline="Enrolled"
-        emptyMessage="You haven't enrolled in any class yet."
+        [title]="'page_my_classes' | translate"
+        [overline]="'page_enrolled' | translate"
+        [emptyMessage]="'empty_no_enrolled_classes' | translate"
         [pageSize]="8">
         <ng-template let-course>
           <div class="course-row">
@@ -34,12 +35,12 @@ import { hasPassedCourse, getProgressLabel, getAssignmentCount } from '../utilit
               <div class="course-row__head">
                 <span class="course-name">{{ course.name }}</span>
                 @if (hasPassed(course)) {
-                  <app-badge variant="validated" customLabel="PASSED"/>
+                  <app-badge variant="validated" [customLabel]="'badge_passed' | translate"/>
                 }
               </div>
               <span class="course-meta">
-                {{ assignmentCount(course) }} assignment{{ assignmentCount(course) === 1 ? '' : 's' }}
-                · {{ course.pass_threshold }}% threshold
+                {{ assignmentCountLabel(course) }}
+                · {{ 'class_list_threshold' | translate:{ threshold: course.pass_threshold } }}
                 @if (course.description) { · {{ course.description | slice:0:60 }}{{ course.description.length > 60 ? '…' : '' }} }
               </span>
               @if (assignmentCount(course) > 0) {
@@ -47,25 +48,25 @@ import { hasPassedCourse, getProgressLabel, getAssignmentCount } from '../utilit
               }
             </div>
             <app-btn variant="ghost" size="sm" (clicked)="toggleAssignments(course)">
-              {{ expandedClass() === course.id ? 'Hide assignments' : 'Assignments' }}
+              {{ (expandedClass() === course.id ? 'btn_hide_assignments' : 'btn_assignments') | translate }}
             </app-btn>
           </div>
 
           @if (expandedClass() === course.id) {
             <div class="assignment-drawer">
               @if (assignmentCount(course) === 0) {
-                <div class="assignment-empty">No assignments in this class yet.</div>
+                <div class="assignment-empty">{{ 'empty_no_assignments_in_class' | translate }}</div>
               } @else {
                 @for (a of course.assignments; track a.id) {
                   <div class="assignment-row">
                     <div class="assignment-info">
                       <span class="assignment-name">{{ a.name }}</span>
                       <span class="assignment-meta">
-                        {{ a.max_score }} pts · {{ a.req_eval }} evals required
-                        @if (a.pass_threshold) { · {{ a.pass_threshold }}% threshold }
+                        {{ 'class_list_assignment_meta' | translate:{ max_score: a.max_score, req_eval: a.req_eval } }}
+                        @if (a.pass_threshold) { · {{ 'class_list_threshold' | translate:{ threshold: a.pass_threshold } }} }
                       </span>
                     </div>
-                    <app-btn variant="ghost" size="sm" (clicked)="openAssignment(a)">Open →</app-btn>
+                    <app-btn variant="ghost" size="sm" (clicked)="openAssignment(a)">{{ 'btn_open' | translate }}</app-btn>
                   </div>
                 }
               }
@@ -79,20 +80,20 @@ import { hasPassedCourse, getProgressLabel, getAssignmentCount } from '../utilit
         <app-list
           [items]="availableClasses()"
           [trackBy]="trackFn"
-          title="Browse classes"
-          overline="Available"
+          [title]="'page_browse_classes' | translate"
+          [overline]="'page_available' | translate"
           [pageSize]="8">
           <ng-template let-course>
             <div class="avail-row">
               <div class="avail-info">
                 <span class="avail-name">{{ course.name }}</span>
                 <span class="avail-meta">
-                  {{ course.assignments?.length ?? 0 }} assignments
-                  · {{ course.pass_threshold }}% threshold
+                  {{ 'class_list_assignments_count' | translate:{ count: course.assignments?.length ?? 0 } }}
+                  · {{ 'class_list_threshold' | translate:{ threshold: course.pass_threshold } }}
                   @if (course.description) { · {{ course.description | slice:0:60 }}{{ course.description.length > 60 ? '…' : '' }} }
                 </span>
               </div>
-              <app-btn variant="secondary" size="sm" (clicked)="enroll(course)">Enroll →</app-btn>
+              <app-btn variant="secondary" size="sm" (clicked)="enroll(course)">{{ 'btn_enroll' | translate }}</app-btn>
             </div>
           </ng-template>
         </app-list>
@@ -239,6 +240,7 @@ export class ClassListComponent implements OnInit {
   private enrollService = inject(EnrollService);
   private auth          = inject(AuthService);
   private loading       = inject(LoadingService);
+  private translate     = inject(TranslateService);
 
   userCourses  = this.courseService.UserCourses;
   allClasses   = signal<Course[]>([]);
@@ -274,6 +276,13 @@ export class ClassListComponent implements OnInit {
   assignmentCount(course: Course) { return getAssignmentCount(course); }
   progressLabel(course: Course)   { return getProgressLabel(course); }
 
+  /** "{n} assignment" / "{n} assignments" — picked at call time so re-evaluates on language change */
+  assignmentCountLabel(course: Course): string {
+    const count = this.assignmentCount(course);
+    const key = count === 1 ? 'class_list_assignment_singular' : 'class_list_assignment_plural';
+    return this.translate.instant(key, { count });
+  }
+
   // ── Inline assignment expansion ────────────────────────────
   expandedClass = signal<number | null>(null);
 
@@ -302,7 +311,7 @@ export class ClassListComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.enrollError.set(err?.error?.message ?? 'Failed to enroll. Please try again.');
+        this.enrollError.set(err?.error?.message ?? this.translate.instant('error_enroll_failed'));
         this.loading.hide();
       },
     });

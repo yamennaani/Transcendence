@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../services/auth.service';
 import { CourseService } from '../core/services/course-service/course-service';
@@ -21,7 +22,7 @@ import { ScorePillComponent } from '../shared/score-pill.component';
 @Component({
   selector: 'app-assignment-detail',
   standalone: true,
-  imports: [DecimalPipe, ContainerComponent, BadgeComponent, BtnComponent, AvatarComponent, ScorePillComponent],
+  imports: [DecimalPipe, ContainerComponent, BadgeComponent, BtnComponent, AvatarComponent, ScorePillComponent, TranslateModule],
   templateUrl: './assignment-detail.component.html',
   styles: [`
     .page {
@@ -34,8 +35,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       flex-direction: column;
       gap: 20px;
     }
-
-    /* Breadcrumb */
     .crumb {
       display: flex;
       align-items: center;
@@ -49,8 +48,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       transition: opacity 120ms;
     }
     .crumb-link:hover { opacity: 0.75; }
-
-    /* Hero */
     .hero {
       display: flex;
       justify-content: space-between;
@@ -136,8 +133,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       font-size: 0.75rem;
       color: ${DS.colors.fg3};
     }
-
-    /* Subject file */
     .subject-row {
       display: flex;
       align-items: center;
@@ -170,8 +165,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       font-size: 0.75rem;
       color: ${DS.colors.fg3};
     }
-
-    /* Description */
     .desc-body { padding: 18px 20px; }
     .desc-label {
       font-size: 0.6875rem;
@@ -187,8 +180,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       color: ${DS.colors.fg2};
       line-height: 1.75;
     }
-
-    /* Two-column grid */
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -203,8 +194,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       flex: 1;
       min-height: 0;
     }
-
-    /* Card body (inside container) */
     .card-inner {
       padding: 18px 20px;
       display: flex;
@@ -229,8 +218,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       font-size: 0.875rem;
       color: ${DS.colors.fg3};
     }
-
-    /* Group card */
     .members-list {
       display: flex;
       flex-direction: column;
@@ -250,8 +237,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       font-weight: 500;
       flex: 1;
     }
-
-    /* Invite card */
     .invite-item {
       padding: 10px 12px;
       border-radius: 8px;
@@ -267,8 +252,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       color: ${DS.colors.fg3};
     }
     .invite-btns { display: flex; gap: 6px; }
-
-    /* Submission card */
     .submission-card { gap: 16px; }
     .sub-status-row {
       display: flex;
@@ -315,24 +298,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       opacity: 0;
       cursor: pointer;
       font-size: 0;
-    }
-    .selected-file {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 12px;
-      border-radius: ${DS.radius.md};
-      border: 1px solid ${DS.colors.cyanBorder};
-      background: ${DS.colors.cyanSubtle};
-      color: ${DS.colors.cyan};
-      font-size: 0.8125rem;
-      min-width: 0;
-    }
-    .selected-file-name {
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      max-width: 100%;
     }
     .upload-error {
       font-size: 0.8125rem;
@@ -391,8 +356,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       color: ${DS.colors.fg3};
       margin-left: auto;
     }
-
-    /* Staff: stats row */
     .staff-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -421,8 +384,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       letter-spacing: -0.03em;
       color: ${DS.colors.fg1};
     }
-
-    /* Staff: submission row */
     .sub-row {
       padding: 14px 18px;
       display: flex;
@@ -434,8 +395,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     .sub-group-name { font-weight: 600; color: ${DS.colors.fg1}; font-size: 0.9375rem; }
     .sub-members { font-size: 0.8125rem; color: ${DS.colors.fg3}; }
     .sub-row-right { display: flex; align-items: center; gap: 12px; }
-
-    /* Not found */
     .not-found {
       flex: 1;
       display: flex;
@@ -448,8 +407,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     .not-found-icon { font-size: 3rem; margin-bottom: 12px; }
     .not-found-title { font-family: ${DS.fonts.display}; font-size: 1.25rem; font-weight: 600; color: ${DS.colors.fg1}; margin-bottom: 6px; }
     .not-found-sub { font-size: 0.875rem; color: ${DS.colors.fg3}; margin-bottom: 20px; }
-
-    /* Section title */
     .section-title {
       font-family: ${DS.fonts.display};
       font-size: 1rem;
@@ -457,11 +414,7 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       color: ${DS.colors.fg1};
       margin: 0;
     }
-
-    /* Action row */
     .action-row { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    /* Group name input */
     .name-input {
       width: 100%;
       box-sizing: border-box;
@@ -477,8 +430,6 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     }
     .name-input::placeholder { color: ${DS.colors.fg3}; }
     .name-input:focus { border-color: ${DS.colors.violet}; }
-
-    /* File preview card */
     .file-preview {
       display: flex;
       align-items: center;
@@ -548,47 +499,40 @@ import { ScorePillComponent } from '../shared/score-pill.component';
 })
 export class AssignmentDetailComponent implements OnInit {
   private readonly allowedSubmissionMimeTypes = new Set([
-    'application/zip',
-    'application/x-zip-compressed',
-    'application/pdf',
-    'image/png',
-    'image/jpeg',
-    'image/gif',
-    'image/webp',
-    'text/plain',
+    'application/zip', 'application/x-zip-compressed', 'application/pdf',
+    'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'text/plain',
     'application/msword',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   ]);
   private readonly maxSubmissionFileSize = 50 * 1024 * 1024;
 
-  private auth         = inject(AuthService);
-  private route        = inject(ActivatedRoute);
-  router               = inject(Router);
-  private assService   = inject(AssignmentService);
+  private auth          = inject(AuthService);
+  private route         = inject(ActivatedRoute);
+  private translate     = inject(TranslateService);
+  router                = inject(Router);
+  private assService    = inject(AssignmentService);
   private courseService = inject(CourseService);
-  private groupService = inject(GroupService);
-  private subService   = inject(SubmissionService);
+  private groupService  = inject(GroupService);
+  private subService    = inject(SubmissionService);
   private enrollService = inject(EnrollService);
-  private loading      = inject(LoadingService);
+  private loading       = inject(LoadingService);
 
   readonly role    = this.auth.role;
   readonly user    = this.auth.user;
   readonly isStaff = computed(() => this.role() === 'Bocal' || this.role() === 'Admin');
 
-  // A Bocal/Admin can also be enrolled as a participant in a class they don't manage
-  // (e.g. another org's class) — in that case show them the student view for it.
   isEnrolled  = signal(false);
   viewAsStaff = computed(() => this.isStaff() && !this.isEnrolled());
 
-  assignment   = signal<AssignmentResponse | null>(null);
-  className    = signal<string | null>(null);
-  notFound     = signal(false);
+  assignment    = signal<AssignmentResponse | null>(null);
+  className     = signal<string | null>(null);
+  notFound      = signal(false);
 
   // Student state
-  myGroup      = signal<Group | null>(null);
-  mySubmission = signal<Submission | null>(null);
-  myInvites    = signal<any[]>([]);
-  actionError  = signal<string | null>(null);
+  myGroup         = signal<Group | null>(null);
+  mySubmission    = signal<Submission | null>(null);
+  myInvites       = signal<any[]>([]);
+  actionError     = signal<string | null>(null);
   submissionError = signal<string | null>(null);
   selectedFile = signal<File | null>(null);
   uploadingFile = signal(false);
@@ -596,7 +540,7 @@ export class AssignmentDetailComponent implements OnInit {
   groupName    = signal<string>('');
 
   // Staff state
-  allSubs      = signal<Submission[]>([]);
+  allSubs = signal<Submission[]>([]);
 
   groupStatus = computed<'no-group' | 'has-invites' | 'in-group'>(() => {
     if (this.myGroup()) return 'in-group';
@@ -614,13 +558,8 @@ export class AssignmentDetailComponent implements OnInit {
     return 'submitted' as const;
   });
 
-  evalSlots     = computed(() => Array.from({ length: this.assignment()?.req_eval ?? 3 }, (_, i) => i));
+  evalSlots      = computed(() => Array.from({ length: this.assignment()?.req_eval ?? 3 }, (_, i) => i));
   completedEvals = computed(() => this.mySubmission()?.responses?.length ?? 0);
-  selectedFileLabel = computed(() => {
-    const file = this.selectedFile();
-    if (!file) return null;
-    return `${file.name} · ${this.formatFileSize(file.size)}`;
-  });
 
   selectedFileMeta = computed(() => {
     const file = this.selectedFile();
@@ -656,11 +595,16 @@ export class AssignmentDetailComponent implements OnInit {
   staffAvgScore = computed(() => {
     const scored = this.allSubs().filter((s) => s.finalScore != null);
     if (!scored.length) return null;
-    return Math.round(scored.reduce((a: number, s) => a + (s.finalScore ?? 0), 0) / scored.length);
+    return Math.round(scored.reduce((a, s) => a + (s.finalScore ?? 0), 0) / scored.length);
   });
 
   readonly flatConfig: ContainerConfig = { variant: 'flat', height: 'auto', scrollable: false };
   readonly cardConfig: ContainerConfig = { variant: 'card', height: 'auto', scrollable: false };
+
+  private currentUserId() {
+    const user = this.user() as { id?: number; userId?: number } | null;
+    return user?.id ?? user?.userId ?? null;
+  }
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
@@ -672,9 +616,6 @@ export class AssignmentDetailComponent implements OnInit {
 
   private load(id: number) {
     this.loading.show();
-
-    // Reset per-assignment state so stale data from a previously viewed assignment
-    // doesn't leak in and hide the join/submission UI.
     this.myGroup.set(null);
     this.mySubmission.set(null);
     this.myInvites.set([]);
@@ -762,8 +703,7 @@ export class AssignmentDetailComponent implements OnInit {
     this.submissionError.set(null);
     this.loading.show();
     this.groupService.createGroup({
-      assId: a.id,
-      userId,
+      assId: a.id, userId,
       name: `${this.user()?.username ?? 'My'}'s work`,
       size: 1,
     }).subscribe({
@@ -774,7 +714,7 @@ export class AssignmentDetailComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? 'Failed to join assignment. Make sure you are enrolled in this class.');
+        this.actionError.set(err?.error?.message ?? this.translate.instant('error_join_assignment_failed'));
         this.loading.hide();
       },
     });
@@ -783,8 +723,7 @@ export class AssignmentDetailComponent implements OnInit {
   goToEvalAssignments(): void {
     const a = this.assignment();
     if (!a) return;
-    this.router.navigate(['/eval-assignments'], { queryParams: { assignmentId: a.id },
-    });
+    this.router.navigate(['/eval-assignments'], { queryParams: { assignmentId: a.id } });
   }
 
   createGroup() {
@@ -792,16 +731,11 @@ export class AssignmentDetailComponent implements OnInit {
     const userId = this.currentUserId();
     const name = this.groupName().trim();
     if (!a || !userId) return;
-    if (!name) { this.actionError.set('Please enter a group name.'); return; }
+    if (!name) { this.actionError.set(this.translate.instant('error_group_name_required')); return; }
     this.actionError.set(null);
     this.submissionError.set(null);
     this.loading.show();
-    this.groupService.createGroup({
-      assId: a.id,
-      userId,
-      name,
-      size: a.groupSize ?? 1,
-    }).subscribe({
+    this.groupService.createGroup({ assId: a.id, userId, name, size: a.groupSize ?? 1 }).subscribe({
       next: (group: any) => {
         this.groupName.set('');
         this.groupService.getGroup(group.id).subscribe({
@@ -810,7 +744,7 @@ export class AssignmentDetailComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? 'Failed to create group. Make sure you are enrolled in this class.');
+        this.actionError.set(err?.error?.message ?? this.translate.instant('error_create_group_failed'));
         this.loading.hide();
       },
     });
@@ -829,7 +763,7 @@ export class AssignmentDetailComponent implements OnInit {
         this.loading.hide();
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? 'Failed to accept invite.');
+        this.actionError.set(err?.error?.message ?? this.translate.instant('error_accept_invite_failed'));
         this.loading.hide();
       },
     });
@@ -857,7 +791,6 @@ export class AssignmentDetailComponent implements OnInit {
       next: (sub) => { this.mySubmission.set(sub); this.loading.hide(); },
       error: (err) => {
         const body = err?.error ?? err?.message ?? err;
-        console.error('startSubmission error:', err);
         this.actionError.set(typeof body === 'string' ? body : JSON.stringify(body));
         this.loading.hide();
       },
@@ -868,19 +801,15 @@ export class AssignmentDetailComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
     input.value = '';
-
     if (!file) return;
-
     this.actionError.set(null);
     this.submissionError.set(null);
-
     const validationError = this.validateSubmissionFile(file);
     if (validationError) {
       this.selectedFile.set(null);
       this.submissionError.set(validationError);
       return;
     }
-
     this.selectedFile.set(file);
     this.uploadSelectedFile();
   }
@@ -896,7 +825,6 @@ export class AssignmentDetailComponent implements OnInit {
     this.submissionError.set(null);
     this.uploadingFile.set(true);
     this.loading.show();
-
     this.subService.uploadFile(group.id, userId, file).subscribe({
       next: (sub) => {
         this.mySubmission.set(sub);
@@ -907,7 +835,6 @@ export class AssignmentDetailComponent implements OnInit {
       },
       error: (err) => {
         const body = err?.error ?? err?.message ?? err;
-        console.error('uploadSelectedFile error:', err);
         this.submissionError.set(typeof body === 'string' ? body : JSON.stringify(body));
         this.uploadingFile.set(false);
         this.loading.hide();
@@ -926,26 +853,22 @@ export class AssignmentDetailComponent implements OnInit {
     this.subService.closeSubmission(group.id, { userId }).subscribe({
       next: (sub) => { this.mySubmission.set(sub); this.loading.hide(); },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? 'Failed to close submission.');
+        this.actionError.set(err?.error?.message ?? this.translate.instant('error_close_submission_failed'));
         this.loading.hide();
       },
     });
   }
 
-  private validateSubmissionFile(file: File) {
+  private validateSubmissionFile(file: File): string | null {
     if (!this.allowedSubmissionMimeTypes.has(file.type)) {
-      return 'Unsupported file type. Please upload a PDF, ZIP, image, text file, or Word document.';
+      return this.translate.instant('error_unsupported_file_type');
     }
-
     if (file.size > this.maxSubmissionFileSize) {
-      return 'File is too large. Maximum allowed size is 50 MB.';
+      return this.translate.instant('error_file_too_large');
     }
-
     return null;
   }
 
-  // Staff managing this class land back on the bocal management view (their own URL);
-  // students — and staff merely enrolled as participants — go to "My classes".
   goToClasses() {
     if (this.viewAsStaff()) this.router.navigate(['/bocal/classes']);
     else this.router.navigate(['/classes']);
@@ -968,5 +891,4 @@ export class AssignmentDetailComponent implements OnInit {
     if (status === 'Open') return 'submitted';
     return 'under_review';
   }
-
 }
