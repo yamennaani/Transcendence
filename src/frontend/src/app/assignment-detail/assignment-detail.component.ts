@@ -601,11 +601,6 @@ export class AssignmentDetailComponent implements OnInit {
   readonly flatConfig: ContainerConfig = { variant: 'flat', height: 'auto', scrollable: false };
   readonly cardConfig: ContainerConfig = { variant: 'card', height: 'auto', scrollable: false };
 
-  private currentUserId() {
-    const user = this.user() as { id?: number; userId?: number } | null;
-    return user?.id ?? user?.userId ?? null;
-  }
-
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
       const id = parseInt(params['assId'], 10);

@@ -9,7 +9,7 @@ import { ProgressBarComponent } from '../shared/progress-bar.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
 import { CourseService } from '../core/services/course-service/course-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
-import { AssignmentService, AssignmentResponse } from '../core/services/course-service/Assignment.service';
+import { AssignmentService } from '../core/services/course-service/Assignment.service';
 import { SubmissionService } from '../core/services/submission-service/submission-service';
 import { TranslateService } from '@ngx-translate/core';
 

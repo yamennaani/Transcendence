@@ -18,7 +18,6 @@ const ACTIVE_ALIASES: Record<string, string[]> = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'label_Admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Student','Bocal','Admin'] },
   { label: 'label_dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
   { label: 'label_my_classes',  route: '/classes',            icon: 'book',       roles: ['Student','Bocal','Admin'] },
   { label: 'label_assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },

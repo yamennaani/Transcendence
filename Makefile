@@ -108,8 +108,8 @@ populateDB:
 	read answer; \
 	if [ "$$answer" = "yes" ]; then \
 		echo "$(BLUE)Running seed script...$(RESET)"; \
-		cd src/packages/database && npm run seed && \
+		bash scripts/populate-db.sh && \
 		echo "$(GREEN)Database populated.$(RESET)"; \
 	else \
 		echo "$(RED)Cancelled.$(RESET)"; \
-	fi	
+	fi

@@ -1,7 +1,8 @@
+const path = require('path')
 const bcrypt = require('bcrypt')
 const { PrismaClient } = require('../generated/prisma')
 const prisma = new PrismaClient()
-require('dotenv').config({ path: '/home/pvass/transcendence/src/.env' });
+require('dotenv').config({ path: path.resolve(__dirname, '../../../.env') });
 
 const groupLetter = (index) => `group${String.fromCharCode(65 + index)}`
 
@@ -164,7 +165,7 @@ async function main() {
 
   const SEED_PASSWORD = 'Test1234!'
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12)
-  console.log(`\nSeed password for all users: ${SEED_PASSWORD}\n`)
+  
 
   await clearDatabase()
 
@@ -634,6 +635,7 @@ async function main() {
     },
     sampleEvalAssignments: 4
   })
+ console.log(`\nSeed password for all users: \x1b[31m${SEED_PASSWORD}\x1b[0m\n`)
 }
 
 main()

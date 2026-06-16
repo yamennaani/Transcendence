@@ -14,11 +14,9 @@ export class MyMissingTranslationHandler implements MissingTranslationHandler {
       const englishValue = params.key
         .split(".")
         .reduce(
-          (obj: Record<string, unknown> | string | undefined, segment: string) =>
-            obj && typeof obj === "object"
-              ? (obj as Record<string, unknown>)[segment]
-              : undefined,
-          englishTranslations as Record<string, unknown>
+            (obj: Record<string, unknown> | undefined, segment: string) =>
+    obj && typeof obj === "object" ? (obj as Record<string, unknown>)[segment] as Record<string, unknown> | undefined : undefined,
+  englishTranslations as Record<string, unknown>
         );
 
       if (typeof englishValue === "string") {

@@ -41,26 +41,6 @@
         }
       </div>
     </div>
-
-    <!-- Stats grid -->
-    <div class="stats-grid">
-      <div class="stat-cell">
-        <span class="stat-label">{{ 'stat_max_score' | translate }}</span>
-        <span class="stat-value">{{ assignment()!.max_score }}</span>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-label">{{ 'stat_req_evals' | translate }}</span>
-        <span class="stat-value">{{ assignment()!.req_eval }}</span>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-label">{{ 'stat_group_size' | translate }}</span>
-        <span class="stat-value">{{ assignment()!.groupSize ?? 1 }}</span>
-      </div>
-      <div class="stat-cell">
-        <span class="stat-label">{{ 'stat_threshold' | translate }}</span>
-        <span class="stat-value">{{ assignment()!.pass_threshold ?? '—' }}{{ assignment()!.pass_threshold ? '%' : '' }}</span>
-      </div>
-    </div>
   </div>
 
   <!-- ── Description ───────────────────────────────────────────── -->
@@ -252,15 +232,6 @@
               </div>
             }
 
-            @if (submission.file) {
-              <div class="file-preview">
-                <div class="file-preview-ext">{{ submission.file.name.includes('.') ? submission.file.name.split('.').pop()!.toUpperCase() : '?' }}</div>
-                <div class="file-preview-info">
-                  <span class="file-preview-name">{{ submission.file.name }}</span>
-                  <span class="file-preview-meta">{{ submission.file.size ? formatFileSize(submission.file.size) : '' }}{{ submission.file.mimiType ? ' · ' + submission.file.mimiType : '' }}</span>
-                </div>
-              </div>
-            }
           }
         </div>
       </app-container>
