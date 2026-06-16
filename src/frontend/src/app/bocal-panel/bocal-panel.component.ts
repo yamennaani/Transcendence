@@ -197,9 +197,9 @@ export class BocalPanelComponent implements OnInit {
     const username = (this.getMemberValue('Username') as string)?.trim();
     const role     = (this.getMemberValue('Role') as string) ?? 'Student';
 
-    if (!email)    { this.memberError.set(this.translate.instant('err_email_required'));    return; }
-    if (!username) { this.memberError.set(this.translate.instant('err_username_required')); return; }
-    if (!orgId)    { this.memberError.set(this.translate.instant('err_no_org')); return; }
+    if (!email)    { this.memberError.set(this.translate.instant('error_email_required'));    return; }
+    if (!username) { this.memberError.set(this.translate.instant('error_username_required')); return; }
+    if (!orgId)    { this.memberError.set(this.translate.instant('error_no_organization')); return; }
 
     this.memberError.set(null);
     this.loading.show();
@@ -211,7 +211,7 @@ export class BocalPanelComponent implements OnInit {
         this.loadAll();
       },
       error: (err) => {
-        this.memberError.set(err?.error?.message ?? this.translate.instant('err_add_member_failed'));
+        this.memberError.set(err?.error?.message ?? this.translate.instant('error_add_member_failed'));
         this.loading.hide();
       },
     });
@@ -239,10 +239,10 @@ export class BocalPanelComponent implements OnInit {
     const reqEval  = parseInt(this.getAssignValue('Required Evals'), 10);
 
     if (!cls)                          { return; }
-    if (!name)                         { this.assignmentError.set(this.translate.instant('err_name_required')); return; }
-    if (!desc)                         { this.assignmentError.set(this.translate.instant('err_description_required')); return; }
-    if (isNaN(maxScore) || maxScore <= 0) { this.assignmentError.set(this.translate.instant('err_invalid_max_score')); return; }
-    if (isNaN(reqEval)  || reqEval  <= 0) { this.assignmentError.set(this.translate.instant('err_invalid_required_evals')); return; }
+    if (!name)                         { this.assignmentError.set(this.translate.instant('error_name_required')); return; }
+    if (!desc)                         { this.assignmentError.set(this.translate.instant('error_description_required')); return; }
+    if (isNaN(maxScore) || maxScore <= 0) { this.assignmentError.set(this.translate.instant('error_invalid_max_score')); return; }
+    if (isNaN(reqEval)  || reqEval  <= 0) { this.assignmentError.set(this.translate.instant('error_invalid_required_evals')); return; }
 
     this.assignmentError.set(null);
     this.loading.show();
@@ -257,7 +257,7 @@ export class BocalPanelComponent implements OnInit {
         this.loading.hide();
       },
       error: (err) => {
-        this.assignmentError.set(err?.error?.message ?? this.translate.instant('err_create_assignment_failed'));
+        this.assignmentError.set(err?.error?.message ?? this.translate.instant('error_create_assignment_failed'));
         this.loading.hide();
       },
     });

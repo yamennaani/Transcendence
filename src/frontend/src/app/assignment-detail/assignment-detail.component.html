@@ -3,9 +3,9 @@
   <div class="not-found">
     <div>
       <div class="not-found-icon">⚠️</div>
-      <div class="not-found-title">Assignment not found</div>
-      <div class="not-found-sub">The requested assignment could not be loaded.</div>
-      <app-btn variant="secondary" (clicked)="router.navigate(['/assignment'])">Back to assignments</app-btn>
+      <div class="not-found-title">{{ 'assignment_not_found_title' | translate }}</div>
+      <div class="not-found-sub">{{ 'assignment_not_found_sub' | translate }}</div>
+      <app-btn variant="secondary" (clicked)="router.navigate(['/assignment'])">{{ 'btn_back_to_assignments' | translate }}</app-btn>
     </div>
   </div>
 }
@@ -16,11 +16,9 @@
 
   <!-- Breadcrumb -->
   <div class="crumb">
-    <span class="crumb-link" (click)="goToClasses()">{{ viewAsStaff() ? 'Manage classes' : 'My classes' }}</span>
+    <span class="crumb-link" (click)="goToClasses()">{{ viewAsStaff() ? ('crumb_manage_classes' | translate) : ('crumb_my_classes' | translate) }}</span>
     <span>/</span>
-    <span class="crumb-link" (click)="goToClass()">
-      {{ className() ?? '…' }}
-    </span>
+    <span class="crumb-link" (click)="goToClass()">{{ className() ?? '…' }}</span>
     <span>/</span>
     <span style="color:oklch(94% 0.005 272)">{{ assignment()!.name }}</span>
   </div>
@@ -33,13 +31,13 @@
         @if (!viewAsStaff()) {
           <app-badge [variant]="statusBadge()"/>
         }
-        <span class="mono-tag">{{ assignment()!.max_score }} pts max</span>
+        <span class="mono-tag">{{ 'assignment_pts_max' | translate:{ max: assignment()!.max_score } }}</span>
         @if (assignment()!.pass_threshold) {
-          <span class="mono-tag">{{ assignment()!.pass_threshold }}% threshold</span>
+          <span class="mono-tag">{{ 'assignment_threshold' | translate:{ threshold: assignment()!.pass_threshold } }}</span>
         }
-        <span class="mono-tag">{{ assignment()!.req_eval }} eval{{ assignment()!.req_eval === 1 ? '' : 's' }} required</span>
+        <span class="mono-tag">{{ 'assignment_evals_required' | translate:{ count: assignment()!.req_eval } }}</span>
         @if (assignment()!.groupSize && assignment()!.groupSize! > 1) {
-          <span class="mono-tag">group ≤ {{ assignment()!.groupSize }}</span>
+          <span class="mono-tag">{{ 'assignment_group_max' | translate:{ size: assignment()!.groupSize } }}</span>
         }
       </div>
     </div>
@@ -47,19 +45,19 @@
     <!-- Stats grid -->
     <div class="stats-grid">
       <div class="stat-cell">
-        <span class="stat-label">Max score</span>
+        <span class="stat-label">{{ 'stat_max_score' | translate }}</span>
         <span class="stat-value">{{ assignment()!.max_score }}</span>
       </div>
       <div class="stat-cell">
-        <span class="stat-label">Req. evals</span>
+        <span class="stat-label">{{ 'stat_req_evals' | translate }}</span>
         <span class="stat-value">{{ assignment()!.req_eval }}</span>
       </div>
       <div class="stat-cell">
-        <span class="stat-label">Group size</span>
+        <span class="stat-label">{{ 'stat_group_size' | translate }}</span>
         <span class="stat-value">{{ assignment()!.groupSize ?? 1 }}</span>
       </div>
       <div class="stat-cell">
-        <span class="stat-label">Threshold</span>
+        <span class="stat-label">{{ 'stat_threshold' | translate }}</span>
         <span class="stat-value">{{ assignment()!.pass_threshold ?? '—' }}{{ assignment()!.pass_threshold ? '%' : '' }}</span>
       </div>
     </div>
@@ -68,8 +66,8 @@
   <!-- ── Description ───────────────────────────────────────────── -->
   <app-container [config]="flatConfig">
     <div class="desc-body">
-      <div class="desc-label">Description</div>
-      <p class="desc-text">{{ assignment()!.description || 'No description provided.' }}</p>
+      <div class="desc-label">{{ 'label_description' | translate }}</div>
+      <p class="desc-text">{{ assignment()!.description || ('assignment_no_description' | translate) }}</p>
     </div>
   </app-container>
 
@@ -85,7 +83,7 @@
           </div>
         </div>
         <a [href]="assignment()!.file!.url" target="_blank" rel="noopener">
-          <app-btn variant="secondary" size="sm">View subject</app-btn>
+          <app-btn variant="secondary" size="sm">{{ 'btn_view_subject' | translate }}</app-btn>
         </a>
       </div>
     </app-container>
@@ -96,15 +94,13 @@
        ════════════════════════════════════════════════════════════ -->
   @if (!viewAsStaff()) {
 
-    <!-- Two-column: group + submission -->
     <div class="two-col">
 
       <!-- ── Your Group ───────────────────────────────────────── -->
       <app-container [config]="cardConfig">
         <div class="card-inner">
-          <div class="card-title">Your Group</div>
+          <div class="card-title">{{ 'card_your_group' | translate }}</div>
 
-          <!-- Error banner -->
           @if (actionError()) {
             <div style="font-size:0.8125rem;color:oklch(62% 0.22 20);background:oklch(18% 0.07 20);border:1px solid oklch(36% 0.12 20);border-radius:8px;padding:10px 12px;">
               {{ actionError() }}
@@ -114,22 +110,20 @@
           <!-- No group & no invites -->
           @if (groupStatus() === 'no-group') {
             @if ((assignment()?.groupSize ?? 1) <= 1) {
-              <!-- Solo assignment: one-click join -->
-              <p class="hint-text">This is a solo assignment. Click below to get started.</p>
+              <p class="hint-text">{{ 'group_solo_hint' | translate }}</p>
               <div class="action-row">
-                <app-btn variant="primary" (clicked)="joinSoloAssignment()">Join assignment</app-btn>
+                <app-btn variant="primary" (clicked)="joinSoloAssignment()">{{ 'btn_join_assignment' | translate }}</app-btn>
               </div>
             } @else {
-              <!-- Group assignment: name input + create -->
-              <p class="hint-text">You're not part of a group yet.</p>
+              <p class="hint-text">{{ 'group_no_group_hint' | translate }}</p>
               <input
                 class="name-input"
                 type="text"
-                placeholder="Group name…"
+                [placeholder]="'group_name_placeholder' | translate"
                 [value]="groupName()"
                 (input)="groupName.set($any($event.target).value)" />
               <div class="action-row">
-                <app-btn variant="primary" (clicked)="createGroup()">Create group</app-btn>
+                <app-btn variant="primary" (clicked)="createGroup()">{{ 'btn_create_group' | translate }}</app-btn>
               </div>
             }
           }
@@ -139,12 +133,12 @@
             @for (inv of myInvites(); track inv.id) {
               <div class="invite-item">
                 <div>
-                  <div class="section-title">{{ inv.targetGroup?.name ?? 'Group invite' }}</div>
-                  <div class="invite-from">from {{ inv.senderUser?.username }}</div>
+                  <div class="section-title">{{ inv.targetGroup?.name ?? ('invite_default_title' | translate) }}</div>
+                  <div class="invite-from">{{ 'invite_from' | translate:{ sender: inv.senderUser?.username } }}</div>
                 </div>
                 <div class="invite-btns">
-                  <app-btn variant="primary" size="sm" (clicked)="acceptInvite(inv.id)">Accept</app-btn>
-                  <app-btn variant="ghost"   size="sm" (clicked)="declineInvite(inv.id)">Decline</app-btn>
+                  <app-btn variant="primary" size="sm" (clicked)="acceptInvite(inv.id)">{{ 'btn_accept' | translate }}</app-btn>
+                  <app-btn variant="ghost"   size="sm" (clicked)="declineInvite(inv.id)">{{ 'btn_decline' | translate }}</app-btn>
                 </div>
               </div>
             }
@@ -153,13 +147,11 @@
           <!-- In a group -->
           @if (groupStatus() === 'in-group') {
             @if ((assignment()?.groupSize ?? 1) <= 1) {
-              <!-- Solo: minimal confirmation -->
               <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:oklch(18% 0.07 145);border:1px solid oklch(36% 0.12 145)">
                 <span style="font-size:1rem">✓</span>
-                <span style="font-size:0.875rem;color:oklch(72% 0.15 145)">You're enrolled in this assignment.</span>
+                <span style="font-size:0.875rem;color:oklch(72% 0.15 145)">{{ 'group_solo_enrolled' | translate }}</span>
               </div>
             } @else {
-              <!-- Multi-member group -->
               <div class="section-title">{{ myGroup()!.name }}</div>
               <div class="members-list">
                 @for (m of myGroup()!.members ?? []; track m.id) {
@@ -167,7 +159,7 @@
                     <app-avatar [name]="m.user.username" [size]="28"/>
                     <span class="member-name">{{ m.user.username }}</span>
                     @if (m.userId === myGroup()!.leaderId) {
-                      <app-badge variant="violet" customLabel="leader"/>
+                      <app-badge variant="violet" [customLabel]="'badge_leader' | translate"/>
                     }
                   </div>
                 }
@@ -180,37 +172,35 @@
       <!-- ── Submission ────────────────────────────────────────── -->
       <app-container [config]="cardConfig">
         <div class="card-inner submission-card">
-          <div class="card-title">Submission</div>
+          <div class="card-title">{{ 'card_submission' | translate }}</div>
 
           @if (!myGroup()) {
-            <p class="hint-text">Join or create a group first.</p>
+            <p class="hint-text">{{ 'submission_join_first' | translate }}</p>
           }
 
           @if (myGroup() && !mySubmission()) {
-            <p class="hint-text">No submission started yet.</p>
-            <app-btn variant="primary" (clicked)="startSubmission()">Start submission</app-btn>
+            <p class="hint-text">{{ 'submission_not_started' | translate }}</p>
+            <app-btn variant="primary" (clicked)="startSubmission()">{{ 'btn_start_submission' | translate }}</app-btn>
           }
 
           @if (mySubmission(); as submission) {
             @if (submissionError()) {
-              <div class="upload-error">
-                {{ submissionError() }}
-              </div>
+              <div class="upload-error">{{ submissionError() }}</div>
             }
 
             <div class="sub-status-row">
               <app-badge [variant]="subStatusVariant(submission.status)"/>
-              <span class="hint-text">{{ submission.status === 'Open' ? 'Open — you can still upload.' : 'Closed.' }}</span>
+              <span class="hint-text">{{ (submission.status === 'Open' ? 'submission_open_hint' : 'submission_closed_hint') | translate }}</span>
             </div>
 
             @if (submission.status === 'Open') {
               <div class="upload-panel">
-                <div class="upload-label">Upload file</div>
-                <p class="upload-help">Choose one file for this submission. Allowed formats include PDF, ZIP, images, text files, and Word documents.</p>
+                <div class="upload-label">{{ 'upload_label' | translate }}</div>
+                <p class="upload-help">{{ 'upload_help' | translate }}</p>
 
                 <div class="upload-row">
                   <div class="upload-picker">
-                    <app-btn variant="secondary" [disabled]="uploadingFile()">Choose file</app-btn>
+                    <app-btn variant="secondary" [disabled]="uploadingFile()">{{ 'btn_choose_file' | translate }}</app-btn>
                     <input
                       class="file-input"
                       type="file"
@@ -219,7 +209,7 @@
                       (change)="onFileSelected($event)"/>
                   </div>
                   @if (!selectedFile()) {
-                    <span class="hint-text">No file selected yet.</span>
+                    <span class="hint-text">{{ 'upload_no_file_selected' | translate }}</span>
                   }
                 </div>
 
@@ -230,7 +220,7 @@
                       <span class="file-preview-name">{{ meta.name }}</span>
                       <span class="file-preview-meta">{{ meta.size }} · {{ meta.type }}</span>
                     </div>
-                    <button class="file-preview-clear" (click)="selectedFile.set(null)" title="Remove">✕</button>
+                    <button class="file-preview-clear" (click)="selectedFile.set(null)" [title]="'btn_remove' | translate">✕</button>
                   </div>
                 }
 
@@ -239,15 +229,15 @@
                     variant="primary"
                     [disabled]="!selectedFile() || uploadingFile()"
                     (clicked)="uploadSelectedFile()">
-                    {{ uploadingFile() ? 'Uploading…' : 'Upload file' }}
+                    {{ (uploadingFile() ? 'btn_uploading' : 'btn_upload_file') | translate }}
                   </app-btn>
-                  <app-btn variant="ghost" [disabled]="uploadingFile()" (clicked)="closeSubmission()">Close submission</app-btn>
+                  <app-btn variant="ghost" [disabled]="uploadingFile()" (clicked)="closeSubmission()">{{ 'btn_close_submission' | translate }}</app-btn>
                 </div>
 
                 <div class="upload-meta">
-                  <span>Max size: 50 MB</span>
+                  <span>{{ 'upload_max_size' | translate }}</span>
                   <span>·</span>
-                  <span>One file at a time</span>
+                  <span>{{ 'upload_one_file' | translate }}</span>
                 </div>
               </div>
             }
@@ -279,7 +269,7 @@
         </div>
         <span class="eval-summary">
           <strong style="color:oklch(94% 0.005 272)">{{ completedEvals() }}</strong>
-          of {{ assignment()!.req_eval }} evaluations received
+          {{ 'eval_progress_summary' | translate:{ total: assignment()!.req_eval } }}
         </span>
         <span class="eval-pct">
           {{ assignment()!.req_eval > 0 ? ((completedEvals() / assignment()!.req_eval) * 100 | number:'1.0-0') : 0 }}%
@@ -293,36 +283,29 @@
        ════════════════════════════════════════════════════════════ -->
   @if (viewAsStaff()) {
 
-    <!-- Pairings action -->
     <div class="action-row">
-      <app-btn
-        variant="secondary"
-        (clicked)="goToEvalAssignments()">
-        Manage evaluation pairings
-      </app-btn>
+      <app-btn variant="secondary" (clicked)="goToEvalAssignments()">{{ 'btn_manage_eval_pairings' | translate }}</app-btn>
     </div>
 
-    <!-- Stats row -->
     <div class="staff-stats">
       <div class="sstat">
-        <span class="sstat-label">Groups</span>
+        <span class="sstat-label">{{ 'stat_groups' | translate }}</span>
         <span class="sstat-value">{{ staffGroupCount() }}</span>
       </div>
       <div class="sstat">
-        <span class="sstat-label">Submitted</span>
+        <span class="sstat-label">{{ 'stat_submitted' | translate }}</span>
         <span class="sstat-value">{{ staffSubmittedCount() }}</span>
       </div>
       <div class="sstat">
-        <span class="sstat-label">Avg score</span>
+        <span class="sstat-label">{{ 'stat_avg_score' | translate }}</span>
         <span class="sstat-value">{{ staffAvgScore() ?? '—' }}</span>
       </div>
     </div>
 
-    <!-- Submissions list -->
     @if (allSubs().length === 0) {
       <app-container [config]="flatConfig">
         <div style="padding:32px;text-align:center;color:oklch(48% 0.01 272);font-size:0.875rem">
-          No submissions yet.
+          {{ 'assignment_no_submissions' | translate }}
         </div>
       </app-container>
     }
