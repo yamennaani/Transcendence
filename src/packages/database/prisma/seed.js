@@ -1,8 +1,7 @@
+const bcrypt = require('bcrypt')
 const { PrismaClient } = require('../generated/prisma')
 const prisma = new PrismaClient()
-require('dotenv').config({ path: '/home/aghanam/Desktop/lastdance/src/.env' });
-
-const passwordHash = 'fake-hashed-password-for-dev'
+require('dotenv').config({ path: '/home/pvass/transcendence/src/.env' });
 
 const groupLetter = (index) => `group${String.fromCharCode(65 + index)}`
 
@@ -28,7 +27,7 @@ async function clearDatabase() {
   await prisma.organization.deleteMany()
 }
 
-async function createUser({ email, username, role, orgId, bio }) {
+async function createUser({ email, username, role, orgId, bio, passwordHash }) {
   return prisma.user.create({
     data: {
       email,
@@ -36,7 +35,11 @@ async function createUser({ email, username, role, orgId, bio }) {
       role,
       orgId,
       userAuth: {
-        create: { pass_hash: passwordHash }
+        create: {
+          pass_hash: passwordHash,
+          email_verified: true,
+          provider: 'local'
+        }
       },
       profile: {
         create: {
@@ -159,6 +162,10 @@ async function createSubmissionForGroup({ group, uploader, fileName, mimeType, u
 async function main() {
   console.log('Seeding database...')
 
+  const SEED_PASSWORD = 'Test1234!'
+  const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12)
+  console.log(`\nSeed password for all users: ${SEED_PASSWORD}\n`)
+
   await clearDatabase()
 
   const org42 = await prisma.organization.create({
@@ -194,7 +201,8 @@ async function main() {
     username: 'admin',
     role: 'Admin',
     orgId: org42.id,
-    bio: '42 Vienna admin account.'
+    bio: '42 Vienna admin account.',
+    passwordHash
   })
 
   const bocal42 = await createUser({
@@ -202,7 +210,8 @@ async function main() {
     username: 'bocal',
     role: 'Bocal',
     orgId: org42.id,
-    bio: '42 Vienna bocal account.'
+    bio: '42 Vienna bocal account.',
+    passwordHash
   })
 
   const adminWU = await createUser({
@@ -210,7 +219,8 @@ async function main() {
     username: 'Uni admin',
     role: 'Admin',
     orgId: orgWU.id,
-    bio: 'WU Vienna admin account.'
+    bio: 'WU Vienna admin account.',
+    passwordHash
   })
 
   const profWU = await createUser({
@@ -218,7 +228,8 @@ async function main() {
     username: 'Uni Prof',
     role: 'Bocal',
     orgId: orgWU.id,
-    bio: 'WU Vienna professor account.'
+    bio: 'WU Vienna professor account.',
+    passwordHash
   })
 
   const students42 = []
@@ -230,7 +241,8 @@ async function main() {
       username: `42student${i}`,
       role: 'Student',
       orgId: org42.id,
-      bio: `I am 42 Vienna student ${i}.`
+      bio: `I am 42 Vienna student ${i}.`,
+      passwordHash
     }))
   }
 
@@ -240,7 +252,8 @@ async function main() {
       username: `UniStudent${i}`,
       role: 'Student',
       orgId: orgWU.id,
-      bio: `I am WU Vienna student ${i}.`
+      bio: `I am WU Vienna student ${i}.`,
+      passwordHash
     }))
   }
 
