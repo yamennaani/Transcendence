@@ -1,0 +1,199 @@
+<div [ngStyle]="pageStyle">
+  <div [ngStyle]="headerRowStyle">
+    <div>
+      <div [ngStyle]="overlineStyle">Peer evaluation</div>
+      <h1 [ngStyle]="h1Style">Evaluation pairings</h1>
+
+      @if (assignmentName()) {
+        <p [ngStyle]="sublineStyle">
+          Assignment: <strong>{{ assignmentName() }}</strong>
+          @if (courseName()) {
+            · Course: <strong>{{ courseName() }}</strong>
+          }
+        </p>
+      } @else if (assignmentId()) {
+        <p [ngStyle]="sublineStyle">Assignment ID: {{ assignmentId() }}</p>
+      } @else {
+        <p [ngStyle]="sublineStyle">No assignment selected.</p>
+      }
+    </div>
+
+    <div [ngStyle]="actionsStyle">
+      <app-btn
+        variant="secondary"
+        (clicked)="goBackToAssignment()">
+        Back to assignment
+      </app-btn>
+
+      <app-btn
+        variant="primary"
+        [disabled]="!assignmentId() || loading()"
+        (clicked)="generateSimplePairings()">
+        Generate pairings
+      </app-btn>
+
+      <app-btn
+        variant="ghost"
+        [disabled]="!assignmentId() || loading() || evalAssignments().length === 0"
+        (clicked)="deleteAllEvalAssignments()">
+        Delete all pairings
+      </app-btn>
+    </div>
+  </div>
+
+  @if (error()) {
+    <div [ngStyle]="errorBannerStyle">
+      {{ error() }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div [ngStyle]="loadingStyle">
+      Loading evaluation pairings…
+    </div>
+  }
+
+  @if (editingPairing()) {
+    <div [ngStyle]="overlayStyle" (click)="closeEditPairingModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div [ngStyle]="modalTitleStyle">
+          Edit pairing — {{ editingPairing()?.evalueeGroupName }}
+        </div>
+
+        <div [ngStyle]="modalBodyStyle">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Evaluee</label>
+            <div [ngStyle]="readonlyFieldStyle">
+              {{ editingPairing()?.evalueeGroupName }}:
+              {{ editingPairing()?.evalueeMembers }}
+            </div>
+          </div>
+
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Evaluator group</label>
+            <select
+              [ngStyle]="inputStyle"
+              [ngModel]="editEvaluatorGroupId()"
+              (ngModelChange)="onEditEvaluatorGroupChanged($event)">
+              @for (group of availableEvaluatorGroups(); track group.id) {
+                <option [ngValue]="group.id">
+                  {{ group.name }}
+                </option>
+              }
+            </select>
+          </div>
+
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Evaluator</label>
+            <select
+              [ngStyle]="inputStyle"
+              [ngModel]="editEvaluatorUserId()"
+              (ngModelChange)="editEvaluatorUserId.set($event)">
+              @for (member of availableEvaluatorMembers(); track member.id) {
+                <option [ngValue]="member.userId">
+                  {{ member.user?.username ?? ('user #' + member.userId) }}
+                </option>
+              }
+            </select>
+          </div>
+
+          @if (editPairingError()) {
+            <div [ngStyle]="errorBannerStyle">
+              {{ editPairingError() }}
+            </div>
+          }
+        </div>
+
+        <div [ngStyle]="modalActionsStyle">
+          <app-btn
+            variant="ghost"
+            size="md"
+            (clicked)="closeEditPairingModal()">
+            Cancel
+          </app-btn>
+
+          <app-btn
+            variant="primary"
+            size="md"
+            [disabled]="loading()"
+            (clicked)="saveEditPairing()">
+            Save changes
+          </app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Display pairings list with container card functionality and buttons in each item -->
+  <div [ngStyle]="pairingsListStyle">
+    <div>
+      <div [ngStyle]="overlineStyle">Generated pairings</div>
+      <h2 [ngStyle]="sectionHeadingStyle">Scheduled evaluation assignments</h2>
+    </div>
+
+    @if (evalAssignments().length === 0 && !loading()) {
+      <app-container [config]="flatConfig">
+        <div [ngStyle]="emptyStateStyle">
+          No evaluation pairings found for this assignment.
+        </div>
+      </app-container>
+    } @else {
+      @if (pairingsByRound().length > 0) {
+        <div [ngStyle]="roundButtonRowStyle">
+          @for (roundGroup of pairingsByRound(); track roundGroup.round) {
+            <app-btn
+              [variant]="selectedRound() === roundGroup.round ? 'primary' : 'ghost'"
+              size="sm"
+              (clicked)="selectedRound.set(roundGroup.round)">
+              Round {{ roundGroup.round }}
+            </app-btn>
+          }
+        </div>
+      }
+
+      @if (selectedRoundGroup(); as roundGroup) {
+        <div [ngStyle]="selectedRoundListStyle">
+          <h3 [ngStyle]="roundHeadingStyle">
+            Round {{ roundGroup.round }}
+          </h3>
+
+          @for (ea of roundGroup.rows; track ea.id) {
+            <app-container [config]="flatConfig">
+              <div [ngStyle]="cardContentStyle">
+                <div>
+                  <div [ngStyle]="cardTitleStyle">
+                    Evaluee: {{ ea.evalueeGroupName }}: {{ ea.evalueeMembers }}
+                  </div>
+
+                  <div [ngStyle]="cardSubtitleStyle">
+                    Evaluator: {{ ea.evaluatorName }} from {{ ea.evaluatorGroupName }}
+                    · Round: {{ ea.round }}
+                    · {{ ea.status }}
+                  </div>
+                </div>
+
+                <span [ngStyle]="cardActionsStyle">
+                  <app-btn
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="loading()"
+                    (clicked)="openEditPairing(ea)">
+                    Edit
+                  </app-btn>
+
+                  <app-btn
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="loading()"
+                    (clicked)="deleteEvalAssignment(ea)">
+                    Delete
+                  </app-btn>
+                </span>
+              </div>
+            </app-container>
+          }
+        </div>
+      }
+    }
+  </div>
+</div>

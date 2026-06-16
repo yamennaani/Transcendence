@@ -87,6 +87,11 @@ export class EvalService {
     getEvalAssignments(assignmentId: number) {
         return this.http.get<EvalAssignment[]>(`${this.base}/assignment/${assignmentId}/eval-assignments`);
     }
+    // delete all EvalAssignments for one assignment (DELETE /api/eval/assignment/:id/eval-assignments)
+    deleteEvalAssignments(assignmentId: number) {
+        return this.http.delete<{message: string; assignmentId: number; count: number; }>(
+            `${this.base}/assignment/${assignmentId}/eval-assignments` );
+    }
     // get one EvalAssignment by its EvalAssignment-id (GET /api/eval/eval-assignments/:id)
     getEvalAssignmentById(id: number) {
         return this.http.get<EvalAssignment>(`${this.base}/eval-assignments/${id}`);

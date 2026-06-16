@@ -193,6 +193,16 @@
               <span class="hint-text">{{ (submission.status === 'Open' ? 'submission_open_hint' : 'submission_closed_hint') | translate }}</span>
             </div>
 
+            @if (submittedFileMeta(submission); as meta) {
+              <div class="file-preview">
+                <div class="file-preview-ext">{{ meta.ext }}</div>
+                <div class="file-preview-info">
+                  <span class="file-preview-name">{{ meta.name }}</span>
+                  <span class="file-preview-meta">{{ meta.size }} · {{ meta.type }}</span>
+                </div>
+              </div>
+            }
+
             @if (submission.status === 'Open') {
               <div class="upload-panel">
                 <div class="upload-label">{{ 'upload_label' | translate }}</div>

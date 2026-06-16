@@ -1,7 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvalAssignment, EvalService} from '../core/services/eval-service/eval-service';
-import { ListComponent, ListColumn } from '../shared/list.component';
+//import { ListComponent, ListColumn } from '../shared/list.component';
+import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { BtnComponent } from '../shared/btn.component';
 import { LoadingService } from '../core/services/loading-service/loading.service';
 
@@ -9,6 +10,9 @@ import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { CourseService } from '../core/services/course-service/course-service';
 import { GroupService } from '../core/services/group-service/group-service';
+
+import { NgStyle } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 
 // as a frontend display shape I want: 
@@ -27,88 +31,28 @@ interface EvalAssignmentDisplayRow {
   evaluatorGroupName: string;
 }
 
+// display interface for Assignment-Group (for edit-functionality)
+interface AssignmentGroup {
+  id: number;
+  name: string;
+  leaderId: number;
+  members: {
+    id: number;
+    userId: number;
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+    };
+  }[];
+}
+
 @Component({
   selector: 'app-eval-assignment-list',
   standalone: true,
-  imports: [ListComponent, BtnComponent],
-  template: `
-    <div class="page">
-      <div class="header-row">
-        <div>
-          <div class="overline">Peer evaluation</div>
-          <h1>Evaluation pairings</h1>
-
-          @if (assignmentName()) {
-            <p class="subline">
-              Assignment: <strong>{{ assignmentName() }}</strong>
-              @if (courseName()) {
-                · Course: <strong>{{ courseName() }}</strong>
-              }
-            </p>
-          } @else if (assignmentId()) {
-            <p class="subline">Assignment ID: {{ assignmentId() }}</p>
-          } @else {
-            <p class="subline">No assignment selected.</p>
-          }
-        </div>
-
-        <div class="actions">
-          <app-btn
-            variant="secondary"
-            (clicked)="goBackToAssignment()">
-            Back to assignment
-          </app-btn>
-
-          <app-btn
-            variant="primary"
-            [disabled]="!assignmentId() || loading()"
-            (clicked)="generateSimplePairings()">
-            Generate simple pairings
-          </app-btn>
-        </div>
-      </div>
-
-      @if (error()) {
-        <div class="error-banner">
-          {{ error() }}
-        </div>
-      }
-
-      @if (loading()) {
-        <div class="loading">
-          Loading evaluation pairings…
-        </div>
-      }
-
-      <app-list
-        [items]="evalAssignments()"
-        [trackBy]="trackFn"
-        [columns]="columns()"
-        title="EvalAssignments"
-        overline="Generated pairings"
-        emptyMessage="No evaluation pairings found for this assignment."
-        [pageSize]="10">
-      </app-list>
-    </div>
-  `,
-  styles: [`
-    .page { flex: 1; overflow-y: auto; padding: 32px; display: flex; flex-direction: column; gap: 20px; }
-
-    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
-
-    h1 { margin: 0; font-size: 1.75rem; }
-
-    .overline { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.75; margin-bottom: 6px; }
-
-    .subline { margin: 6px 0 0; opacity: 0.75; font-size: 0.9rem; }
-
-    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
-
-    .error-banner { border: 1px solid #f0aaaa; background: #fff0f0; color: #9f1d1d;
-      border-radius: 8px; padding: 10px 14px; font-size: 0.875rem; }
-
-    .loading { font-size: 0.875rem; opacity: 0.75; }
-  `],
+  //imports: [ListComponent, BtnComponent],
+  imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
+  templateUrl: './eval-assignment-list.component.html',
 })
 export class EvalAssignmentListComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -125,37 +69,91 @@ export class EvalAssignmentListComponent implements OnInit {
   loading = signal(false);
   error = signal<string | null>(null);
 
-  readonly trackFn = (ea: EvalAssignmentDisplayRow) => ea.id;
+  // Assignment groups for edit-functionality:
+  assignmentGroups = signal<AssignmentGroup[]>([]);
+  editingPairing = signal<EvalAssignmentDisplayRow | null>(null);
+  editEvaluatorGroupId = signal<number | null>(null);
+  editEvaluatorUserId = signal<number | null>(null);
+  editPairingError = signal<string | null>(null);
 
-columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
-  { label: 'Evaluee',
-    render: ea => `Evaluee: ${ea.evalueeGroupName}: ${ea.evalueeMembers}`, },
-  { label: 'Evaluator', 
-    render: ea => `Evaluator: ${ea.evaluatorName} from ${ea.evaluatorGroupName}`, },
-  { label: 'Round',
-    render: ea => `Round: ${ea.round}`, },
-  { label: 'Status',
-    render: ea => ea.status, },
-]);
+  pairingsByRound = computed(() => {
+    const map = new Map<number, EvalAssignmentDisplayRow[]>();
+    for (const row of this.evalAssignments()) {
+      const existing = map.get(row.round) ?? [];
+      existing.push(row);
+      map.set(row.round, existing);
+    }
+    return Array.from(map.entries())
+    .sort(([roundA], [roundB]) => roundA - roundB)
+    .map(([round, rows]) => ({
+      round,
+      rows: [...rows].sort((a, b) => a.evalueeGroupName.localeCompare(b.evalueeGroupName)),
+    }));
+  });
+
+  selectedRound = signal<number | null>(null);
+  roundNumbers = computed(() => this.pairingsByRound().map(group => group.round));
+  selectedRoundGroup = computed(() => {
+    const groups = this.pairingsByRound();
+    if (groups.length === 0) { return null; }
+    const selected = this.selectedRound();
+    if (selected === null) { return groups[0]; }
+    return groups.find(group => group.round === selected) ?? groups[0];
+  });
+
+  // ── Container configs ──────────────────────────────────────
+  readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
+  
+  // ── Styles ─────────────────────────────────────────────────
+  readonly pageStyle = {flex: '1', height: '100vh', overflowY: 'auto', padding: '32px', boxSizing: 'border-box' as const, 
+    display: 'flex', flexDirection: 'column' as const, gap: '20px', };
+  readonly headerRowStyle = {display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', 
+    gap: '20px', flexWrap: 'wrap' as const, };
+  readonly h1Style = { margin: '0', fontSize: '1.75rem', };
+  readonly overlineStyle = { fontSize: '0.75rem', textTransform: 'uppercase' as const, letterSpacing: '0.08em',
+    opacity: '0.75', marginBottom: '6px', };
+  readonly sublineStyle = { margin: '6px 0 0', opacity: '0.75', fontSize: '0.9rem', };
+  readonly actionsStyle = { display: 'flex', gap: '10px', flexWrap: 'wrap' as const, };
+  readonly errorBannerStyle = { border: '1px solid #f0aaaa', background: '#fff0f0', color: '#9f1d1d',
+    borderRadius: '8px', padding: '10px 14px', fontSize: '0.875rem', };
+  readonly loadingStyle = { fontSize: '0.875rem', opacity: '0.75', };
+  readonly overlayStyle = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)', backdropFilter: 'blur(8px)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100', };
+  readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px',
+    width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
+  readonly modalTitleStyle = { fontSize: '1.125rem', fontWeight: '600', };
+  readonly modalBodyStyle = { display: 'flex', flexDirection: 'column' as const, gap: '14px', };
+  readonly fieldLabelStyle = { display: 'block', fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const, opacity: '0.65', marginBottom: '4px', };
+  readonly inputStyle = { width: '100%', boxSizing: 'border-box' as const, padding: '9px 12px', background: '#050712',
+    border: '1px solid #2a2f45', borderRadius: '8px', color: 'white', fontSize: '0.875rem', };
+  readonly readonlyFieldStyle = { fontSize: '0.875rem', opacity: '0.8', border: '1px solid #2a2f45', 
+    borderRadius: '8px', padding: '9px 12px', };
+  readonly modalActionsStyle = { display: 'flex', justifyContent: 'flex-end', gap: '8px', };
+  readonly pairingsListStyle = { display: 'flex', flexDirection: 'column' as const, gap: '12px', };
+  readonly roundButtonRowStyle = { display: 'flex', gap: '8px', flexWrap: 'wrap' as const, };
+  readonly selectedRoundListStyle = { display: 'flex', flexDirection: 'column' as const, gap: '10px', };
+  readonly roundHeadingStyle = { margin: '12px 0 0', fontSize: '1.1rem', };
+  readonly sectionHeadingStyle = { margin: '0', fontSize: '1.75rem', };
+  readonly emptyStateStyle = { padding: '18px 20px', fontSize: '0.9rem', opacity: '0.65', };
+  readonly cardContentStyle = { padding: '16px 20px', display: 'flex', justifyContent: 'space-between',
+    alignItems: 'center', gap: '16px', };
+  readonly cardTitleStyle = { fontWeight: '600', color: 'oklch(94% 0.005 272)', marginBottom: '4px', };
+  readonly cardSubtitleStyle = { fontSize: '0.8125rem', color: 'oklch(48% 0.01 272)', };
+  readonly cardActionsStyle = { display: 'flex', alignItems: 'center', gap: '8px', };
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
       const raw = params['assignmentId'] ?? params['assId'];
 
-      if (!raw) {
-        this.error.set('Missing assignmentId in the URL.');
-        return;
-      }
+      if (!raw) { this.error.set('Missing assignmentId in the URL.'); return; }
 
       const id = parseInt(raw, 10);
-
-      if (Number.isNaN(id)) {
-        this.error.set('Invalid assignmentId in the URL.');
-        return;
-      }
+      if (Number.isNaN(id)) { this.error.set('Invalid assignmentId in the URL.'); return; }
 
       this.assignmentId.set(id);
       this.loadEvalAssignmentHeader(id);
+      this.loadGroupsForAssignment(id);
       this.loadEvalAssignments(id);
     });
   }
@@ -175,22 +173,81 @@ columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
         this.loadEvalAssignments(id);
       },
       error: err => {
-        this.error.set(
-          err?.error?.message ?? 'Failed to generate simple pairings.'
-        );
+        this.error.set(this.errorMessage(err, 'Failed to generate pairings.'));
         this.loading.set(false);
         this.loadingService.hide();
       },
     });
   }
 
+  // errorMessage helper function (for passing on error message from the backend)
+  private errorMessage(err: any, fallback: string): string {
+    return (
+      err?.error?.message ??
+      err?.error?.error ??
+      err?.message ??
+      fallback
+    );
+  }
+
+  // delete one EvalAssignment-pairing 
+  deleteEvalAssignment(row: EvalAssignmentDisplayRow): void {
+    const ok = window.confirm(`Are you sure you want to delete this pairing?\n\n` +
+      `${row.evalueeGroupName} evaluated by ${row.evaluatorName}`);
+    if (!ok) return;
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.loadingService.show();
+
+    this.evalService.deleteEvalAssignment(row.id).subscribe({
+      next: () => { 
+        this.evalAssignments.update(rows => rows.filter(ea => ea.id !== row.id) );
+        this.loading.set(false);
+        this.loadingService.hide(); 
+      },
+      error: err => {
+        this.error.set(err?.error?.message ?? 'Failed to delete evaluation pairing.' );
+        this.loading.set(false);
+        this.loadingService.hide();         
+      }, });
+  }
+
+  // delete all EvalAssignment-pairings
+  deleteAllEvalAssignments(): void {
+    const id = this.assignmentId();
+    
+    if (!id) { this.error.set('Cannot delete pairings without an assignment id.'); return; }
+    if (this.evalAssignments().length === 0) { return; }
+
+    const ok = window.confirm('Are you sure you want to delete all evaluation pairings for this assignment?' );
+    if (!ok) return;
+
+    this.loading.set(true);
+    this.error.set(null);
+    this.loadingService.show();
+
+    this.evalService.deleteEvalAssignments(id).subscribe({
+      next: () => {
+        this.evalAssignments.set([]);
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+      error: err => {
+        this.error.set(
+          err?.error?.message ?? 'Failed to delete evaluation pairings.'
+        );
+
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+    });
+  }  
+
   goBackToAssignment(): void {
     const id = this.assignmentId();
 
-    if (!id) {
-      this.router.navigate(['/assignment']);
-      return;
-    }
+    if (!id) { this.router.navigate(['/assignment']); return; }
 
     this.router.navigate(['/assignment-detail'], {
       queryParams: { assId: id },
@@ -237,9 +294,9 @@ columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
 
     this.evalService.getEvalAssignments(assignmentId).pipe(
       switchMap((rows: EvalAssignment[]) => {
-        if (rows.length === 0) {
-          return of([]);
-        }
+        //console.log('Raw eval assignments from backend:', rows);
+        //console.log('Rounds received:', rows.map(row => row.round));
+        if (rows.length === 0) { return of([]); }
 
         const displayRowRequests = rows.map(row =>
           forkJoin({
@@ -286,6 +343,9 @@ columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
     ).subscribe({
       next: displayRows => {
         this.evalAssignments.set(displayRows);
+        const rounds = Array.from(new Set(displayRows.map(row => row.round)))
+          .sort((a, b) => a - b);
+        if (rounds.length > 0 && !this.selectedRound()) { this.selectedRound.set(rounds[0]); }
         this.loading.set(false);
       },
       error: err => {
@@ -297,5 +357,105 @@ columns = computed<ListColumn<EvalAssignmentDisplayRow>[]>(() => [
     });
   }
 
+  availableEvaluatorGroups = computed(() => {
+    const row = this.editingPairing();
+    if (!row) { return this.assignmentGroups(); }
+    return this.assignmentGroups().filter(group => group.id !== row.evalueeGroupId);
+  });
+
+  availableEvaluatorMembers = computed(() => {
+    const groupId = this.editEvaluatorGroupId();
+    if (!groupId) { return []; }
+    return this.assignmentGroups().find(group => group.id === groupId)?.members ?? [];
+  });
+
+  private loadGroupsForAssignment(assignmentId: number): void {
+    this.groupService.getGroupsForAssignment(assignmentId).subscribe({
+      next: groups => {
+        this.assignmentGroups.set(groups as AssignmentGroup[]);
+      },
+      error: () => {
+        this.assignmentGroups.set([]);
+      },
+    });
+  }
+
+  openEditPairing(row: EvalAssignmentDisplayRow): void {
+    console.log('openEditPairing clicked', row);
+    this.editingPairing.set(row);
+    this.editEvaluatorGroupId.set(row.evaluatorGroupId);
+    this.editPairingError.set(null);
+    const evaluatorGroup = this.assignmentGroups().find(group => group.id === row.evaluatorGroupId);
+    const evaluatorIsInGroup = evaluatorGroup?.members.some(member => member.userId === row.evaluatorUserId);
+    if (evaluatorIsInGroup) {
+      this.editEvaluatorUserId.set(row.evaluatorUserId);
+    } else {
+      this.editEvaluatorUserId.set(evaluatorGroup?.members?.[0]?.userId ?? null);
+    }
+  }
+
+  onEditEvaluatorGroupChanged(rawValue: string): void {
+    const groupId = parseInt(rawValue, 10);
+    if (Number.isNaN(groupId)) {
+      this.editEvaluatorGroupId.set(null);
+      this.editEvaluatorUserId.set(null);
+      return;
+    }
+    this.editEvaluatorGroupId.set(groupId);
+    const group = this.assignmentGroups().find(g => g.id === groupId);
+    const firstMember = group?.members?.[0];
+    this.editEvaluatorUserId.set(firstMember?.userId ?? null);
+  }
+
+  closeEditPairingModal(): void {
+    this.editingPairing.set(null);
+    this.editEvaluatorGroupId.set(null);
+    this.editEvaluatorUserId.set(null);
+    this.editPairingError.set(null);
+  }  
+
+  saveEditPairing(): void {
+    const row = this.editingPairing();
+    const assignmentId = this.assignmentId();
+    const evaluatorGroupId = this.editEvaluatorGroupId();
+    const evaluatorUserId = this.editEvaluatorUserId();
+
+    if (!row || !assignmentId) { return; }
+    if (!evaluatorGroupId || !evaluatorUserId) { this.editPairingError.set('Please select an evaluator group and evaluator.'); return; }
+    if (evaluatorGroupId === row.evalueeGroupId) { this.editPairingError.set('A group cannot evaluate itself.'); return; }
+
+    this.editPairingError.set(null);
+    this.loading.set(true);
+    this.loadingService.show();
+    this.evalService.updateEvalAssignment(row.id, {
+      assignmentId,
+      evalueeGroupId: row.evalueeGroupId,
+      evaluatorGroupId,
+      evaluatorUserId,
+      round: row.round,
+      status: row.status as any,
+      submissionId: null,
+      evalResponseId: null,
+    }).subscribe({
+      next: () => {
+        this.closeEditPairingModal();
+        this.loadEvalAssignments(assignmentId);
+
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+      error: err => {
+        console.error('Failed to update pairing:', err);
+        console.error('Backend error body:', err?.error);
+
+        this.editPairingError.set(
+          err?.error?.message ?? 'Failed to update evaluation pairing.'
+        );
+
+        this.loading.set(false);
+        this.loadingService.hide();
+      },
+    });
+  }  
 
 }

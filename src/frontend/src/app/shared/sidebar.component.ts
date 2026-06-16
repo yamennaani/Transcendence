@@ -2,7 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
@@ -20,12 +20,12 @@ const ACTIVE_ALIASES: Record<string, string[]> = {
 const NAV_ITEMS: NavItem[] = [
   { label: 'label_Admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Student','Bocal','Admin'] },
   { label: 'label_dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
-  { label: 'label_my_classes',  route: '/classes',            icon: 'book',       roles: ['Student'] },
+  { label: 'label_my_classes',  route: '/classes',            icon: 'book',       roles: ['Student','Bocal','Admin'] },
   { label: 'label_assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },
-  { label: 'label_evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student'], badge: 2 },
-  { label: 'label_progress1',   route: '/progress',           icon: 'trending',   roles: ['Student'] },
-  { label: 'label_manage',      route: '/bocal',              icon: 'building',   roles: ['Bocal','Admin'] },
-  { label: 'label_users',       route: '/users',              icon: 'users',      roles: ['Admin'] },
+  { label: 'label_evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student','Bocal','Admin'], badge: 2 },
+  { label: 'label_progress1',   route: '/progress',           icon: 'trending',   roles: ['Student','Bocal','Admin'] },
+  { label: 'label_bocal',       route: '/bocal',              icon: 'building',   roles: ['Student','Bocal','Admin'] },
+  { label: 'label_admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Student','Bocal','Admin'] },
 ];
 
 @Component({
@@ -80,10 +80,9 @@ const NAV_ITEMS: NavItem[] = [
   styles: [`a { text-decoration: none; }`],
 })
 export class SidebarComponent {
-  private auth   = inject(AuthService);
-  private router = inject(Router);
-  private translate = inject(TranslateService);
-   private sanitizer = inject(DomSanitizer);
+  private auth      = inject(AuthService);
+  private router    = inject(Router);
+  private sanitizer = inject(DomSanitizer);
 
   user    = this.auth.user;
   hovered = signal('');
