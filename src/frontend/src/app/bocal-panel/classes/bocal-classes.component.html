@@ -2,25 +2,24 @@
 
   <!-- ── Header ─────────────────────────────────────────────── -->
   <div style="margin-bottom:20px">
-    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <div [ngStyle]="overlineStyle">{{ 'bocal_panel' | translate }}</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end">
       <h1 [ngStyle]="h1Style">
         @if (selectedClass()) {
-          <span [ngStyle]="crumbStyle" (click)="backToClasses()">← Classes</span>
+          <span [ngStyle]="crumbStyle" (click)="backToClasses()">← {{ 'tab_classes' | translate }}</span>
           {{ selectedClass()!.name }}
         } @else {
-          Manage classes
+          {{ 'manage_classes' | translate }}
         }
       </h1>
 
-      <!-- Context-sensitive action button -->
       @if (!selectedClass()) {
-        <app-btn variant="primary" (clicked)="showNew.set(true)">+ New class</app-btn>
+        <app-btn variant="primary" (clicked)="showNew.set(true)">{{ 'new_class' | translate }}</app-btn>
       } @else {
         <span style="display:flex;gap:8px">
-          <app-btn variant="secondary" (clicked)="openEditClass()">Edit class</app-btn>
-          <app-btn variant="ghost" (clicked)="deleteClass(selectedClass()!)">Delete class</app-btn>
-          <app-btn variant="primary" (clicked)="showAddAssign.set(true)">+ Assignment</app-btn>
+          <app-btn variant="secondary" (clicked)="openEditClass()">{{ 'bocal_btn_edit_class' | translate }}</app-btn>
+          <app-btn variant="ghost"     (clicked)="deleteClass(selectedClass()!)">{{ 'bocal_btn_delete_class' | translate }}</app-btn>
+          <app-btn variant="primary"   (clicked)="showAddAssign.set(true)">{{ 'new_assignment' | translate }}</app-btn>
         </span>
       }
     </div>
@@ -40,19 +39,21 @@
     <div [ngStyle]="overlayStyle" (click)="closeAssignModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          New assignment — {{ selectedClass()?.name }}
+          {{ 'modal_new_assignment' | translate }} — {{ selectedClass()?.name }}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           @for (field of assignmentFields; track field.label) {
-            <app-field [field]="field" [isEditing]="true" (valueChanged)="onAssignmentFieldChanged($event)" (fileChosen)="onAssignmentFileChosen($event)" />
+            <app-field [field]="field" [isEditing]="true"
+              (valueChanged)="onAssignmentFieldChanged($event)"
+              (fileChosen)="onAssignmentFileChosen($event)" />
           }
         </div>
         @if (assignmentError()) {
           <div [ngStyle]="errorStyle">{{ assignmentError() }}</div>
         }
         <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeAssignModal()">Cancel</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onAddAssignment()">Create</app-btn>
+          <app-btn variant="ghost"   size="md" (clicked)="closeAssignModal()">{{ 'btn_cancel' | translate }}</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onAddAssignment()">{{ 'btn_create' | translate }}</app-btn>
         </div>
       </div>
     </div>
@@ -63,28 +64,37 @@
     <div [ngStyle]="overlayStyle" (click)="closeEditClassModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Edit class — {{ selectedClass()?.name }}
+          {{ 'bocal_edit_class_title' | translate }} — {{ selectedClass()?.name }}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div>
-            <label [ngStyle]="fieldLabelStyle">Class name</label>
-            <input [ngStyle]="inputStyle" type="text" [value]="editClassName()" (input)="editClassName.set($any($event.target).value)" />
+            <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_class_name' | translate }}</label>
+            <input [ngStyle]="inputStyle" type="text"
+                   [value]="editClassName()"
+                   (input)="editClassName.set($any($event.target).value)" />
           </div>
           <div>
-            <label [ngStyle]="fieldLabelStyle">Description</label>
-            <textarea [ngStyle]="textAreaStyle" [value]="editClassDesc()" (input)="editClassDesc.set($any($event.target).value)"></textarea>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_description' | translate }}</label>
+            <textarea [ngStyle]="textAreaStyle"
+                      [value]="editClassDesc()"
+                      (input)="editClassDesc.set($any($event.target).value)"></textarea>
           </div>
           <div>
-            <label [ngStyle]="fieldLabelStyle">Pass threshold — {{ editClassThreshold() }}%</label>
-            <input type="range" min="50" max="100" [value]="editClassThreshold()" (input)="editClassThreshold.set(+$any($event.target).value)" style="width:100%" />
+            <label [ngStyle]="fieldLabelStyle">
+              {{ 'bocal_label_pass_threshold' | translate }} — {{ editClassThreshold() }}%
+            </label>
+            <input type="range" min="50" max="100"
+                   [value]="editClassThreshold()"
+                   (input)="editClassThreshold.set(+$any($event.target).value)"
+                   style="width:100%" />
           </div>
         </div>
         @if (editClassError()) {
           <div [ngStyle]="errorStyle">{{ editClassError() }}</div>
         }
         <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeEditClassModal()">Cancel</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onSaveClassEdit()">Save changes</app-btn>
+          <app-btn variant="ghost"   size="md" (clicked)="closeEditClassModal()">{{ 'btn_cancel' | translate }}</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onSaveClassEdit()">{{ 'bocal_btn_save_changes' | translate }}</app-btn>
         </div>
       </div>
     </div>
@@ -95,39 +105,51 @@
     <div [ngStyle]="overlayStyle" (click)="closeEditAssignmentModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Edit assignment — {{ editingAssignment()?.name }}
+          {{ 'bocal_edit_assignment_title' | translate }} — {{ editingAssignment()?.name }}
         </div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div>
-            <label [ngStyle]="fieldLabelStyle">Name</label>
-            <input [ngStyle]="inputStyle" type="text" [value]="editAssignName()" (input)="editAssignName.set($any($event.target).value)" />
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_name' | translate }}</label>
+            <input [ngStyle]="inputStyle" type="text"
+                   [value]="editAssignName()"
+                   (input)="editAssignName.set($any($event.target).value)" />
           </div>
           <div>
-            <label [ngStyle]="fieldLabelStyle">Description</label>
-            <textarea [ngStyle]="textAreaStyle" [value]="editAssignDesc()" (input)="editAssignDesc.set($any($event.target).value)"></textarea>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_description' | translate }}</label>
+            <textarea [ngStyle]="textAreaStyle"
+                      [value]="editAssignDesc()"
+                      (input)="editAssignDesc.set($any($event.target).value)"></textarea>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div>
-              <label [ngStyle]="fieldLabelStyle">Group size</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" [value]="editAssignGroupSize()" (input)="editAssignGroupSize.set(+$any($event.target).value)" />
+              <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_group_size' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1"
+                     [value]="editAssignGroupSize()"
+                     (input)="editAssignGroupSize.set(+$any($event.target).value)" />
             </div>
             <div>
-              <label [ngStyle]="fieldLabelStyle">Max score</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" [value]="editAssignMaxScore()" (input)="editAssignMaxScore.set(+$any($event.target).value)" />
+              <label [ngStyle]="fieldLabelStyle">{{ 'label_max_score' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1"
+                     [value]="editAssignMaxScore()"
+                     (input)="editAssignMaxScore.set(+$any($event.target).value)" />
             </div>
             <div>
-              <label [ngStyle]="fieldLabelStyle">Required evals</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" [value]="editAssignReqEval()" (input)="editAssignReqEval.set(+$any($event.target).value)" />
+              <label [ngStyle]="fieldLabelStyle">{{ 'label_required_evals' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1"
+                     [value]="editAssignReqEval()"
+                     (input)="editAssignReqEval.set(+$any($event.target).value)" />
             </div>
             <div>
-              <label [ngStyle]="fieldLabelStyle">Pass threshold (%)</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" max="100" [value]="editAssignThreshold()" (input)="editAssignThreshold.set(+$any($event.target).value)" />
+              <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_pass_threshold_pct' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" max="100"
+                     [value]="editAssignThreshold()"
+                     (input)="editAssignThreshold.set(+$any($event.target).value)" />
             </div>
           </div>
           <div>
-            <label [ngStyle]="fieldLabelStyle">Subject file</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_subject_file' | translate }}</label>
             <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
-              {{ editAssignFileName() ?? 'No subject file attached.' }}
+              {{ editAssignFileName() ?? ('bocal_no_subject_file' | translate) }}
             </div>
             <input [ngStyle]="inputStyle" type="file"
                    accept=".pdf,.zip,.doc,.docx,.txt"
@@ -138,14 +160,14 @@
           <div [ngStyle]="errorStyle">{{ editAssignError() }}</div>
         }
         <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeEditAssignmentModal()">Cancel</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onSaveAssignmentEdit()">Save changes</app-btn>
+          <app-btn variant="ghost"   size="md" (clicked)="closeEditAssignmentModal()">{{ 'btn_cancel' | translate }}</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onSaveAssignmentEdit()">{{ 'bocal_btn_save_changes' | translate }}</app-btn>
         </div>
       </div>
     </div>
   }
 
-  <!-- Class detail view -->
+  <!-- ── Class detail view ──────────────────────────────────── -->
   @if (selectedClass()) {
     <div style="display:flex;flex-direction:column;gap:12px">
 
@@ -153,11 +175,11 @@
       <app-container [config]="flatConfig">
         <div style="padding:16px 20px">
           <p style="font-size:0.9rem;color:oklch(68% 0.01 272);margin:0 0 12px">
-            {{ selectedClass()!.description || 'No description.' }}
+            {{ selectedClass()!.description || ('msg_no_description_dot' | translate) }}
           </p>
           <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
-            {{ selectedClass()!.assignmentCount }} assignment{{ selectedClass()!.assignmentCount === 1 ? '' : 's' }}
-            · created {{ selectedClass()!.created_at | date:'mediumDate' }}
+            {{ assignmentCountLabel(selectedClass()!) }}
+            · {{ 'bocal_created' | translate }} {{ selectedClass()!.created_at | date:'mediumDate' }}
           </div>
         </div>
       </app-container>
@@ -166,9 +188,11 @@
       @if (classAssignments().length === 0) {
         <app-container [config]="insetConfig">
           <div [ngStyle]="emptyStyle">
-            No assignments yet.
+            {{ 'msg_no_assignments_yet' | translate }}
             <div style="margin-top:8px">
-              <app-btn variant="secondary" size="sm" (clicked)="showAddAssign.set(true)">+ Add first assignment</app-btn>
+              <app-btn variant="secondary" size="sm" (clicked)="showAddAssign.set(true)">
+                + {{ 'msg_add_first_assignment' | translate }}
+              </app-btn>
             </div>
           </div>
         </app-container>
@@ -179,32 +203,32 @@
               <div>
                 <div style="font-weight:600;color:oklch(94% 0.005 272);margin-bottom:3px">{{ a.name }}</div>
                 <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                  {{ a.max_score }} pts · {{ a.req_eval }} evals required
-                  @if (a.pass_threshold) { · {{ a.pass_threshold }}% threshold }
+                  {{ 'class_list_assignment_meta' | translate:{ max_score: a.max_score, req_eval: a.req_eval } }}
+                  @if (a.pass_threshold) { · {{ 'class_list_threshold' | translate:{ threshold: a.pass_threshold } }} }
                   @if (a.file) { · 📎 {{ a.file.name }} }
                 </div>
               </div>
               <span style="display:flex;align-items:center;gap:8px">
                 @if (a.file) {
                   <a [href]="a.file.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()">
-                    <app-btn variant="ghost" size="sm">Subject</app-btn>
+                    <app-btn variant="ghost" size="sm">{{ 'bocal_btn_subject' | translate }}</app-btn>
                   </a>
                 }
                 <app-btn variant="ghost" size="sm" (clicked)="toggleGroups(a)">
-                  {{ expandedAssignment() === a.id ? 'Hide groups' : 'Groups' }}
+                  {{ (expandedAssignment() === a.id ? 'bocal_btn_hide_groups' : 'bocal_btn_groups') | translate }}
                 </app-btn>
-                <app-btn variant="ghost" size="sm" (clicked)="openEditAssignment(a)">Edit</app-btn>
-                <app-btn variant="ghost" size="sm" (clicked)="viewAssignment(a)">
-                  View ↗
-                </app-btn>
-                <app-btn variant="ghost" size="sm" (clicked)="deleteAssignment(a)">Delete</app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="openEditAssignment(a)">{{ 'btn_edit' | translate }}</app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="viewAssignment(a)">{{ 'bocal_btn_view' | translate }}</app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="deleteAssignment(a)">{{ 'bocal_btn_delete' | translate }}</app-btn>
               </span>
             </div>
 
             @if (expandedAssignment() === a.id) {
               <div style="padding:0 18px 14px;display:flex;flex-direction:column;gap:6px;border-top:1px solid oklch(22% 0.025 272)">
                 @if (groupsFor(a).length === 0) {
-                  <div style="padding-top:12px;font-size:0.8125rem;color:oklch(48% 0.01 272)">No groups yet.</div>
+                  <div style="padding-top:12px;font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                    {{ 'bocal_no_groups_yet' | translate }}
+                  </div>
                 } @else {
                   @for (g of groupsFor(a); track g.id) {
                     <div style="padding-top:12px;display:flex;justify-content:space-between;align-items:center">
@@ -212,11 +236,11 @@
                         <div style="font-size:0.875rem;font-weight:600;color:oklch(94% 0.005 272)">{{ g.name }}</div>
                         <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
                           @for (m of g.members; track m.id; let last = $last) {
-                            {{ m.user?.username }}@if (m.userId === g.leaderId) { (leader) }@if (!last) { · }
+                            {{ m.user?.username }}@if (m.userId === g.leaderId) { ({{ 'badge_leader' | translate }}) }@if (!last) { · }
                           }
                         </div>
                       </div>
-                      <app-btn variant="ghost" size="sm" (clicked)="removeGroup(a, g)">Remove</app-btn>
+                      <app-btn variant="ghost" size="sm" (clicked)="removeGroup(a, g)">{{ 'btn_remove' | translate }}</app-btn>
                     </div>
                   }
                 }
@@ -228,11 +252,11 @@
     </div>
   }
 
-  <!-- Class list -->
+  <!-- ── Class list ─────────────────────────────────────────── -->
   @if (!selectedClass()) {
     <div style="display:flex;flex-direction:column;gap:10px">
       @if (classes().length === 0) {
-        <div [ngStyle]="emptyStyle">No classes found for this organization.</div>
+        <div [ngStyle]="emptyStyle">{{ 'msg_no_classes' | translate }}</div>
       } @else {
         @for (c of classes(); track c.id) {
           <app-container [config]="flatConfig">
@@ -243,16 +267,16 @@
                   {{ c.name }}
                 </div>
                 <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                  {{ c.description || 'No description' }}
+                  {{ c.description || ('msg_no_description' | translate) }}
                 </div>
                 <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">
-                  {{ c.assignmentCount }} assignment{{ c.assignmentCount === 1 ? '' : 's' }}
+                  {{ assignmentCountLabel(c) }}
                   · {{ c.created_at | date:'mediumDate' }}
                 </div>
               </div>
               <span style="display:flex;gap:8px" (click)="$event.stopPropagation()">
-                <app-btn variant="ghost" size="sm" (clicked)="deleteClass(c)">Delete</app-btn>
-                <app-btn variant="secondary" size="sm" (clicked)="selectClass(c)">Open →</app-btn>
+                <app-btn variant="ghost"      size="sm" (clicked)="deleteClass(c)">{{ 'bocal_btn_delete' | translate }}</app-btn>
+                <app-btn variant="secondary"  size="sm" (clicked)="selectClass(c)">{{ 'btn_open' | translate }}</app-btn>
               </span>
             </div>
           </app-container>

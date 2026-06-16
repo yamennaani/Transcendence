@@ -389,6 +389,13 @@ export class BocalClassesComponent implements OnInit {
     });
   }
 
+  // --Assignment count label with proper pluralization──
+  assignmentCountLabel(c: { assignmentCount: number }): string {
+  const count = c.assignmentCount;
+  const key = count === 1 ? 'class_list_assignment_singular' : 'class_list_assignment_plural';
+  return this.translate.instant(key, { count });
+  }
+
   // ── Delete class ───────────────────────────────────────────
   deleteClass(c: BocalClass) {
     if (!confirm(this.translate.instant('confirm_delete_class', { name: c.name }))) return;
