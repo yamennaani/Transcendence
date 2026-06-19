@@ -29,7 +29,7 @@
         variant="primary"
         [disabled]="!assignmentId() || loading()"
         (clicked)="generateSimplePairings()">
-        Generate pairings
+        Generate all pairings
       </app-btn>
 
       <app-btn
@@ -38,8 +38,23 @@
         (clicked)="deleteAllEvalAssignments()">
         Delete all pairings
       </app-btn>
+
+    </div>
+    
+
+    <div [ngStyle]="actionsStyle">
+
+      <app-btn
+        variant="ghost"
+        [disabled]="loading() || assignmentGroups().length === 0"
+        (clicked)="showEvaluatorWorkload.set(true)">
+        Show evaluator counts
+      </app-btn>
+
     </div>
   </div>
+
+
 
   @if (error()) {
     <div [ngStyle]="errorBannerStyle">
@@ -52,6 +67,51 @@
       Loading evaluation pairings…
     </div>
   }
+
+    @if (showEvaluatorWorkload()) {
+    <div [ngStyle]="overlayStyle" (click)="showEvaluatorWorkload.set(false)">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div [ngStyle]="modalTitleStyle">
+          Evaluator counts
+        </div>
+
+        <div [ngStyle]="modalBodyStyle">
+          @if (evaluatorWorkload().length === 0) {
+            <div [ngStyle]="emptyStateStyle">
+              No students found for this assignment.
+            </div>
+          } @else {
+            @for (student of evaluatorWorkload(); track student.userId) {
+              <div [ngStyle]="workloadRowStyle">
+                <div>
+                  <div [ngStyle]="cardTitleStyle">
+                    {{ student.username }}
+                  </div>
+                  <div [ngStyle]="cardSubtitleStyle">
+                    {{ student.groupName }}
+                  </div>
+                </div>
+
+                <strong>
+                  {{ student.count }}
+                </strong>
+              </div>
+            }
+          }
+        </div>
+
+        <div [ngStyle]="modalActionsStyle">
+          <app-btn
+            variant="primary"
+            size="md"
+            (clicked)="showEvaluatorWorkload.set(false)">
+            Close
+          </app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
 
   @if (editingPairing()) {
     <div [ngStyle]="overlayStyle" (click)="closeEditPairingModal()">

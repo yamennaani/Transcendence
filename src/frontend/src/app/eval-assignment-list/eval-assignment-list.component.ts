@@ -47,6 +47,14 @@ interface AssignmentGroup {
   }[];
 }
 
+// interface to know how many times student acts in the role of evaluator:
+interface EvaluatorWorkloadRow {
+  userId: number;
+  username: string;
+  groupName: string;
+  count: number;
+}
+
 @Component({
   selector: 'app-eval-assignment-list',
   standalone: true,
@@ -101,6 +109,33 @@ export class EvalAssignmentListComponent implements OnInit {
     return groups.find(group => group.round === selected) ?? groups[0];
   });
 
+
+  showEvaluatorWorkload = signal(false);
+  evaluatorWorkload = computed<EvaluatorWorkloadRow[]>(() => {
+    const countByUserId = new Map<number, number>();
+    for (const row of this.evalAssignments()) {
+      const current = countByUserId.get(row.evaluatorUserId) ?? 0;
+      countByUserId.set(row.evaluatorUserId, current + 1);
+    }
+
+    const studentsByUserId = new Map<number, EvaluatorWorkloadRow>();
+    for (const group of this.assignmentGroups()) {
+      for (const member of group.members) {
+        if (!studentsByUserId.has(member.userId)) {
+          studentsByUserId.set(member.userId, {
+            userId: member.userId,
+            username: member.user?.username ?? `user #${member.userId}`,
+            groupName: group.name,
+            count: countByUserId.get(member.userId) ?? 0, });
+        }
+      }
+    }
+
+    return Array.from(studentsByUserId.values()).sort((a, b) => {
+      if (a.count !== b.count) { return a.count - b.count; }
+      return a.username.localeCompare(b.username); });
+  });
+
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
   
@@ -119,8 +154,6 @@ export class EvalAssignmentListComponent implements OnInit {
   readonly loadingStyle = { fontSize: '0.875rem', opacity: '0.75', };
   readonly overlayStyle = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)', backdropFilter: 'blur(8px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100', };
-  readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px',
-    width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
   readonly modalTitleStyle = { fontSize: '1.125rem', fontWeight: '600', };
   readonly modalBodyStyle = { display: 'flex', flexDirection: 'column' as const, gap: '14px', };
   readonly fieldLabelStyle = { display: 'block', fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em',
@@ -141,6 +174,13 @@ export class EvalAssignmentListComponent implements OnInit {
   readonly cardTitleStyle = { fontWeight: '600', color: 'oklch(94% 0.005 272)', marginBottom: '4px', };
   readonly cardSubtitleStyle = { fontSize: '0.8125rem', color: 'oklch(48% 0.01 272)', };
   readonly cardActionsStyle = { display: 'flex', alignItems: 'center', gap: '8px', };
+  readonly workloadRowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    gap: '16px', padding: '10px 0', borderBottom: '1px solid #2a2f45', };  
+  //readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px',  
+  //  width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
+readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px', width: '440px',
+    maxHeight: '90vh', overflowY: 'auto' as const, boxSizing: 'border-box' as const, display: 'flex', flexDirection: 'column' as const,
+    gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
