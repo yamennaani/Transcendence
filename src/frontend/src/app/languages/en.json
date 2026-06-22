@@ -103,6 +103,11 @@
     "confirm_remove_group": "Remove group \"{{name}}\"? Its members and submissions will be deleted.",
     "confirm_remove_from_class": "Remove {{username}} from \"{{className}}\"? They will also be removed from any groups in this class.",
 
+    "course_util_no_data":       "No course data",
+    "course_util_no_assignments": "No assignments yet",
+    "course_util_passed":        "Threshold met — class passed",
+    "course_util_remaining":     "{{remaining}} more assignment(s) to reach {{threshold}}% threshold",
+    
     "crumb_manage_classes": "Manage classes",
     "crumb_my_classes": "My classes",
 

@@ -1,278 +1,613 @@
-*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, Krabitsc* 
-
 # Transcendence
 
-## Description
-A peer-to-peer learning platform inspired by 42 School — built with Angular, Express microservices, PostgreSQL, and nginx, fully containerized with Docker.
+> *This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Karabitsc.*
 
-### Team Info 
+---
 
-#### PO - Katrin Rabitsch (Karabitsc)
-The Project Owner. Came up with idea. 
+# Table of Contents
 
-#### PM - Albert Ruckenbauer (Aruckenb)
-Project Manager, Key developer in the localization feature of the frontend. 
+* [Description](#description)
+* [Team Information](#team-information)
+* [Project Management](#project-management)
+* [Technology Stack](#technology-stack)
+* [Modules](#modules)
 
-#### Tech Lead - Yamen Alnaani (Yalnaani)
-Tech Lead and Architect, idea behind the backend and the microservices
+  * [Major Modules](#major-modules)
+  * [Minor Modules](#minor-modules)
+  * [Custom Modules](#custom-modules)
+* [Features](#features)
+* [Database Schema](#database-schema)
+* [Instructions](#instructions)
 
-#### Developer - Adam Ghanam (Aghanam)
-Key Developer in Authincation, helped in the development of the backend
+  * [Requirements](#requirements)
+  * [Getting Started](#getting-started)
+  * [Commands](#commands)
+  * [Project Structure](#project-structure)
+  * [Architecture](#architecture)
+  * [API Endpoints](#api-endpoints)
+  * [Adding a New Service](#adding-a-new-service)
+  * [Branch Strategy](#branch-strategy)
+  * [Contributing](#contributing)
+* [Journey](#journey)
+* [Resources](#resources)
 
-#### Developer - Peter Vass (Pvass)
-Key Developer in Frontend frame work and helped with database, Enitiy relationship diagram. Helped with strucutre the backend 
+---
 
-### Project Management 
-Github and Treelo, our main source of communication was discord in a Discord channel we created, their we managed and scheduled various meetings and discussed issues/bugs as well as shared various resources or updates. 
+# Description
 
+Transcendence is a peer-to-peer learning platform inspired by the educational model of **42 School**. The platform enables students, instructors (Bocal), and administrators to collaborate through assignments, organizations, groups, and evaluations in a modern web application.
 
-## Stack
-| Layer | Technology |
-|---|---|
-| Frontend | Angular 17 |
-| Services | Express.js (microservices) |
-| Database | PostgreSQL 16 + Prisma v5 |
-| Reverse proxy | nginx |
-| Containerization | Docker + Docker Compose |
+The project follows a **microservice architecture**, with an Angular frontend, Express.js backend services, PostgreSQL database managed through Prisma ORM, and nginx acting as the reverse proxy. Everything is fully containerized using Docker for a simple development and deployment experience.
 
-The reason behind these frame works:
+---
 
-## Modules 
+# Team Information
 
-#### Major Modules - Points 12
+## Project Owner — Katrin Rabitsch (Karabitsc)
 
-Use of framework for both frontend and backend!
-- Here we use Angular for the frontend and for the backend we used Express.js with microservices. We as a group decided to use Angular for the frontend due to it being widely used and popular believing developing this programming skill will be useful for the future. The backend was decided by our Tech Lead early on during the development.
+* Original project concept
+* Requirements planning
+* Feature discussions
 
-A Public API that Interacts with the database 
-- 
+## Project Manager — Albert Ruckenbauer (Aruckenb)
 
-Standard Usermanangement and Authentication
-- Yes
+* Project management
+* Feature planning
+* Frontend localization
+* Documentation
+* Team coordination
 
-Advanced Permissions system
-- Admin bocal student 
+## Technical Lead — Yamen Alnaani (Yalnaani)
 
-An Organization system
-- Yes
+* Backend architecture
+* Microservice design
+* Database architecture
+* Infrastructure decisions
 
-Microservices Backend
-- 
+## Developer — Adam Ghanam (Aghanam)
 
-#### Minor Modules - Points 10
+* Authentication system
+* OAuth implementation
+* Backend development
 
-Use of an ORM for the Database
-- The ORM that we used was none other then Prisma. *provide a reason why  
+## Developer — Peter Vass (Pvass)
 
-Real Time Collaborative Feature
-- A shared network for students and bocal 
+* Frontend framework
+* Dashboard implementation
+* Database design
+* Entity Relationship Diagram
+* Backend structure
 
-Custom Made design suystem with ressuable components
-- In the frontend 
+---
 
-Advacne search funcitonality 
-- Frontend 
+# Project Management
 
-File Upload and Management Sytem
-- users can upload and delete files 
+Throughout development we used several tools to coordinate the project:
 
-Support for multiple Languages
-- English german arabic hungarian 
+* GitHub
+* Trello
+* Discord
 
-Right to left
-- Arabic 
+Discord served as our primary communication platform where we:
 
-Support for addtional Broweser
-- should just work
+* Planned weekly meetings
+* Assigned tasks
+* Discussed bugs
+* Shared development progress
+* Reviewed pull requests
+* Planned milestones
 
-Implement remote Authenication With OAtuh 2.0
-- adam
+GitHub Projects and Trello were used to organize issues, tasks, and sprint planning.
 
-User Activity Insight 
-- Peter dashboard 
+---
 
-### Custom Modules 
+# Technology Stack
 
-Minor Module - Evaluation Pairing Alogorthim 
-- 
+| Layer            | Technology               |
+| ---------------- | ------------------------ |
+| Frontend         | Angular 17               |
+| Backend          | Express.js Microservices |
+| Database         | PostgreSQL 16            |
+| ORM              | Prisma v5                |
+| Reverse Proxy    | nginx                    |
+| Containerization | Docker & Docker Compose  |
+| Authentication   | JWT + OAuth 2.0          |
+| Localization     | ngx-translate            |
 
-## Features 
+### Why these technologies?
 
+**Angular**
 
-### Database Schema 
-*Use prisma is display the Database and the Visualisation of it! 
+Chosen because of its scalability, component architecture, built-in tooling, and popularity within enterprise applications.
 
-## Instructions
+**Express.js Microservices**
+
+Separating the backend into multiple services improves maintainability, scalability, and allows each service to evolve independently.
+
+**PostgreSQL**
+
+Reliable relational database with excellent support for transactions and complex relationships.
+
+**Prisma ORM**
+
+Provides excellent type safety, automatic client generation, migrations, and significantly simplifies database development.
+
+**Docker**
+
+Ensures every developer has an identical development environment while simplifying deployment.
+
+---
+
+# Modules
+
+The project fulfills both mandatory and custom modules from the 42 Transcendence curriculum.
+
+---
+
+## Major Modules
+
+### ✔ Framework for Frontend and Backend
+
+* Angular frontend
+* Express.js backend
+* Microservice architecture
+
+---
+
+### ✔ Public API interacting with the Database
+
+REST API allowing CRUD operations across multiple services.
+
+Examples include:
+
+* Users
+* Organizations
+* Classes
+* Assignments
+* Groups
+* Enrollments
+
+---
+
+### ✔ Standard User Management & Authentication
+
+Supports:
+
+* Registration
+* Login
+* JWT Authentication
+* Password hashing
+* Protected routes
+* Session management
+
+---
+
+### ✔ Advanced Permission System
+
+Three user roles:
+
+* Student
+* Bocal
+* Administrator
+
+Each role has different permissions throughout the application.
+
+---
+
+### ✔ Organization System
+
+Organizations contain:
+
+* Members
+* Classes
+* Administrative staff
+* Permissions
+
+---
+
+### ✔ Microservice Backend
+
+Backend split into independent services:
+
+* User Service
+* Authentication Service
+* Organization Service
+* Class Service
+* Enrollment Service
+* Group Service
+
+Each service owns its own business logic while sharing common packages.
+
+---
+
+## Minor Modules
+
+### ✔ ORM Database
+
+Prisma ORM provides:
+
+* Type-safe queries
+* Database migrations
+* Generated client
+* Easy schema evolution
+* Excellent TypeScript integration
+
+---
+
+### ✔ Real-Time Collaborative Feature
+
+Students collaborate through:
+
+* Assignment groups
+* Invitations
+* Shared evaluations
+
+---
+
+### ✔ Custom Design System
+
+Frontend includes reusable:
+
+* Buttons
+* Cards
+* Dialogs
+* Tables
+* Inputs
+* Layout components
+
+This keeps the interface visually consistent.
+
+---
+
+### ✔ Advanced Search
+
+Search functionality includes:
+
+* Users
+* Classes
+* Organizations
+
+---
+
+### ✔ File Upload & Management
+
+Users may:
+
+* Upload files
+* Delete files
+* Manage submissions
+
+---
+
+### ✔ Multi-language Support
+
+Supported languages:
+
+* English
+* German
+* Hungarian
+* Arabic
+
+---
+
+### ✔ Right-to-Left (RTL)
+
+Arabic is fully supported through RTL layouts.
+
+---
+
+### ✔ Cross-browser Support
+
+The application has been developed to function correctly on all modern browsers.
+
+---
+
+### ✔ OAuth 2.0 Authentication
+
+Users may authenticate using remote OAuth providers.
+
+---
+
+### ✔ User Activity Dashboard
+
+Dashboard displaying statistics such as:
+
+* Submission counts
+* Evaluation progress
+* Completion rates
+
+---
+
+## Custom Modules
+
+### Evaluation Pairing Algorithm
+
+Custom pairing algorithm that automatically assigns peer evaluations while balancing fairness and workload across students.
+
+---
+
+# Features
+
+## Three User Types
+
+### Student
+
+* Join organizations
+* Enroll in classes
+* Submit assignments
+* Form groups
+* Evaluate peers
+* View progress
+
+---
+
+### Bocal
+
+* Manage classes
+* Create assignments
+* Manage evaluations
+* Review student progress
+* Moderate organizations
+
+---
+
+### Administrator
+
+* Full system management
+* User management
+* Organization management
+* Permission management
+* Administrative dashboard
+
+---
+
+# Database Schema
+
+The project uses **Prisma** for schema management.
+
+Database visualization can be generated directly from the Prisma schema using Prisma Studio or ER diagram generation tools.
+
+*(Insert your Prisma schema visualization here.)*
+
+---
+
+# Instructions
 
 ## Requirements
-- Docker
-- Docker Compose
-- Make
+
+* Docker
+* Docker Compose
+* Make
+
+---
 
 ## Getting Started
 
-### 1. Clone the repo
+### Clone the repository
+
 ```bash
 git clone git@github.com:yamennaani/Transcendence.git
 cd Transcendence
 ```
 
-### 2. Run
+### Run
+
 ```bash
 make
 ```
 
-That's it. On first run, `make` will:
-- Generate `src/.env` with all default values
-- Link `src/packages/database/.env` → `src/.env` automatically
-- Build and start all containers
-- Apply all pending database migrations
+On first startup the project will automatically:
 
-Open your browser at **http://localhost**
+* Generate `src/.env`
+* Link the Prisma environment
+* Build all Docker containers
+* Apply database migrations
+* Start every microservice
+
+Open:
+
+```
+http://localhost
+```
 
 ---
 
 ## Commands
-| Command | Description |
-|---|---|
-| `make` | Start in dev mode (default) |
-| `make dev` | Start in dev mode — hot reload, instant startup |
-| `make prod` | Start in production mode — full healthchecks |
-| `make down` | Stop all containers |
-| `make re` | Stop, rebuild, and start |
-| `make logs` | Follow all container logs |
-| `make status` | Show running containers |
-| `make migrate` | Apply pending database migrations |
-| `make studio` | Open Prisma Studio at http://localhost:5555 |
-| `make clean` | Remove all Docker resources |
-| `make fclean` | Full reset — removes Docker resources and `.env` |
+
+| Command        | Description                      |
+| -------------- | -------------------------------- |
+| `make`         | Start development                |
+| `make dev`     | Development mode with hot reload |
+| `make prod`    | Production mode                  |
+| `make down`    | Stop containers                  |
+| `make re`      | Rebuild project                  |
+| `make logs`    | View logs                        |
+| `make status`  | Show running containers          |
+| `make migrate` | Apply migrations                 |
+| `make studio`  | Open Prisma Studio               |
+| `make clean`   | Remove Docker resources          |
+| `make fclean`  | Complete reset                   |
 
 ---
 
 ## Project Structure
-```
+
+```text
 Transcendence/
 ├── Makefile
 ├── README.md
 ├── DEV_DOC.md
 └── src/
-    ├── docker-compose.yml       ← root compose
-    ├── docker-compose.dev.yml   ← dev overrides (hot reload)
-    ├── .env                     ← auto-generated, never committed
-    ├── nginx/                   ← routing rules
-    ├── frontend/                ← Angular 17
-    ├── database/                ← PostgreSQL + init.sql
+    ├── docker-compose.yml
+    ├── docker-compose.dev.yml
+    ├── .env
+    ├── nginx/
+    ├── frontend/
+    ├── database/
     ├── packages/
-    │   ├── database/            ← shared Prisma client (all models)
-    │   ├── logger/              ← shared JSON logger
-    │   ├── errors/              ← shared error classes
-    │   └── utils/               ← shared query helpers (userUtils, classUtils, orgUtils...)
+    │   ├── database/
+    │   ├── logger/
+    │   ├── errors/
+    │   └── utils/
     └── services/
-        ├── user/                ← User microservice
-        ├── auth/                ← Auth microservice
-        ├── org/                 ← Organization microservice
-        ├── class/               ← Class + Assignment microservice
-        ├── enroll/              ← Enrollment microservice
-        └── group/               ← Group + Invite microservice
+        ├── user/
+        ├── auth/
+        ├── org/
+        ├── class/
+        ├── enroll/
+        └── group/
 ```
 
+---
+
 ## Architecture
-```
-internet
+
+```text
+Internet
     │
-  nginx :80
-    ├── /                  → frontend
-    ├── /api/user/         → user-service     :3001
-    ├── /api/auth/         → auth-service     :3002
-    ├── /api/org/          → org-service      :3003
-    ├── /api/class/        → class-service    :3004
-    ├── /api/enroll/       → enroll-service   :3005
-    └── /api/group/        → group-service    :3006
-                │
-             database      (internal network)
+ nginx
+    │
+ ├── Frontend
+ ├── User Service
+ ├── Auth Service
+ ├── Organization Service
+ ├── Class Service
+ ├── Enrollment Service
+ └── Group Service
+          │
+     PostgreSQL
 ```
 
 ---
 
 ## API Endpoints
 
-### User Service `/api/user`
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/user/` | List all users |
-| GET | `/api/user/:id` | Get user by ID |
-| POST | `/api/user/register` | Register a new user |
-| GET | `/api/user/:id/profile` | Get user profile |
-| PATCH | `/api/user/:id/profile` | Update user profile |
-| DELETE | `/api/user/:id` | Delete user |
+### User Service
 
-### Org Service `/api/org`
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/org/` | List all organizations |
-| GET | `/api/org/:id` | Get org by ID |
-| POST | `/api/org/` | Create organization |
-| POST | `/api/org/:id/members` | Add or move a member to org |
-| DELETE | `/api/org/:id/members` | Remove member from org |
+| Method | Endpoint                |
+| ------ | ----------------------- |
+| GET    | `/api/user`             |
+| POST   | `/api/user/register`    |
+| GET    | `/api/user/:id`         |
+| PATCH  | `/api/user/:id/profile` |
+| DELETE | `/api/user/:id`         |
 
-### Class Service `/api/class`
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/class/` | List all classes |
-| GET | `/api/class/:id` | Get class by ID |
-| POST | `/api/class/` | Create class |
-| GET | `/api/class/:id/assignments` | List assignments for a class |
-| POST | `/api/class/:id/assignments` | Create assignment |
+### Organization Service
 
-### Enrollment Service `/api/enroll`
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/enroll/` | Enroll a student in a class |
-| PATCH | `/api/enroll/` | Drop a student from a class |
+| Method | Endpoint               |
+| ------ | ---------------------- |
+| GET    | `/api/org`             |
+| POST   | `/api/org`             |
+| GET    | `/api/org/:id`         |
+| POST   | `/api/org/:id/members` |
+| DELETE | `/api/org/:id/members` |
 
-### Group Service `/api/group`
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/group/` | Create a group for an assignment |
-| POST | `/api/group/:id/invite` | Invite a member to a group |
-| PATCH | `/api/group/invite/:id` | Respond to a group invite |
+### Class Service
+
+| Method | Endpoint                     |
+| ------ | ---------------------------- |
+| GET    | `/api/class`                 |
+| POST   | `/api/class`                 |
+| GET    | `/api/class/:id`             |
+| GET    | `/api/class/:id/assignments` |
+| POST   | `/api/class/:id/assignments` |
+
+### Enrollment Service
+
+| Method | Endpoint      |
+| ------ | ------------- |
+| POST   | `/api/enroll` |
+| PATCH  | `/api/enroll` |
+
+### Group Service
+
+| Method | Endpoint                |
+| ------ | ----------------------- |
+| POST   | `/api/group`            |
+| POST   | `/api/group/:id/invite` |
+| PATCH  | `/api/group/invite/:id` |
 
 ---
 
 ## Adding a New Service
-1. Create `src/services/your-service/`
-2. Copy structure from `services/user/`
-3. Add to `src/docker-compose.yml` includes
-4. Add nginx route in `src/nginx/conf.d/default.conf`
-5. Add models to `src/packages/database/prisma/schema.prisma`
-6. Run `make migrate && make re`
+
+1. Create a new service directory.
+2. Copy the User service as a template.
+3. Register the service in Docker Compose.
+4. Configure nginx routing.
+5. Add Prisma models.
+6. Run:
+
+```bash
+make migrate
+make re
+```
 
 ---
 
 ## Branch Strategy
-```
-main        → production only, 2 approvals required
-develop     → integration, 1 approval required
-feature/*   → your daily work, branch from develop
-fix/*       → bug fixes
-chore/*     → config and infra changes
+
+```text
+main
+│
+├── develop
+│
+├── feature/*
+├── fix/*
+└── chore/*
 ```
 
-See [DEV_DOC.md](./DEV_DOC.md) for the full Git workflow.
-
-## Contributing
-1. Branch from `develop`
-2. Follow the commit convention: `feat(scope): description`
-3. Open a PR targeting `develop`
-4. Never push directly to `main` or `develop`
+* `main` — Production
+* `develop` — Integration
+* `feature/*` — New features
+* `fix/*` — Bug fixes
+* `chore/*` — Maintenance
 
 ---
 
-## Resources 
-System was inspired by 42
+## Contributing
 
+1. Create a branch from `develop`.
+2. Follow the commit convention:
 
-### Usage of AI 
-Ai was used to aid and understand the framework, and assit in our vision of the project 
+```text
+feat(scope): description
+```
 
-> Maintained by [@yamennaani](https://github.com/yamennaani)
+3. Open a Pull Request.
+4. Request review.
+5. Merge into `develop`.
+
+---
+
+# Journey
+
+## Students Journey
+
+## Bocal Journey
+
+## Admin Journey 
+
+---
+
+# Resources
+
+### Inspiration
+
+The project was inspired by the educational platform used at **42 School**.
+
+### AI Usage
+
+Artificial Intelligence tools were used to:
+
+* Understand unfamiliar frameworks
+* Research implementation approaches
+* Assist with debugging
+* Improve documentation
+* Accelerate development
+
+All architecture, implementation decisions, and final code were designed, reviewed, and validated by the development team.
+
+---
+
+**Maintained by:** @yamennaani

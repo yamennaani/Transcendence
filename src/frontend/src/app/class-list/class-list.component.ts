@@ -274,7 +274,7 @@ export class ClassListComponent implements OnInit {
 
   hasPassed(course: Course)       { return hasPassedCourse(course); }
   assignmentCount(course: Course) { return getAssignmentCount(course); }
-  progressLabel(course: Course)   { return getProgressLabel(course); }
+  progressLabel(course: Course)   { return getProgressLabel(course, this.translate); }
 
   /** "{n} assignment" / "{n} assignments" — picked at call time so re-evaluates on language change */
   assignmentCountLabel(course: Course): string {

@@ -102,6 +102,11 @@
     "confirm_delete_assignment": "هل تريد حذف الواجب \"{{name}}\"؟ سيتم حذف المجموعات وعمليات التسليم نهائيًا.",
     "confirm_remove_group": "هل تريد إزالة المجموعة \"{{name}}\"؟ سيتم حذف أعضائها وعمليات التسليم الخاصة بها.",
     "confirm_remove_from_class": "هل تريد إزالة {{username}} من \"{{className}}\"؟ سيتم أيضًا إزالته من جميع مجموعات هذا الصف.",
+    
+    "course_util_no_data":        "لا توجد بيانات للمقرر",
+    "course_util_no_assignments": "لا توجد مهام بعد",
+    "course_util_passed":         "تم بلوغ الحد المطلوب — اجتزت المقرر",
+    "course_util_remaining":      "{{remaining}} مهمة إضافية للوصول إلى نسبة {{threshold}}%",
 
     "crumb_manage_classes": "إدارة الصفوف",
     "crumb_my_classes": "صفوفي",

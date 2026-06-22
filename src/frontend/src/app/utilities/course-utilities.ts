@@ -4,26 +4,17 @@
  */
 
 import { Course, Assignment } from '../tokens';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateService } from '@ngx-translate/core';
 
 
-/**
- * Get safe assignment count
- */
 export function getAssignmentCount(course: Course | undefined | null): number {
   return course?.assignments?.length ?? 0;
 }
 
-/**
- * Get safe completed assignment count
- */
 export function getCompletedCount(course: Course | undefined | null): number {
   return course?.done ?? 0;
 }
 
-/**
- * Calculate progress percentage
- */
 export function getProgressPercentage(course: Course | undefined | null): number {
   const total = getAssignmentCount(course);
   if (total === 0) return 0;
@@ -31,9 +22,6 @@ export function getProgressPercentage(course: Course | undefined | null): number
   return Math.round((completed / total) * 100);
 }
 
-/**
- * Check if course passed based on threshold
- */
 export function hasPassedCourse(course: Course | undefined | null): boolean {
   if (!course) return false;
   const total = getAssignmentCount(course);
@@ -43,9 +31,6 @@ export function hasPassedCourse(course: Course | undefined | null): boolean {
   return (completed / total) >= requiredPercentage;
 }
 
-/**
- * Calculate remaining assignments needed to pass
- */
 export function getRemainingToPass(course: Course | undefined | null): number {
   if (!course) return 0;
   const total = getAssignmentCount(course);
@@ -57,46 +42,47 @@ export function getRemainingToPass(course: Course | undefined | null): number {
 }
 
 /**
- * Get progress label for display
+ * Get progress label for display.
+ * 
+ * TranslateService is passed explicitly because this is a plain utility
+ * function outside of Angular's DI context — inject() is only available
+ * inside component/service constructors. Callers (components or services)
+ * pass their own injected translate instance.
  */
-export function getProgressLabel(course: Course | undefined | null): string {
+export function getProgressLabel(
+  course: Course | undefined | null,
+  translate: TranslateService
+): string {
   if (!course) {
-    return 'No course data';
+    return translate.instant('course_util_no_data');
   }
 
   const total = getAssignmentCount(course);
-  const completed = getCompletedCount(course);
-  const threshold = course.pass_threshold ?? 100;
 
   if (total === 0) {
-    return 'No assignments yet';
+    return translate.instant('course_util_no_assignments');
   }
 
   if (hasPassedCourse(course)) {
-    return 'Threshold met — class passed';
+    return translate.instant('course_util_passed');
   }
 
-  const remaining = getRemainingToPass(course);
-  return `${remaining} more assignment(s) to reach ${threshold}% threshold` ;
+  const remaining  = getRemainingToPass(course);
+  const threshold  = course.pass_threshold ?? 100;
+  return translate.instant('course_util_remaining', { remaining, threshold });
 }
 
-/**
- * Validate course object has required fields
- */
 export function isValidCourse(course: any): course is Course {
   return (
     course &&
-    typeof course.id === 'number' &&
-    typeof course.name === 'string' &&
+    typeof course.id         === 'number' &&
+    typeof course.name       === 'string' &&
     Array.isArray(course.assignments) &&
-    typeof course.done === 'number' &&
+    typeof course.done       === 'number' &&
     typeof course.pass_threshold === 'number'
   );
 }
 
-/**
- * Type-safe course calculations with all safety checks
- */
 export const courseCalculations = {
   getTotalAssignments: (course: Course | undefined | null): number => {
     return course?.assignments?.length ?? 0;
@@ -107,7 +93,7 @@ export const courseCalculations = {
   },
 
   getPendingAssignments: (course: Course | undefined | null): number => {
-    const total = course?.assignments?.length ?? 0;
+    const total     = course?.assignments?.length ?? 0;
     const completed = course?.done ?? 0;
     return Math.max(0, total - completed);
   },
@@ -136,27 +122,35 @@ export const courseCalculations = {
     course: Course | undefined | null
   ): 'not-started' | 'in-progress' | 'completed' | 'passed' => {
     if (!course) return 'not-started';
-    const total = course.assignments?.length ?? 0;
+    const total     = course.assignments?.length ?? 0;
     const completed = course.done ?? 0;
 
-    if (completed === 0) return 'not-started';
-    if (courseCalculations.hasPassed(course)) return 'passed';
-    if (completed < total) return 'in-progress';
+    if (completed === 0)                          return 'not-started';
+    if (courseCalculations.hasPassed(course))     return 'passed';
+    if (completed < total)                        return 'in-progress';
     return 'completed';
   },
 
-  getDetailedStatus: (course: Course | undefined | null) => {
+  /**
+   * translate is optional here — callers that don't need the displayLabel
+   * (e.g. pure logic checks) can omit it; passing it enables the translated label.
+   */
+  getDetailedStatus: (
+    course: Course | undefined | null,
+    translate?: TranslateService
+  ) => {
     return {
-      total: courseCalculations.getTotalAssignments(course),
-      completed: courseCalculations.getCompletedAssignments(course),
-      pending: courseCalculations.getPendingAssignments(course),
-      progressPercent: courseCalculations.getProgressPercent(course),
-      thresholdPercent: courseCalculations.getThresholdPercent(course),
-      hasPassed: courseCalculations.hasPassed(course),
-      status: courseCalculations.getStatus(course),
-      remainingToPass: getRemainingToPass(course ?? undefined),
-      displayLabel: getProgressLabel(course ?? undefined),
-
+      total:             courseCalculations.getTotalAssignments(course),
+      completed:         courseCalculations.getCompletedAssignments(course),
+      pending:           courseCalculations.getPendingAssignments(course),
+      progressPercent:   courseCalculations.getProgressPercent(course),
+      thresholdPercent:  courseCalculations.getThresholdPercent(course),
+      hasPassed:         courseCalculations.hasPassed(course),
+      status:            courseCalculations.getStatus(course),
+      remainingToPass:   getRemainingToPass(course ?? undefined),
+      displayLabel:      translate
+                           ? getProgressLabel(course ?? undefined, translate)
+                           : getProgressLabel(course ?? undefined, null as any),
     };
   },
 };

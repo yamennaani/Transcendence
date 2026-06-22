@@ -102,7 +102,12 @@
     "confirm_delete_assignment": "Aufgabe \"{{name}}\" löschen? Dadurch werden Gruppen und Abgaben dauerhaft entfernt.",
     "confirm_remove_group": "Gruppe \"{{name}}\" entfernen? Ihre Mitglieder und Abgaben werden gelöscht.",
     "confirm_remove_from_class": "{{username}} aus \"{{className}}\" entfernen? Die Person wird auch aus allen Gruppen dieser Klasse entfernt.",
-
+    
+    "course_util_no_data":        "Keine Kursdaten verfügbar",
+    "course_util_no_assignments": "Noch keine Aufgaben",
+    "course_util_passed":         "Schwellenwert erreicht — Kurs bestanden",
+    "course_util_remaining":      "Noch {{remaining}} Aufgabe(n) bis zum {{threshold}}%-Schwellenwert",
+    
     "crumb_manage_classes": "Klassen verwalten",
     "crumb_my_classes": "Meine Klassen",
 

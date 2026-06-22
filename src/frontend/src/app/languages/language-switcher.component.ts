@@ -73,7 +73,7 @@ import { TranslateService, TranslateModule } from '@ngx-translate/core';
     .lang-options {
       /* hidden by default, no display:none so we can transition */
       position: absolute;
-      bottom: calc(100% + 6px);
+      bottom: calc(100% + 10px);
       left: 0;
       right: 0;
       background: oklch(16% 0.02 272);
