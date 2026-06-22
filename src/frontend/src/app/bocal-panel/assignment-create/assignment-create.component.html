@@ -4,7 +4,7 @@
     <span [ngStyle]="crumbStyle" (click)="onCancel()">← Back to class</span>
     <div [ngStyle]="overlineStyle">Bocal panel</div>
     <h1 [ngStyle]="h1Style">
-      New assignment @if (className()) { — {{ className() }} }
+      {{ editMode() ? 'Edit assignment' : 'New assignment' }} @if (className()) { — {{ className() }} }
     </h1>
     <p [ngStyle]="subStyle">Define the assignment, then build its eval sheet — an eval sheet that sums to the max score is required before saving.</p>
   </div>
@@ -35,6 +35,18 @@
             <input [ngStyle]="inputStyle" type="number" min="1" [value]="reqEval()" (input)="reqEval.set(+$any($event.target).value)" />
           </div>
         </div>
+        @if (editMode()) {
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Group size</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" [value]="groupSize()" (input)="groupSize.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Pass threshold (%)</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" max="100" [value]="passThreshold()" (input)="passThreshold.set(+$any($event.target).value)" />
+            </div>
+          </div>
+        }
         <div>
           <label [ngStyle]="fieldLabelStyle">Subject file</label>
           <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
@@ -158,7 +170,7 @@
 
     <div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid oklch(22% 0.025 272)">
       <app-btn variant="ghost"   size="md" (clicked)="onCancel()">Cancel</app-btn>
-      <app-btn variant="primary" size="md" (clicked)="onSave()">Create assignment</app-btn>
+      <app-btn variant="primary" size="md" (clicked)="onSave()">{{ editMode() ? 'Save changes' : 'Create assignment' }}</app-btn>
     </div>
   </app-container>
 

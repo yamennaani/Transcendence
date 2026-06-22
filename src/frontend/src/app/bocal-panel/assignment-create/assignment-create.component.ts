@@ -13,6 +13,7 @@ import { EvalService, EvalSectionType } from '../../core/services/eval-service/e
 import { LoadingService } from '../../core/services/loading-service/loading.service';
 
 interface PendingSection {
+  id?: number;
   name: string;
   description: string;
   marks: number;
@@ -38,16 +39,23 @@ export class AssignmentCreateComponent implements OnInit {
   error     = signal<string | null>(null);
   activeTab = signal(0);
 
+  // ── Edit mode (editing an existing assignment + its eval sheet) ──
+  editMode = signal(false);
+
   // ── Assignment fields ───────────────────────────────────────
-  name        = signal('');
-  description = signal('');
-  maxScore    = signal<number | null>(null);
-  reqEval     = signal<number | null>(null);
-  fileName    = signal<string | null>(null);
+  name          = signal('');
+  description   = signal('');
+  maxScore      = signal<number | null>(null);
+  reqEval       = signal<number | null>(null);
+  groupSize     = signal<number | null>(null);
+  passThreshold = signal<number | null>(null);
+  fileName      = signal<string | null>(null);
   private file: File | null = null;
 
   // ── Eval sheet sections (built locally, persisted on save) ──
   pendingSections = signal<PendingSection[]>([]);
+  /** Section ids that existed on the backend when editing started — diffed against pendingSections on save to know what to delete. */
+  private originalSectionIds = new Set<number>();
   sectionName   = signal('');
   sectionDesc   = signal('');
   sectionMarks  = signal<number | null>(null);
@@ -76,11 +84,21 @@ export class AssignmentCreateComponent implements OnInit {
   });
 
   private classId: number | null = null;
+  private assignmentId: number | null = null;
+  private sheetId: number | null = null;
 
   readonly flatConfig: ContainerConfig = { variant: 'flat', height: 'auto', scrollable: false };
 
   ngOnInit() {
     this.route.queryParams.subscribe(params => {
+      const assId = parseInt(params['assId'], 10);
+      if (assId) {
+        this.editMode.set(true);
+        this.assignmentId = assId;
+        this.loadForEdit(assId);
+        return;
+      }
+
       const id = parseInt(params['classId'], 10);
       if (!id) { this.error.set('Missing class id.'); return; }
       this.classId = id;
@@ -88,6 +106,45 @@ export class AssignmentCreateComponent implements OnInit {
         next: (cls) => this.className.set(cls.name),
         error: () => this.className.set(null),
       });
+    });
+  }
+
+  private loadForEdit(assId: number) {
+    this.loading.show();
+    this.assignService.getAssignmentById(assId).subscribe({
+      next: (a) => {
+        this.classId = a.classid;
+        this.name.set(a.name);
+        this.description.set(a.description);
+        this.maxScore.set(a.max_score);
+        this.reqEval.set(a.req_eval);
+        this.groupSize.set(a.groupSize ?? 1);
+        this.passThreshold.set(a.pass_threshold ?? 80);
+        this.fileName.set(a.file?.name ?? null);
+
+        this.courseService.getClass(a.classid).subscribe({
+          next: (cls) => this.className.set(cls.name),
+          error: () => this.className.set(null),
+        });
+
+        this.evalService.getEvalSheetByAssignment(assId).subscribe({
+          next: (sheet) => {
+            this.sheetId = sheet.id;
+            const sections = sheet.sections.map(s => ({
+              id: s.id, name: s.name, description: s.description, marks: s.marks, sectionType: s.sectionType,
+            }));
+            this.pendingSections.set(sections);
+            this.originalSectionIds = new Set(sections.map(s => s.id));
+            this.loading.hide();
+          },
+          // No eval sheet yet — one will be created on save.
+          error: () => this.loading.hide(),
+        });
+      },
+      error: () => {
+        this.error.set('Assignment not found.');
+        this.loading.hide();
+      },
     });
   }
 
@@ -165,13 +222,15 @@ export class AssignmentCreateComponent implements OnInit {
 
     this.error.set(null);
     this.pendingSections.update(list => list.map((s, i) =>
-      i === idx ? { name, description: desc, marks, sectionType: this.editType() } : s
+      i === idx ? { ...s, name, description: desc, marks, sectionType: this.editType() } : s
     ));
     this.editingIndex.set(null);
   }
 
   // ── Save ──────────────────────────────────────────────────────
   onSave() {
+    if (this.editMode()) { this.onUpdate(); return; }
+
     const classId   = this.classId;
     const name      = this.name().trim();
     const desc      = this.description().trim();
@@ -225,18 +284,100 @@ export class AssignmentCreateComponent implements OnInit {
             this.loading.hide();
             this.router.navigate(['/bocal/classes'], { queryParams: { classId } });
           },
-          // The assignment and sheet already exist; let the user finish adding sections from the eval sheet page.
+          // The assignment and sheet already exist; let the user finish adding sections from this same page in edit mode.
           error: () => {
             this.loading.hide();
-            this.router.navigate(['/bocal/eval-sheet'], { queryParams: { assId: assignment.id } });
+            this.router.navigate(['/bocal/assignment-create'], { queryParams: { assId: assignment.id } });
           },
         });
       },
       error: () => {
         this.loading.hide();
-        this.router.navigate(['/bocal/eval-sheet'], { queryParams: { assId: assignment.id } });
+        this.router.navigate(['/bocal/assignment-create'], { queryParams: { assId: assignment.id } });
       },
     });
+  }
+
+  /** Updates the assignment fields, then syncs the eval sheet sections (create/update/delete) to match pendingSections. */
+  private onUpdate() {
+    const assId          = this.assignmentId;
+    const classId         = this.classId;
+    const name            = this.name().trim();
+    const desc            = this.description().trim();
+    const maxScore        = this.maxScore();
+    const reqEval         = this.reqEval();
+    const groupSize       = this.groupSize();
+    const passThreshold   = this.passThreshold();
+    const createdBy       = this.auth.user()?.id;
+
+    if (!assId || !classId)                { this.error.set('Missing assignment.'); return; }
+    if (!createdBy)                        { this.error.set('Could not identify user. Please refresh and try again.'); return; }
+    if (!name)                             { this.error.set('Name is required.'); return; }
+    if (!desc)                             { this.error.set('Description is required.'); return; }
+    if (!maxScore || maxScore <= 0)        { this.error.set('Enter a valid max score.'); return; }
+    if (!reqEval  || reqEval  <= 0)        { this.error.set('Enter a valid required evals count.'); return; }
+    if (!groupSize || groupSize <= 0)      { this.error.set('Enter a valid group size.'); return; }
+    if (!passThreshold || passThreshold <= 0) { this.error.set('Enter a valid pass threshold.'); return; }
+    if (this.pendingSections().length === 0) {
+      this.activeTab.set(1);
+      this.error.set('An eval sheet is required. Add at least one section on the Eval sheet tab.');
+      return;
+    }
+    if (this.totalMarks() !== maxScore) {
+      this.activeTab.set(1);
+      this.error.set(`The eval sheet must add up to exactly the max score. It currently totals ${this.totalMarks()} / ${maxScore} pts.`);
+      return;
+    }
+
+    this.error.set(null);
+    this.loading.show();
+    this.assignService.updateAssignment(assId, {
+      classId, name, description: desc, groupSize, reqEval, maxScore, passThreshold,
+      createdBy, file: this.file ?? undefined,
+    }).subscribe({
+      next: () => this.syncEvalSheet(assId, classId),
+      error: (err) => {
+        this.error.set(err?.error?.message ?? 'Failed to update assignment.');
+        this.loading.hide();
+      },
+    });
+  }
+
+  /** Brings the backend eval sheet in line with pendingSections: creates new sections, updates existing ones, deletes removed ones. */
+  private syncEvalSheet(assId: number, classId: number) {
+    if (this.sheetId) {
+      this.applySectionChanges(this.sheetId, classId);
+      return;
+    }
+    this.evalService.createEvalSheet(assId).subscribe({
+      next: (sheet) => { this.sheetId = sheet.id; this.applySectionChanges(sheet.id, classId); },
+      error: () => {
+        this.loading.hide();
+        this.router.navigate(['/bocal/classes'], { queryParams: { classId } });
+      },
+    });
+  }
+
+  private applySectionChanges(sheetId: number, classId: number) {
+    const finish = () => {
+      this.loading.hide();
+      this.router.navigate(['/bocal/classes'], { queryParams: { classId } });
+    };
+
+    const current = this.pendingSections();
+    const currentIds = new Set(current.filter(s => s.id != null).map(s => s.id!));
+    const removedIds = [...this.originalSectionIds].filter(id => !currentIds.has(id));
+
+    const ops = [
+      ...removedIds.map(id => this.evalService.removeSection(sheetId, id)),
+      ...current.filter(s => s.id == null).map(s => this.evalService.createSection(sheetId, s)),
+      ...current.filter(s => s.id != null).map(s => this.evalService.updateSection(sheetId, {
+        secId: s.id!, name: s.name, description: s.description, marks: s.marks, sectionType: s.sectionType,
+      })),
+    ];
+
+    if (ops.length === 0) { finish(); return; }
+    forkJoin(ops).subscribe({ next: finish, error: finish });
   }
 
   onCancel() {

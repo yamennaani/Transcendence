@@ -78,7 +78,6 @@ const closeSubmission = async (groupId, {userId})=>{
     if(!groupId || !userId)
         throw new ValidationError('Invalid request')
     const {group, user} = await validateGroupMember(groupId, userId)
-    console.log(user)
     if(user.id !== group.leaderId)
         throw new UnauthorizedError('the user is not the leader')
 
@@ -87,10 +86,10 @@ const closeSubmission = async (groupId, {userId})=>{
         throw new NotFoundError('Submission not found')
     if(existingSub.status != 'Open')
         throw new ValidationError('Submission is already closed')
-
+    
     return await prisma.submission.update({
         where: { id: existingSub.id },
-        data: { status: 'Close' }
+        data: { status: 'Close', closedAt: new Date() }
     })
 }
 
@@ -179,7 +178,7 @@ const getSubmissionsForAssignment = async (assId)=>{
         throw new NotFoundError('Assignment not found')
     return utils.getSubmissionsBy(
         {group:{assId: parseInt(assId)}},
-        {file: true, group: {include: {members: {include: {user: true}}}}}
+        {file: true, group: {include: {members: {include: {user: { select: { id: true, username: true } } }}}}}
     )
 }
 

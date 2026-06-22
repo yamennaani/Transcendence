@@ -1,137 +1,128 @@
-<<!-- Done state -->
-@if (step() === 4) {
-  <div [ngStyle]="donePgStyle">
-    <div [ngStyle]="doneCardStyle">
-      <div style="font-size:48px;margin-bottom:16px">✓</div>
-      <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:oklch(94% 0.005 272);margin-bottom:8px">{{ 'eval_done_title' | translate }}</h2>
-      <p style="color:oklch(68% 0.01 272);margin-bottom:24px;line-height:1.6">
-        {{ 'eval_done_score_prefix' | translate }}
-        <strong style="color:oklch(68% 0.18 145);font-family:'JetBrains Mono',monospace">{{ score() }}/100</strong>
-        {{ 'eval_done_score_suffix' | translate }}
-      </p>
-      <app-btn variant="primary" (clicked)="router.navigate(['/dashboard'])">{{ 'btn_back_to_dashboard' | translate }}</app-btn>
+<!-- Login: leader email + passkey ─────────────────────────── -->
+@if (phase() === 'login') {
+  <div [ngStyle]="pageStyle">
+    <div [ngStyle]="crumbStyle">
+      <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">dashboard</span>
+      <span>/</span><span style="color:oklch(94% 0.005 272)">evaluate a submission</span>
+    </div>
+
+    <h1 [ngStyle]="h1Style">Start an evaluation</h1>
+    <p [ngStyle]="subStyle">Ask the team you're evaluating for their leader's email and the passkey they were given when they closed their submission.</p>
+
+    <div [ngStyle]="panelStyle">
+      <div>
+        <label [ngStyle]="fieldLabelStyle">Leader email</label>
+        <input [ngStyle]="inputStyle" type="email" placeholder="leader@example.com"
+               [value]="leaderEmail()" (input)="leaderEmail.set($any($event.target).value)" />
+      </div>
+      <div>
+        <label [ngStyle]="fieldLabelStyle">Passkey</label>
+        <input [ngStyle]="{...inputStyle, fontFamily:'JetBrains Mono, monospace', fontSize:'1.125rem', letterSpacing:'0.1em'}"
+               type="text" inputmode="numeric" maxlength="6" placeholder="482913"
+               [value]="passkeyInput()" (input)="passkeyInput.set($any($event.target).value)" />
+      </div>
+
+      @if (loginError()) {
+        <div [ngStyle]="errorStyle">{{ loginError() }}</div>
+      }
+
+      <div style="display:flex;gap:10px">
+        <app-btn variant="primary" (clicked)="login()">Continue</app-btn>
+        <app-btn variant="ghost" (clicked)="router.navigate(['/dashboard'])">Cancel</app-btn>
+      </div>
     </div>
   </div>
 }
 
-@if (step() !== 4) {
-  <div [ngStyle]="pageStyle">
-    <!-- Breadcrumb -->
-    <div [ngStyle]="crumbStyle">
-      <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">{{ 'breadcrumb_dashboard' | translate }}</span>
-      <span>/</span><span style="color:oklch(94% 0.005 272)">{{ 'breadcrumb_evaluate_submission' | translate }}</span>
+<!-- Eval sheet page ───────────────────────────────────────────── -->
+@if (phase() === 'flow' && session()) {
+
+  <!-- Feedback message after submit — no further actions -->
+  @if (submitted()) {
+    <div [ngStyle]="donePgStyle">
+      <div [ngStyle]="doneCardStyle">
+        <div style="font-size:48px;margin-bottom:16px">✓</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:oklch(94% 0.005 272);margin-bottom:8px">Evaluation submitted</h2>
+        <p style="color:oklch(68% 0.01 272);line-height:1.6">
+          A score of <strong [ngStyle]="{color: scoreColor(), fontFamily:'JetBrains Mono, monospace'}">{{ totalScore() }}/{{ maxScore() }}</strong>
+          has been recorded for {{ session()?.group?.name }}.
+        </p>
+      </div>
     </div>
+  } @else {
 
-    <h1 [ngStyle]="h1Style">{{ 'eval_title' | translate }}</h1>
-    <p [ngStyle]="subStyle">{{ 'eval_subtitle' | translate }}</p>
-
-    <!-- Submission card -->
-    <div [ngStyle]="subCardStyle">
-      <app-avatar [name]="sub.student" [size]="40"/>
-      <div style="flex:1">
-        <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;color:oklch(94% 0.005 272);margin-bottom:2px">{{ sub.assignment }}</div>
-        <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">{{ 'eval_submission_by' | translate:{ student: sub.student, date: sub.submittedAt } }}</div>
-        <div style="font-family:'JetBrains Mono',monospace;font-size:0.8125rem;color:oklch(72% 0.15 200);margin-top:4px">{{ sub.repo }}</div>
+    <div [ngStyle]="pageStyle">
+      <!-- Breadcrumb -->
+      <div [ngStyle]="crumbStyle">
+        <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">dashboard</span>
+        <span>/</span><span style="color:oklch(94% 0.005 272)">evaluate submission</span>
       </div>
-      <app-btn variant="secondary" size="sm">{{ 'btn_view_repo' | translate }}</app-btn>
-    </div>
 
-    <!-- Step 0: Intro -->
-    @if (step() === 0) {
-      <div [ngStyle]="panelStyle">
-        <div style="font-size:0.6875rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:oklch(64% 0.28 296)">{{ 'eval_before_begin' | translate }}</div>
-        <ul style="padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px">
-          @for (item of introItems(); track $index) {
-            <li style="display:flex;gap:10px;font-size:0.9375rem;color:oklch(68% 0.01 272);line-height:1.5">
-              <span style="color:oklch(64% 0.28 296);font-family:'JetBrains Mono',monospace;flex-shrink:0">0{{ $index + 1 }}.</span>{{ item }}
-            </li>
-          }
-        </ul>
-        <div style="display:flex;gap:10px">
-          <app-btn variant="primary" (clicked)="step.set(1)">{{ 'btn_start_evaluation' | translate }}</app-btn>
-          <app-btn variant="ghost" (clicked)="router.navigate(['/dashboard'])">{{ 'btn_cancel' | translate }}</app-btn>
-        </div>
+      <div>
+        <h1 [ngStyle]="h1Style">Peer evaluation</h1>
+        <p [ngStyle]="subStyle">You cannot evaluate your own submission. Be honest and constructive.</p>
       </div>
-    }
 
-    <!-- Step 1: Checklist -->
-    @if (step() === 1) {
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <div [ngStyle]="sectionHeadStyle">{{ 'eval_checklist_title' | translate }}</div>
-        @for (q of checklist(); track $index) {
-          <div [ngStyle]="checkRowStyle($index)">
-            <span style="font-size:0.9375rem;color:oklch(94% 0.005 272);line-height:1.5">{{ q }}</span>
-            <div style="display:flex;gap:8px;flex-shrink:0">
-              <button [ngStyle]="{...answerBtnStyle($index,true),padding:'5px 12px',borderRadius:'6px',cursor:'pointer',fontFamily:'DM Sans,sans-serif',fontSize:'0.8125rem',fontWeight:'500',transition:'all 150ms'}"
-                      (click)="setAnswer($index, true)">{{ 'btn_yes' | translate }}</button>
-              <button [ngStyle]="{...answerBtnStyle($index,false),padding:'5px 12px',borderRadius:'6px',cursor:'pointer',fontFamily:'DM Sans,sans-serif',fontSize:'0.8125rem',fontWeight:'500',transition:'all 150ms'}"
-                      (click)="setAnswer($index, false)">{{ 'btn_no' | translate }}</button>
-            </div>
-          </div>
-        }
-        <div style="display:flex;gap:10px;margin-top:4px">
-          <app-btn variant="primary" [disabled]="!allAnswered()" (clicked)="step.set(2)">{{ 'btn_continue' | translate }}</app-btn>
-          <app-btn variant="ghost" (clicked)="step.set(0)">{{ 'btn_back' | translate }}</app-btn>
+      <!-- Submission file, at the top -->
+      <div [ngStyle]="subCardStyle">
+        <app-avatar [name]="session()!.group.name" [size]="40"/>
+        <div style="flex:1">
+          <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;color:oklch(94% 0.005 272);margin-bottom:2px">{{ session()!.assignment.name }}</div>
+          <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">by {{ session()!.group.name }}</div>
         </div>
-      </div>
-    }
-
-    <!-- Step 2: Score + feedback -->
-    @if (step() === 2) {
-      <div [ngStyle]="panelStyle">
-        <div>
-          <div [ngStyle]="sectionHeadStyle">{{ 'eval_overall_score' | translate }}</div>
-          <div style="display:flex;align-items:center;gap:16px">
-            <input type="range" min="0" max="120" [value]="score()" (input)="score.set(+$any($event.target).value)"
-                   style="flex:1;accent-color:oklch(64% 0.28 296)"/>
-            <div [ngStyle]="{fontFamily:'Space Grotesk,sans-serif',fontSize:'2rem',fontWeight:'700',letterSpacing:'-0.03em',color:scoreColor(),minWidth:'80px',textAlign:'right'}">
-              {{ score() }}<span style="font-size:1rem;color:oklch(48% 0.01 272)">/120</span>
-            </div>
-          </div>
-          <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:4px">{{ 'eval_score_max_bonus' | translate }}</div>
-        </div>
-        <div>
-          <div [ngStyle]="sectionHeadStyle">{{ 'eval_written_feedback' | translate }}</div>
-          <textarea [ngStyle]="textareaStyle" [value]="feedback()"
-                    (input)="feedback.set($any($event.target).value)"
-                    [placeholder]="'eval_feedback_placeholder' | translate"></textarea>
-        </div>
-        <div style="display:flex;gap:10px">
-          <app-btn variant="primary" [disabled]="!feedbackOk()" (clicked)="step.set(3)">{{ 'btn_review_submit' | translate }}</app-btn>
-          <app-btn variant="ghost" (clicked)="step.set(1)">{{ 'btn_back' | translate }}</app-btn>
-        </div>
-        @if (feedback().length > 0 && !feedbackOk()) {
-          <span style="font-size:0.75rem;color:oklch(75% 0.18 80)">{{ 'eval_feedback_min_length' | translate }}</span>
+        @if (session()!.submission.file) {
+          <a [href]="session()!.submission.file!.url" target="_blank" rel="noopener">
+            <app-btn variant="secondary" size="sm">View submission</app-btn>
+          </a>
         }
       </div>
-    }
 
-    <!-- Step 3: Review -->
-    @if (step() === 3) {
-      <div [ngStyle]="panelStyle">
-        <div style="font-size:0.6875rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:oklch(64% 0.28 296)">{{ 'eval_review_title' | translate }}</div>
-        <div style="display:flex;flex-wrap:wrap;gap:12px">
-          @for (q of checklist(); track $index) {
-            <div style="display:flex;align-items:center;gap:6px">
-              <span [ngStyle]="{fontSize:'0.75rem',color:answers()[$index]?'oklch(68% 0.18 145)':'oklch(62% 0.22 20)'}">
-                {{ answers()[$index] ? '✓' : '✗' }}
-              </span>
-              <span style="font-size:0.75rem;color:oklch(68% 0.01 272)">{{ q.slice(0, 32) }}…</span>
+      <!-- Sections — each one clear: title, description, then a big control -->
+      @for (s of sections(); track s.id) {
+        <div class="section-card">
+          <div>
+            <div class="section-title">{{ s.name }}</div>
+            <div class="section-desc">{{ s.description }}</div>
+          </div>
+
+          @if (s.sectionType === 'Toggle') {
+            <div class="big-toggle-row">
+              <button class="big-toggle-btn yes" [class.selected]="isToggleSelected(s, true)" (click)="setToggle(s, true)">
+                Yes
+                <span class="big-toggle-pts">+{{ s.marks }} pts</span>
+              </button>
+              <button class="big-toggle-btn no" [class.selected]="isToggleSelected(s, false)" (click)="setToggle(s, false)">
+                No
+                <span class="big-toggle-pts">0 pts</span>
+              </button>
+            </div>
+          } @else {
+            <div class="big-slider-wrap">
+              <div class="big-slider-value">{{ scoreFor(s.id) ?? 0 }}<span class="big-slider-max"> / {{ s.marks }} pts</span></div>
+              <input class="big-slider" type="range" min="0" [max]="s.marks" step="1" [value]="scoreFor(s.id) ?? 0"
+                     (input)="setSlider(s, +$any($event.target).value)" />
             </div>
           }
         </div>
-        <div style="display:flex;align-items:center;gap:12px">
-          <app-score-pill [score]="score()" [max]="120"/>
-          <span style="font-size:0.875rem;color:oklch(68% 0.01 272)">{{ 'eval_final_score' | translate }}</span>
-        </div>
-        <div [ngStyle]="reviewRowStyle">
-          <p style="font-size:0.875rem;color:oklch(68% 0.01 272);line-height:1.6">{{ feedback() }}</p>
-        </div>
-        <div style="display:flex;gap:10px">
-          <app-btn variant="primary" (clicked)="step.set(4)">{{ 'btn_submit_evaluation' | translate }}</app-btn>
-          <app-btn variant="ghost" (clicked)="step.set(2)">{{ 'btn_edit' | translate }}</app-btn>
-        </div>
+      }
+
+      <!-- Comment -->
+      <div [ngStyle]="panelStyle">
+        <div [ngStyle]="sectionHeadStyle">Written feedback</div>
+        <textarea [ngStyle]="textareaStyle" [value]="comment()"
+                  (input)="comment.set($any($event.target).value)"
+                  placeholder="Describe what was done well and what could be improved..."></textarea>
+        @if (comment().length > 0 && !commentOk()) {
+          <span style="font-size:0.75rem;color:oklch(75% 0.18 80)">Feedback must be at least 20 characters.</span>
+        }
       </div>
-    }
-  </div>
+
+      @if (submitError()) {
+        <div [ngStyle]="errorStyle">{{ submitError() }}</div>
+      }
+
+      <!-- One submit button -->
+      <app-btn variant="primary" size="lg" [disabled]="!canSubmit()" (clicked)="submit()">Submit evaluation</app-btn>
+    </div>
+  }
 }

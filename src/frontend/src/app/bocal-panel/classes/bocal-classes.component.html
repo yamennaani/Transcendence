@@ -75,73 +75,6 @@
     </div>
   }
 
-  <!-- ── Edit assignment modal ──────────────────────────────── -->
-  @if (editingAssignment()) {
-    <div [ngStyle]="overlayStyle" (click)="closeEditAssignmentModal()">
-      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          {{ 'bocal_edit_assignment_title' | translate }} — {{ editingAssignment()?.name }}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div>
-            <label [ngStyle]="fieldLabelStyle">{{ 'label_name' | translate }}</label>
-            <input [ngStyle]="inputStyle" type="text"
-                   [value]="editAssignName()"
-                   (input)="editAssignName.set($any($event.target).value)" />
-          </div>
-          <div>
-            <label [ngStyle]="fieldLabelStyle">{{ 'label_description' | translate }}</label>
-            <textarea [ngStyle]="textAreaStyle"
-                      [value]="editAssignDesc()"
-                      (input)="editAssignDesc.set($any($event.target).value)"></textarea>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_group_size' | translate }}</label>
-              <input [ngStyle]="inputStyle" type="number" min="1"
-                     [value]="editAssignGroupSize()"
-                     (input)="editAssignGroupSize.set(+$any($event.target).value)" />
-            </div>
-            <div>
-              <label [ngStyle]="fieldLabelStyle">{{ 'label_max_score' | translate }}</label>
-              <input [ngStyle]="inputStyle" type="number" min="1"
-                     [value]="editAssignMaxScore()"
-                     (input)="editAssignMaxScore.set(+$any($event.target).value)" />
-            </div>
-            <div>
-              <label [ngStyle]="fieldLabelStyle">{{ 'label_required_evals' | translate }}</label>
-              <input [ngStyle]="inputStyle" type="number" min="1"
-                     [value]="editAssignReqEval()"
-                     (input)="editAssignReqEval.set(+$any($event.target).value)" />
-            </div>
-            <div>
-              <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_pass_threshold_pct' | translate }}</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" max="100"
-                     [value]="editAssignThreshold()"
-                     (input)="editAssignThreshold.set(+$any($event.target).value)" />
-            </div>
-          </div>
-          <div>
-            <label [ngStyle]="fieldLabelStyle">{{ 'label_subject_file' | translate }}</label>
-            <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
-              {{ editAssignFileName() ?? ('bocal_no_subject_file' | translate) }}
-            </div>
-            <input [ngStyle]="inputStyle" type="file"
-                   accept=".pdf,.zip,.doc,.docx,.txt"
-                   (change)="onEditAssignFilePicked($event)" />
-          </div>
-        </div>
-        @if (editAssignError()) {
-          <div [ngStyle]="errorStyle">{{ editAssignError() }}</div>
-        }
-        <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeEditAssignmentModal()">{{ 'btn_cancel' | translate }}</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onSaveAssignmentEdit()">{{ 'bocal_btn_save_changes' | translate }}</app-btn>
-        </div>
-      </div>
-    </div>
-  }
-
   <!-- ── Class detail view ──────────────────────────────────── -->
   @if (selectedClass()) {
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -192,8 +125,6 @@
                 <app-btn variant="ghost" size="sm" (clicked)="toggleGroups(a)">
                   {{ (expandedAssignment() === a.id ? 'bocal_btn_hide_groups' : 'bocal_btn_groups') | translate }}
                 </app-btn>
-                   <app-btn variant="ghost" size="sm" (clicked)="openEvalSheet(a)">Eval sheet</app-btn>
-                   
                 <app-btn variant="ghost" size="sm" (clicked)="openEditAssignment(a)">{{ 'btn_edit' | translate }}</app-btn>
                 <app-btn variant="ghost" size="sm" (clicked)="viewAssignment(a)">{{ 'bocal_btn_view' | translate }}</app-btn>
                 <app-btn variant="ghost" size="sm" (clicked)="deleteAssignment(a)">{{ 'bocal_btn_delete' | translate }}</app-btn>

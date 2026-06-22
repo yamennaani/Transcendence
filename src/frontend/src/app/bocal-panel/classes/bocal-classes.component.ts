@@ -55,7 +55,6 @@ export class BocalClassesComponent implements OnInit {
   // ── Modal visibility ───────────────────────────────────────
   showNew         = signal(false);
   showEditClass   = signal(false);
-  editingAssignment = signal<AssignmentResponse | null>(null);
 
   // ── Data signals ───────────────────────────────────────────
   classes          = signal<BocalClass[]>([]);
@@ -68,25 +67,11 @@ export class BocalClassesComponent implements OnInit {
 
   // ── Form error signals ─────────────────────────────────────
   editClassError  = signal<string | null>(null);
-  editAssignError = signal<string | null>(null);
 
   // ── Edit class form state ──────────────────────────────────
   editClassName      = signal('');
   editClassDesc      = signal('');
   editClassThreshold = signal(80);
-
-  // ── Edit assignment form state ─────────────────────────────
-  editAssignName      = signal('');
-  editAssignDesc      = signal('');
-  editAssignGroupSize = signal(1);
-  editAssignMaxScore  = signal(100);
-  editAssignReqEval   = signal(3);
-  editAssignThreshold = signal(80);
-  editAssignFileName  = signal<string | null>(null);
-
-  // ── Form field changes ─────────────────────────────────────
-  private assignmentFile: File | null = null;
-  private editAssignFile: File | null = null;
 
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
@@ -201,11 +186,6 @@ export class BocalClassesComponent implements OnInit {
     this.router.navigate(['/bocal/assignment-create'], { queryParams: { classId: cls.id } });
   }
 
-  openEvalSheet(a: AssignmentResponse) {
-    this.router.navigate(['/bocal/eval-sheet'], { queryParams: { assId: a.id } });
-  }
-
-
   // ── Create class ───────────────────────────────────────────
   onClassCreated() {
     this.showNew.set(false);
@@ -263,71 +243,9 @@ export class BocalClassesComponent implements OnInit {
   }
 
   // ── Edit assignment ────────────────────────────────────────
+  /** Opens the merged assignment + eval sheet editor, pre-filled for this assignment. */
   openEditAssignment(a: AssignmentResponse) {
-    this.editingAssignment.set(a);
-    this.editAssignName.set(a.name);
-    this.editAssignDesc.set(a.description);
-    this.editAssignGroupSize.set(a.groupSize ?? 1);
-    this.editAssignMaxScore.set(a.max_score);
-    this.editAssignReqEval.set(a.req_eval);
-    this.editAssignThreshold.set(a.pass_threshold ?? 80);
-    this.editAssignError.set(null);
-    this.editAssignFile = null;
-    this.editAssignFileName.set(a.file?.name ?? null);
-  }
-
-  onEditAssignFilePicked(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0] ?? null;
-    if (!file) return;
-    this.editAssignFile = file;
-    this.editAssignFileName.set(file.name);
-  }
-
-  closeEditAssignmentModal() {
-    this.editingAssignment.set(null);
-    this.editAssignError.set(null);
-    this.editAssignFile = null;
-    this.editAssignFileName.set(null);
-  }
-
-  onSaveAssignmentEdit() {
-    const a    = this.editingAssignment();
-    const cls  = this.selectedClass();
-    const name = this.editAssignName().trim();
-    const desc = this.editAssignDesc().trim();
-    const groupSize     = this.editAssignGroupSize();
-    const maxScore      = this.editAssignMaxScore();
-    const reqEval       = this.editAssignReqEval();
-    const passThreshold = this.editAssignThreshold();
-    const createdBy = this.auth.user()?.id;
-
-    if (!a || !cls) return;
-    if (!createdBy) { this.editAssignError.set(this.translate.instant('error_resolve_user_failed')); return; }
-    if (!name) { this.editAssignError.set(this.translate.instant('error_name_required')); return; }
-    if (!desc) { this.editAssignError.set(this.translate.instant('error_description_required')); return; }
-    if (isNaN(groupSize) || groupSize <= 0)     { this.editAssignError.set(this.translate.instant('error_invalid_group_size')); return; }
-    if (isNaN(maxScore)  || maxScore <= 0)      { this.editAssignError.set(this.translate.instant('error_invalid_max_score')); return; }
-    if (isNaN(reqEval)   || reqEval  <= 0)      { this.editAssignError.set(this.translate.instant('error_invalid_req_eval')); return; }
-
-    this.editAssignError.set(null);
-    this.loading.show();
-    this.assignService.updateAssignment(a.id, {
-      classId: cls.id, name, description: desc,
-      groupSize, reqEval, maxScore, passThreshold,
-      createdBy, file: this.editAssignFile ?? undefined,
-    }).subscribe({
-      next: (updated) => {
-        this.classAssignments.update(list => list.map(x =>
-          x.id === a.id ? { ...x, ...updated } : x
-        ));
-        this.closeEditAssignmentModal();
-        this.loading.hide();
-      },
-      error: (err) => {
-        this.editAssignError.set(err?.error?.message ?? this.translate.instant('error_update_assignment_failed'));
-        this.loading.hide();
-      },
-    });
+    this.router.navigate(['/bocal/assignment-create'], { queryParams: { assId: a.id } });
   }
 
   // --Assignment count label with proper pluralization──

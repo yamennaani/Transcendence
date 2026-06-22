@@ -1,5 +1,6 @@
 import { HttpClient } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
+import { EvalResponse } from "../../../tokens";
 
 // EvalAssignment object as returned by the backend (mirroring Prisma EvalAssignment model fields)
 export interface EvalAssignment {
@@ -13,6 +14,7 @@ export interface EvalAssignment {
   submissionId: number | null;
   evalResponseId: number | null;
   createdAt: string;
+  evaluatorUser?: { id: number; username: string; email: string };
 }
 
 // Request body for manually creating one EvalAssignment
@@ -36,6 +38,22 @@ export interface UpdateEvalAssignmentPayload {
   status?: EvalAssignmentStatus;
   submissionId?: number | null;
   evalResponseId?: number | null;
+}
+
+export interface StartEvaluationResponse {
+    evalAssignmentId: number;
+    assignment: { id: number; name: string; description: string; max_score: number };
+    group: { id: number; name: string };
+    submission: { id: number; file: { id: number; name: string; url: string; size: number } | null };
+    evalSheet: EvalSheet;
+}
+
+export interface SubmitEvaluationResponse {
+    id: number;
+    subId: number;
+    userId: number;
+    givenMarks: number;
+    comment: string;
 }
 
 // mirroring enum EvalAssignmentStatus in schema.prisma
@@ -123,4 +141,21 @@ export class EvalService {
     }
     //generatePairings(assignmentId)
 
+    startEvaluation(data: { evaluatorUserId: number, leaderEmail: string, passkey: string }) {
+        return this.http.post<StartEvaluationResponse>(`${this.base}/evaluate/start`, data)
+    }
+
+    submitEvaluation(data: { evalAssignmentId: number, evaluatorUserId: number, comment: string, scores: { sectionId: number, score: number }[] }) {
+        return this.http.post<SubmitEvaluationResponse>(`${this.base}/evaluate/submit`, data)
+    }
+
+    // all eval feedback (EvalResponse rows) left on one submission
+    getResponsesForSubmission(subId: number) {
+        return this.http.get<EvalResponse[]>(`${this.base}/submission/${subId}/responses`)
+    }
+
+    // group leader replies to one piece of eval feedback
+    replyToResponse(responseId: number, data: { userId: number, reply: string }) {
+        return this.http.patch<EvalResponse>(`${this.base}/responses/${responseId}/reply`, data)
+    }
 }
