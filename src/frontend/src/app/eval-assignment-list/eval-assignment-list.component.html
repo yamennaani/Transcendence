@@ -46,10 +46,24 @@
 
       <app-btn
         variant="ghost"
+        [disabled]="loading() || manualPairingEvalueeGroupOptions().length === 0"
+        (clicked)="openCreateSinglePairingModal()">
+        Create single pairing
+      </app-btn>
+
+      <app-btn
+        variant="ghost"
         [disabled]="loading() || assignmentGroups().length === 0"
         (clicked)="showEvaluatorWorkload.set(true)">
         Show evaluator counts
       </app-btn>
+
+      <app-btn
+        variant="ghost"
+        [disabled]="loading()"
+        (clicked)="showUnmatchedStudents.set(true)">
+        Show unmatched students
+      </app-btn>      
 
     </div>
   </div>
@@ -106,6 +120,150 @@
             size="md"
             (clicked)="showEvaluatorWorkload.set(false)">
             Close
+          </app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (showUnmatchedStudents()) {
+    <div [ngStyle]="overlayStyle" (click)="showUnmatchedStudents.set(false)">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div [ngStyle]="modalTitleStyle">
+          Unmatched students
+        </div>
+
+        <div [ngStyle]="modalBodyStyle">
+          @if (unmatchedStudents().length === 0) {
+            <div [ngStyle]="emptyStateStyle">
+              All enrolled students have the required number of evaluee pairings.
+            </div>
+          } @else {
+            @for (student of unmatchedStudents(); track student.userId) {
+              <div [ngStyle]="workloadRowStyle">
+                <div>
+                  <div [ngStyle]="cardTitleStyle">
+                    {{ student.username }}
+                  </div>
+
+                  <div [ngStyle]="cardSubtitleStyle">
+                    {{ student.email }}
+                  </div>
+
+                  <div [ngStyle]="cardSubtitleStyle">
+                    {{ student.groupNames }}
+                  </div>
+
+                  <div [ngStyle]="cardSubtitleStyle">
+                    Evaluee pairings:
+                    {{ student.evalueeAssignments }} /
+                    {{ student.requiredRounds }}
+                  </div>
+                </div>
+
+                <strong>
+                  missing {{ student.missingRounds }}
+                </strong>
+              </div>
+            }
+          }
+        </div>
+
+        <div [ngStyle]="modalActionsStyle">
+          <app-btn
+            variant="primary"
+            size="md"
+            (clicked)="showUnmatchedStudents.set(false)">
+            Close
+          </app-btn>
+        </div>
+      </div>
+    </div>
+  }  
+
+  @if (showCreateSinglePairing()) {
+    <div [ngStyle]="overlayStyle" (click)="closeCreateSinglePairingModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div [ngStyle]="modalTitleStyle">
+          Create single pairing
+        </div>
+
+        <div [ngStyle]="modalBodyStyle">
+          @if (manualPairingEvalueeGroupOptions().length === 0) {
+            <div [ngStyle]="emptyStateStyle">
+              No evaluee group is currently missing a pairing.
+              If an enrolled student has no group yet, create a group for them first.
+            </div>
+          } @else {
+            <div>
+              <label [ngStyle]="fieldLabelStyle">
+                Unmatched evaluee group / round
+              </label>
+
+              <select
+                [ngStyle]="inputStyle"
+                [ngModel]="createPairingEvalueeGroup()"
+                (ngModelChange)="onManualPairingEvalueeGroupChanged($event)">
+                @for (option of manualPairingEvalueeGroupOptions(); track option.groupId + '-' + option.round) {
+                  <option [ngValue]="option">
+                    Round {{ option.round }} · {{ option.groupName }}:
+                    {{ option.members }}
+                    · currently {{ option.evalueeAssignments }}/{{ option.requiredRounds }}
+                  </option>
+                }
+              </select>
+            </div>
+
+            @if (createPairingEvalueeGroup()) {
+              <div [ngStyle]="readonlyFieldStyle">
+                Evaluee group:
+                {{ createPairingEvalueeGroup()?.groupName }}
+                —
+                {{ createPairingEvalueeGroup()?.members }}
+              </div>
+            }
+
+            <div>
+              <label [ngStyle]="fieldLabelStyle">
+                Evaluator
+              </label>
+
+              <select
+                [ngStyle]="inputStyle"
+                [ngModel]="createPairingEvaluator()"
+                (ngModelChange)="createPairingEvaluator.set($event)">
+                @for (candidate of availableManualPairingEvaluators(); track candidate.userId) {
+                  <option [ngValue]="candidate">
+                    {{ candidate.username }}
+                    · {{ candidate.groupName }}
+                    · {{ candidate.count }} evaluator assignment(s)
+                  </option>
+                }
+              </select>
+            </div>
+
+            @if (createPairingError()) {
+              <div [ngStyle]="errorBannerStyle">
+                {{ createPairingError() }}
+              </div>
+            }
+          }
+        </div>
+
+        <div [ngStyle]="modalActionsStyle">
+          <app-btn
+            variant="ghost"
+            size="md"
+            (clicked)="closeCreateSinglePairingModal()">
+            Cancel
+          </app-btn>
+
+          <app-btn
+            variant="primary"
+            size="md"
+            [disabled]="loading() || !createPairingEvalueeGroup() || !createPairingEvaluator()"
+            (clicked)="saveCreateSinglePairing()">
+            Create pairing
           </app-btn>
         </div>
       </div>

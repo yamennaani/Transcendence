@@ -44,6 +44,13 @@ route.patch('/invite/:id', async(req, res, next)=>{
     }catch(err){next(err)}
 })
 
+// staff/admin: directly add a member to a group
+route.post('/:id/admin/member', async (req, res, next) => {
+    try {
+        res.json(await groupService.addMemberAdmin(req.params.id, req.body))
+    } catch (err) { next(err) }
+})
+
 route.post('/:id/invite', async (req, res, next)=>{
     try{
         res.json(await groupService.inviteMember(req.params.id, req.body))
