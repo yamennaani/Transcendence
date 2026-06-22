@@ -1,0 +1,165 @@
+<div [ngStyle]="pageStyle">
+
+  <div>
+    <span [ngStyle]="crumbStyle" (click)="onCancel()">← Back to class</span>
+    <div [ngStyle]="overlineStyle">Bocal panel</div>
+    <h1 [ngStyle]="h1Style">
+      New assignment @if (className()) { — {{ className() }} }
+    </h1>
+    <p [ngStyle]="subStyle">Define the assignment, then build its eval sheet — an eval sheet that sums to the max score is required before saving.</p>
+  </div>
+
+  <app-container [config]="flatConfig">
+    <app-tab-list (tabChanged)="activeTab.set($event)">
+      <ng-template appTab label="Assignment" icon="assignment" />
+      <ng-template appTab label="Eval sheet (required)" icon="checklist" [count]="pendingSections().length" />
+    </app-tab-list>
+
+    @if (activeTab() === 0) {
+      <div style="padding:0 18px 18px;display:flex;flex-direction:column;gap:10px">
+        <div>
+          <label [ngStyle]="fieldLabelStyle">Name</label>
+          <input [ngStyle]="inputStyle" type="text" [value]="name()" (input)="name.set($any($event.target).value)" />
+        </div>
+        <div>
+          <label [ngStyle]="fieldLabelStyle">Description</label>
+          <textarea [ngStyle]="textAreaStyle" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Max score</label>
+            <input [ngStyle]="inputStyle" type="number" min="1" [value]="maxScore()" (input)="maxScore.set(+$any($event.target).value)" />
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Required evals</label>
+            <input [ngStyle]="inputStyle" type="number" min="1" [value]="reqEval()" (input)="reqEval.set(+$any($event.target).value)" />
+          </div>
+        </div>
+        <div>
+          <label [ngStyle]="fieldLabelStyle">Subject file</label>
+          <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
+            {{ fileName() ?? 'No subject file attached.' }}
+          </div>
+          <input [ngStyle]="inputStyle" type="file"
+                 accept=".pdf,.zip,.doc,.docx,.txt"
+                 (change)="onFilePicked($event)" />
+        </div>
+      </div>
+    }
+
+    @if (activeTab() === 1) {
+      <div style="padding:0 18px 18px;display:flex;flex-direction:column;gap:12px">
+
+        <!-- Score summary -->
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:oklch(15% 0.025 272);border:1px solid oklch(27% 0.03 272);border-radius:8px">
+          <div>
+            <div [ngStyle]="fieldLabelStyle">Eval sheet score</div>
+            <div [ngStyle]="{fontFamily:'JetBrains Mono, monospace', fontSize:'1.25rem', fontWeight:'700', color: scoreColor()}">
+              {{ totalMarks() }}<span style="font-size:0.8125rem;color:oklch(48% 0.01 272)"> / {{ maxScore() ?? 0 }} pts</span>
+            </div>
+          </div>
+          <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">{{ remainingMarks() }} pts remaining</div>
+        </div>
+
+        <!-- Sections list -->
+        @if (pendingSections().length === 0) {
+          <div [ngStyle]="emptyStyle">No sections yet. An eval sheet is required — add sections below until they sum to {{ maxScore() ?? 0 }} pts.</div>
+        } @else {
+          @for (s of pendingSections(); track $index; let i = $index) {
+            <div style="padding:12px 16px;display:flex;flex-direction:column;gap:10px;background:oklch(15% 0.025 272);border:1px solid oklch(27% 0.03 272);border-radius:8px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer" (click)="toggleExpand(i)">
+                <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                  <span style="font-size:0.7rem;color:oklch(48% 0.01 272);flex-shrink:0">{{ expandedIndex() === i ? '▾' : '▸' }}</span>
+                  <span style="font-weight:600;color:oklch(94% 0.005 272)">{{ s.name }}</span>
+                </div>
+                <span style="display:flex;align-items:center;gap:10px;flex-shrink:0" (click)="$event.stopPropagation()">
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:0.875rem;color:oklch(94% 0.005 272)">{{ s.marks }} pts</span>
+                  <span style="font-size:0.75rem;padding:3px 8px;border-radius:999px;background:oklch(22% 0.08 296);color:oklch(64% 0.28 296)">{{ s.sectionType }}</span>
+                  <app-btn variant="ghost" size="sm" (clicked)="startEdit(i)">Edit</app-btn>
+                  <app-btn variant="ghost" size="sm" (clicked)="removeSection(i)">Remove</app-btn>
+                </span>
+              </div>
+
+              @if (expandedIndex() === i) {
+                @if (editingIndex() === i) {
+                  <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px;border-top:1px solid oklch(27% 0.03 272)">
+                    <div>
+                      <label [ngStyle]="fieldLabelStyle">Name</label>
+                      <input [ngStyle]="inputStyle" type="text" [value]="editName()" (input)="editName.set($any($event.target).value)" />
+                    </div>
+                    <div>
+                      <label [ngStyle]="fieldLabelStyle">Description</label>
+                      <textarea [ngStyle]="textAreaStyle" [value]="editDesc()" (input)="editDesc.set($any($event.target).value)"></textarea>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                      <div>
+                        <label [ngStyle]="fieldLabelStyle">Marks (max {{ editRemainingMarks() }})</label>
+                        <input [ngStyle]="inputStyle" type="number" min="1" [max]="editRemainingMarks()" [value]="editMarks()" (input)="editMarks.set(+$any($event.target).value)" />
+                      </div>
+                      <div>
+                        <label [ngStyle]="fieldLabelStyle">Type</label>
+                        <select [ngStyle]="inputStyle" [value]="editType()" (change)="editType.set($any($event.target).value)">
+                          <option value="Toggle">Toggle</option>
+                          <option value="Slider">Slider</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;gap:8px">
+                      <app-btn variant="ghost"   size="sm" (clicked)="cancelEdit()">Cancel</app-btn>
+                      <app-btn variant="primary" size="sm" (clicked)="saveEdit()">Save</app-btn>
+                    </div>
+                  </div>
+                } @else {
+                  <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);padding-top:6px;border-top:1px solid oklch(27% 0.03 272)">
+                    {{ s.description }}
+                  </div>
+                }
+              }
+            </div>
+          }
+        }
+
+        <!-- Add section form -->
+        <div style="display:flex;flex-direction:column;gap:10px;padding-top:6px;border-top:1px solid oklch(22% 0.025 272)">
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:0.9375rem;font-weight:600;color:oklch(94% 0.005 272)">Add section</div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Name</label>
+            <input [ngStyle]="inputStyle" type="text" [value]="sectionName()" (input)="sectionName.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Description</label>
+            <textarea [ngStyle]="textAreaStyle" [value]="sectionDesc()" (input)="sectionDesc.set($any($event.target).value)"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Marks</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" [max]="remainingMarks()" [value]="sectionMarks()" (input)="sectionMarks.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">Type</label>
+              <select [ngStyle]="inputStyle" [value]="sectionType()" (change)="sectionType.set($any($event.target).value)">
+                <option value="Toggle">Toggle</option>
+                <option value="Slider">Slider</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end">
+            <app-btn variant="secondary" size="sm" [disabled]="remainingMarks() <= 0" (clicked)="addSection()">+ Add section</app-btn>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div style="padding:0 18px 18px">
+        <div [ngStyle]="errorStyle">{{ error() }}</div>
+      </div>
+    }
+
+    <div style="display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid oklch(22% 0.025 272)">
+      <app-btn variant="ghost"   size="md" (clicked)="onCancel()">Cancel</app-btn>
+      <app-btn variant="primary" size="md" (clicked)="onSave()">Create assignment</app-btn>
+    </div>
+  </app-container>
+
+</div>

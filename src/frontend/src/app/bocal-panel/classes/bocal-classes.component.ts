@@ -5,15 +5,15 @@ import { forkJoin } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS } from '../../tokens';
 import { BtnComponent } from '../../shared/btn.component';
-import { FieldComponent } from '../../shared/field.component';
 import { ContainerComponent, ContainerConfig } from '../../shared/container.component';
 import { CreateClassPage } from '../../shared/CreateClassPage';
-import { FieldType, FileField } from '../../shared/field.types';
 import { AuthService } from '../../services/auth.service';
 import { CourseService } from '../../core/services/course-service/course-service';
 import { AssignmentService, AssignmentResponse } from '../../core/services/course-service/Assignment.service';
 import { GroupService } from '../../core/services/group-service/group-service';
 import { LoadingService } from '../../core/services/loading-service/loading.service';
+
+
 
 export interface AssignmentGroup {
   id: number;
@@ -36,7 +36,7 @@ export interface BocalClass {
   standalone: true,
   imports: [
     NgStyle, DatePipe,
-    BtnComponent, FieldComponent, ContainerComponent,
+    BtnComponent, ContainerComponent,
     CreateClassPage,
     TranslateModule,
   ],
@@ -54,7 +54,6 @@ export class BocalClassesComponent implements OnInit {
 
   // ── Modal visibility ───────────────────────────────────────
   showNew         = signal(false);
-  showAddAssign   = signal(false);
   showEditClass   = signal(false);
   editingAssignment = signal<AssignmentResponse | null>(null);
 
@@ -68,7 +67,6 @@ export class BocalClassesComponent implements OnInit {
   assignmentGroups   = signal<Map<number, AssignmentGroup[]>>(new Map());
 
   // ── Form error signals ─────────────────────────────────────
-  assignmentError = signal<string | null>(null);
   editClassError  = signal<string | null>(null);
   editAssignError = signal<string | null>(null);
 
@@ -87,12 +85,8 @@ export class BocalClassesComponent implements OnInit {
   editAssignFileName  = signal<string | null>(null);
 
   // ── Form field changes ─────────────────────────────────────
-  private assignmentChanges = new Map<string, FieldType>();
   private assignmentFile: File | null = null;
   private editAssignFile: File | null = null;
-
-  // ── Add assignment fields (translatable, rebuilt on lang change) ──
-  assignmentFields: FieldType[] = [];
 
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
@@ -104,9 +98,8 @@ export class BocalClassesComponent implements OnInit {
     this.loadAll();
 
     // Build translated field labels initially and whenever the language changes
-    this.buildAssignmentFields();
     this.translate.onLangChange.subscribe(() => {
-      this.buildAssignmentFields();
+      
     });
 
     // Keep the selected class in sync with the `classId` query param so that
@@ -123,17 +116,6 @@ export class BocalClassesComponent implements OnInit {
   }
 
   private pendingClassId: number | null = null;
-
-  private buildAssignmentFields() {
-    this.assignmentFields = [
-      { type: 'text',      label: this.translate.instant('label_name'),           icon: 'title',       required: true, allowEdit: true, value: undefined },
-      { type: 'text-area', label: this.translate.instant('label_description'),    icon: 'description', required: true, allowEdit: true, value: undefined },
-      { type: 'text',      label: this.translate.instant('label_max_score'),      icon: 'score',       required: true, allowEdit: true, value: undefined },
-      { type: 'text',      label: this.translate.instant('label_required_evals'), icon: 'rate_review', required: true, allowEdit: true, value: undefined },
-      { type: 'file',      label: this.translate.instant('label_subject_file'),   icon: 'attach_file', required: false, allowEdit: true, value: undefined,
-        accept: ['.pdf', '.zip', '.doc', '.docx', '.txt'] } as FileField,
-    ];
-  }
 
   loadAll() {
     const orgId = this.orgId;
@@ -213,62 +195,21 @@ export class BocalClassesComponent implements OnInit {
     });
   }
 
+  addAssignment() {
+    const cls = this.selectedClass();
+    if (!cls) return;
+    this.router.navigate(['/bocal/assignment-create'], { queryParams: { classId: cls.id } });
+  }
+
+  openEvalSheet(a: AssignmentResponse) {
+    this.router.navigate(['/bocal/eval-sheet'], { queryParams: { assId: a.id } });
+  }
+
+
   // ── Create class ───────────────────────────────────────────
   onClassCreated() {
     this.showNew.set(false);
     this.loadAll();
-  }
-
-  // ── Add assignment ─────────────────────────────────────────
-  onAssignmentFieldChanged(f: FieldType) { this.assignmentChanges.set(f.label, f); }
-  onAssignmentFileChosen(event: { label: string; file: File }) { this.assignmentFile = event.file; }
-
-  private getAssignValue(label: string): any {
-    const c = this.assignmentChanges.get(label);
-    return c !== undefined ? c.value : this.assignmentFields.find(f => f.label === label)?.value;
-  }
-
-  onAddAssignment() {
-    const cls      = this.selectedClass();
-    const name     = (this.getAssignValue(this.translate.instant('label_name')) as string)?.trim();
-    const desc     = (this.getAssignValue(this.translate.instant('label_description')) as string)?.trim();
-    const maxScore = parseInt(this.getAssignValue(this.translate.instant('label_max_score')), 10);
-    const reqEval  = parseInt(this.getAssignValue(this.translate.instant('label_required_evals')), 10);
-    const createdBy = this.auth.user()?.id;
-
-    if (!cls)                          { return; }
-    if (!createdBy)                    { this.assignmentError.set(this.translate.instant('error_user_not_identified')); return; }
-    if (!name)                         { this.assignmentError.set(this.translate.instant('error_name_required')); return; }
-    if (!desc)                         { this.assignmentError.set(this.translate.instant('error_description_required')); return; }
-    if (isNaN(maxScore) || maxScore <= 0) { this.assignmentError.set(this.translate.instant('error_invalid_max_score')); return; }
-    if (isNaN(reqEval)  || reqEval  <= 0) { this.assignmentError.set(this.translate.instant('error_invalid_req_eval')); return; }
-
-    this.assignmentError.set(null);
-    this.loading.show();
-    this.assignService.createAssignment(cls.id, {
-      name, description: desc, maxScore, reqEval, createdBy,
-      file: this.assignmentFile ?? undefined,
-    }).subscribe({
-      next: (a) => {
-        this.classAssignments.update(list => [...list, a]);
-        this.classes.update(list => list.map(c =>
-          c.id === cls.id ? { ...c, assignmentCount: c.assignmentCount + 1 } : c
-        ));
-        this.closeAssignModal();
-        this.loading.hide();
-      },
-      error: (err) => {
-        this.assignmentError.set(err?.error?.message ?? this.translate.instant('error_create_assignment_failed'));
-        this.loading.hide();
-      },
-    });
-  }
-
-  closeAssignModal() {
-    this.showAddAssign.set(false);
-    this.assignmentChanges.clear();
-    this.assignmentFile = null;
-    this.assignmentError.set(null);
   }
 
   // ── Edit class ─────────────────────────────────────────────

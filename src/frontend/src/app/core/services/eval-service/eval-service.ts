@@ -41,8 +41,21 @@ export interface UpdateEvalAssignmentPayload {
 // mirroring enum EvalAssignmentStatus in schema.prisma
 export type EvalAssignmentStatus = 'Pending' | 'Submitted' | 'Cancelled';
 
+export type EvalSectionType = 'Toggle' | 'Slider';
+export interface EvalSection {
+    id: number;
+    name: string;
+    description: string;
+    marks: number;
+    sectionType: EvalSectionType;
+    evalSheetId: number;
 
-
+}
+export interface EvalSheet {
+    id: number;
+    assId: number;
+    sections: EvalSection[];
+}
 @Injectable({ providedIn: "root" })
 export class EvalService {
     private http = inject(HttpClient)
@@ -50,27 +63,27 @@ export class EvalService {
 
     // EvalSheet routes
     getEvalSheet(id: number) {
-        return this.http.get(`${this.base}/sheet/${id}`)
+        return this.http.get<EvalSheet>(`${this.base}/sheet/${id}`)
     }
 
     getEvalSheetByAssignment(assignmentId: number) {
-        return this.http.get(`${this.base}/sheet/ass/${assignmentId}`)
+        return this.http.get<EvalSheet>(`${this.base}/sheet/ass/${assignmentId}`)
     }
 
-    createEvalSheet(data: { assignmentId: number, title?: string }) {
-        return this.http.post(`${this.base}/sheet`, data)
+     createEvalSheet(assId: number) {
+        return this.http.post<EvalSheet>(`${this.base}/sheet`, { assId })
     }
 
-    createSection(sheetId: number, data: { title: string, maxScore: number }) {
-        return this.http.post(`${this.base}/sheet/${sheetId}/section`, data)
+    createSection(sheetId: number, data: { name: string, description: string, marks: number, sectionType: EvalSectionType }) {
+        return this.http.post<EvalSection>(`${this.base}/sheet/${sheetId}/section`, data)
     }
 
-    updateSection(sheetId: number, data: { sectionId: number, title?: string, maxScore?: number }) {
-        return this.http.patch(`${this.base}/sheet/${sheetId}/section`, data)
+   updateSection(sheetId: number, data: { secId: number, name?: string, description?: string, marks?: number, sectionType?: EvalSectionType }) {
+        return this.http.patch<EvalSection>(`${this.base}/sheet/${sheetId}/section`, data)
     }
 
-    removeSection(sheetId: number, data: { sectionId: number }) {
-        return this.http.delete(`${this.base}/sheet/${sheetId}/section`, { body: data })
+    removeSection(sheetId: number, secId: number) {
+        return this.http.delete<{ message: string, id: number }>(`${this.base}/sheet/${sheetId}/section`, { body: { secId } })
     }
 
     getAssignment(id: number) {

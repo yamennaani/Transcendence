@@ -19,7 +19,7 @@
         <span style="display:flex;gap:8px">
           <app-btn variant="secondary" (clicked)="openEditClass()">{{ 'bocal_btn_edit_class' | translate }}</app-btn>
           <app-btn variant="ghost"     (clicked)="deleteClass(selectedClass()!)">{{ 'bocal_btn_delete_class' | translate }}</app-btn>
-          <app-btn variant="primary"   (clicked)="showAddAssign.set(true)">{{ 'new_assignment' | translate }}</app-btn>
+          <app-btn variant="primary" (clicked)="addAssignment()">+ Assignment</app-btn>
         </span>
       }
     </div>
@@ -33,32 +33,7 @@
       </div>
     </div>
   }
-
-  <!-- ── Add assignment modal ───────────────────────────────── -->
-  @if (showAddAssign()) {
-    <div [ngStyle]="overlayStyle" (click)="closeAssignModal()">
-      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          {{ 'modal_new_assignment' | translate }} — {{ selectedClass()?.name }}
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          @for (field of assignmentFields; track field.label) {
-            <app-field [field]="field" [isEditing]="true"
-              (valueChanged)="onAssignmentFieldChanged($event)"
-              (fileChosen)="onAssignmentFileChosen($event)" />
-          }
-        </div>
-        @if (assignmentError()) {
-          <div [ngStyle]="errorStyle">{{ assignmentError() }}</div>
-        }
-        <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeAssignModal()">{{ 'btn_cancel' | translate }}</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onAddAssignment()">{{ 'btn_create' | translate }}</app-btn>
-        </div>
-      </div>
-    </div>
-  }
-
+  
   <!-- ── Edit class modal ───────────────────────────────────── -->
   @if (showEditClass()) {
     <div [ngStyle]="overlayStyle" (click)="closeEditClassModal()">
@@ -190,7 +165,7 @@
           <div [ngStyle]="emptyStyle">
             {{ 'msg_no_assignments_yet' | translate }}
             <div style="margin-top:8px">
-              <app-btn variant="secondary" size="sm" (clicked)="showAddAssign.set(true)">
+              <app-btn variant="secondary" size="sm" (clicked)="addAssignment()">
                 + {{ 'msg_add_first_assignment' | translate }}
               </app-btn>
             </div>
@@ -217,6 +192,8 @@
                 <app-btn variant="ghost" size="sm" (clicked)="toggleGroups(a)">
                   {{ (expandedAssignment() === a.id ? 'bocal_btn_hide_groups' : 'bocal_btn_groups') | translate }}
                 </app-btn>
+                   <app-btn variant="ghost" size="sm" (clicked)="openEvalSheet(a)">Eval sheet</app-btn>
+                   
                 <app-btn variant="ghost" size="sm" (clicked)="openEditAssignment(a)">{{ 'btn_edit' | translate }}</app-btn>
                 <app-btn variant="ghost" size="sm" (clicked)="viewAssignment(a)">{{ 'bocal_btn_view' | translate }}</app-btn>
                 <app-btn variant="ghost" size="sm" (clicked)="deleteAssignment(a)">{{ 'bocal_btn_delete' | translate }}</app-btn>

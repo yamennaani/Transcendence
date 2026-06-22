@@ -119,8 +119,17 @@ export const routes: Routes = [
         path: 'analytics',
         loadComponent: () => import('./bocal-panel/analytics/bocal-analytics.component').then(m => m.BocalAnalyticsComponent),
       },
+      {
+        path: 'assignment-create',
+        loadComponent: () => import('./bocal-panel/assignment-create/assignment-create.component').then(m => m.AssignmentCreateComponent),
+      },
+      {
+        path: 'eval-sheet',
+        loadComponent: () => import('./bocal-panel/eval-sheet/eval-sheet.component').then(m => m.EvalSheetComponent),
+      },
     ],
   },
+  
   {
     path: 'admin/orgs',
     canActivate: [authGuard, adminGuard],
