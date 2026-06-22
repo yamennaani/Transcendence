@@ -155,6 +155,8 @@ The project fulfills both mandatory and custom modules from the 42 Transcendence
 
 ## Major Modules
 
+*Make everything more descriptive here! 
+
 ### ✔ Framework for Frontend and Backend
 
 * Angular frontend
