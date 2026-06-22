@@ -926,7 +926,7 @@ export class AssignmentDetailComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_join_assignment_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_join_assignment_failed'));
         this.loading.hide();
       },
     });
@@ -956,7 +956,7 @@ export class AssignmentDetailComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_create_group_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_create_group_failed'));
         this.loading.hide();
       },
     });
@@ -975,7 +975,7 @@ export class AssignmentDetailComponent implements OnInit {
         this.loading.hide();
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_accept_invite_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_accept_invite_failed'));
         this.loading.hide();
       },
     });
@@ -1070,7 +1070,7 @@ export class AssignmentDetailComponent implements OnInit {
         this.loading.hide();
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_close_submission_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_close_submission_failed'));
         this.loading.hide();
       },
     });
