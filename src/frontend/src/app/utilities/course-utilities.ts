@@ -4,6 +4,8 @@
  */
 
 import { Course, Assignment } from '../tokens';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
 
 /**
  * Get safe assignment count
@@ -75,7 +77,7 @@ export function getProgressLabel(course: Course | undefined | null): string {
   }
 
   const remaining = getRemainingToPass(course);
-  return `${remaining} more assignment(s) to reach ${threshold}% threshold`;
+  return `${remaining} more assignment(s) to reach ${threshold}% threshold` ;
 }
 
 /**
@@ -154,6 +156,7 @@ export const courseCalculations = {
       status: courseCalculations.getStatus(course),
       remainingToPass: getRemainingToPass(course ?? undefined),
       displayLabel: getProgressLabel(course ?? undefined),
+
     };
   },
 };
