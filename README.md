@@ -1,9 +1,9 @@
 *This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, Krabitsc* 
 
 # Transcendence
-A peer-to-peer learning platform inspired by 42 School — built with Angular, Express microservices, PostgreSQL, and nginx, fully containerized with Docker.
 
 ## Description
+A peer-to-peer learning platform inspired by 42 School — built with Angular, Express microservices, PostgreSQL, and nginx, fully containerized with Docker.
 
 ### Team Info 
 
