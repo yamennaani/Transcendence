@@ -230,6 +230,7 @@ model Submission {
   fileId  Int?             @unique
   status  SubmissionStatus @default(Open)
   type    SubmissionType   @default(FILE)
+  passkey String           @unique @default(dbgenerated("lpad(floor(random() * 1000000)::text, 6, '0')"))
 
   group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   file  File? @relation(fields: [fileId], references: [id], onDelete: Cascade)

@@ -162,7 +162,16 @@
             <p class="hint-text">{{ 'submission_not_started' | translate }}</p>
             <app-btn variant="primary" (clicked)="startSubmission()">{{ 'btn_start_submission' | translate }}</app-btn>
           }
-
+           @if (mySubmission()?.status === 'Close') {
+              <div class="passkey-box">
+                <div>
+                  <div class="passkey-label">Eval passkey</div>
+                  <div class="passkey-value">{{ mySubmission()?.passkey }}</div>
+                </div>
+                <div class="passkey-hint">Give this — and your leader's email — to whoever evaluates your project.</div>
+              </div>
+            }
+            
           @if (mySubmission(); as submission) {
             @if (submissionError()) {
               <div class="upload-error">{{ submissionError() }}</div>
@@ -237,24 +246,91 @@
       </app-container>
     </div>
 
+    <!-- ── Grade & feedback ──────────────────────────────────── -->
+    @if (mySubmission()?.status === 'Close') {
+      <app-container [config]="flatConfig">
+        <div class="grade-inner">
+          <div class="grade-head">
+            <div class="card-title">Grade &amp; feedback</div>
+            @if (mySubmission()?.finalScore != null) {
+              <app-score-pill [score]="mySubmission()!.finalScore!" [max]="assignment()!.max_score"/>
+            } @else {
+              <span class="hint-text">Grade pending — waiting on evaluator feedback.</span>
+            }
+          </div>
+
+          @if (myResponses().length === 0) {
+            <p class="hint-text">No feedback yet.</p>
+          } @else {
+            @for (r of myResponses(); track r.id) {
+              <div class="feedback-item">
+                <div class="feedback-head">
+                  <span class="feedback-evaluator">{{ r.user?.username ?? 'Evaluator' }}</span>
+                  <span class="feedback-marks">{{ r.givenMarks }} / {{ assignment()!.max_score }}</span>
+                </div>
+                <p class="feedback-comment">{{ r.comment }}</p>
+
+                @if (r.reply) {
+                  <div class="feedback-reply">
+                    <div class="feedback-reply-label">Your reply</div>
+                    <p class="feedback-reply-text">{{ r.reply }}</p>
+                  </div>
+                } @else if (isLeader()) {
+                  <div class="feedback-reply-form">
+                    <textarea class="feedback-reply-input"
+                              [value]="replyDraft(r.id)"
+                              (input)="setReplyDraft(r.id, $any($event.target).value)"
+                              placeholder="Reply to this feedback..."></textarea>
+                    <app-btn variant="secondary" size="sm" (clicked)="submitReply(r)">Reply</app-btn>
+                  </div>
+                }
+              </div>
+            }
+          }
+
+          @if (replyError()) {
+            <div class="upload-error">{{ replyError() }}</div>
+          }
+        </div>
+      </app-container>
+    }
+
     <!-- ── Evaluation progress ────────────────────────────────── -->
     <app-container [config]="flatConfig">
       <div class="eval-inner">
-        <div class="eval-dots">
-          @for (n of evalSlots(); track n) {
-            @if (n > 0) {
-              <div class="eval-connector" [class.done]="n <= completedEvals()"></div>
+        <div class="eval-top-row">
+          <div class="eval-dots">
+            @for (n of evalSlots(); track n) {
+              @if (n > 0) {
+                <div class="eval-connector" [class.done]="n <= completedEvals()"></div>
+              }
+              <div class="eval-dot" [class.done]="n < completedEvals()">{{ n + 1 }}</div>
             }
-            <div class="eval-dot" [class.done]="n < completedEvals()">{{ n + 1 }}</div>
-          }
+          </div>
+          <span class="eval-summary">
+            <strong style="color:oklch(94% 0.005 272)">{{ completedEvals() }}</strong>
+            {{ 'eval_progress_summary' | translate:{ total: assignment()!.req_eval } }}
+          </span>
+          <span class="eval-pct">
+            {{ assignment()!.req_eval > 0 ? ((completedEvals() / assignment()!.req_eval) * 100 | number:'1.0-0') : 0 }}%
+          </span>
         </div>
-        <span class="eval-summary">
-          <strong style="color:oklch(94% 0.005 272)">{{ completedEvals() }}</strong>
-          {{ 'eval_progress_summary' | translate:{ total: assignment()!.req_eval } }}
-        </span>
-        <span class="eval-pct">
-          {{ assignment()!.req_eval > 0 ? ((completedEvals() / assignment()!.req_eval) * 100 | number:'1.0-0') : 0 }}%
-        </span>
+
+        @if (mySubmission()?.status === 'Close') {
+          <div class="evaluators-row">
+            <span class="evaluators-label">Evaluators</span>
+            @if (myEvaluators().length === 0) {
+              <span class="hint-text">Not assigned yet — check back soon.</span>
+            } @else {
+              @for (ea of myEvaluators(); track ea.id) {
+                <span class="evaluator-chip" [class.done]="ea.status === 'Submitted'">
+                  {{ ea.evaluatorUser?.username ?? 'Unknown' }}
+                  @if (ea.status === 'Submitted') { ✓ }
+                </span>
+              }
+            }
+          </div>
+        }
       </div>
     </app-container>
   }

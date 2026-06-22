@@ -10,8 +10,9 @@ import { AssignmentService, AssignmentResponse } from '../core/services/course-s
 import { GroupService } from '../core/services/group-service/group-service';
 import { SubmissionService } from '../core/services/submission-service/submission-service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
+import { EvalService, EvalAssignment } from '../core/services/eval-service/eval-service';
 import { LoadingService } from '../core/services/loading-service/loading.service';
-import { Group, DS, Submission } from '../tokens';
+import { Group, DS, Submission, EvalResponse } from '../tokens';
 
 import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { BadgeComponent } from '../shared/badge.component';
@@ -311,6 +312,11 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     .eval-inner {
       padding: 16px 20px;
       display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .eval-top-row {
+      display: flex;
       align-items: center;
       gap: 20px;
       flex-wrap: wrap;
@@ -355,6 +361,38 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       font-size: 0.875rem;
       color: ${DS.colors.fg3};
       margin-left: auto;
+    }
+    .evaluators-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-top: 12px;
+      border-top: 1px solid ${DS.colors.borderSubtle};
+    }
+    .evaluators-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: ${DS.colors.fg3};
+    }
+    .evaluator-chip {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: ${DS.fonts.mono};
+      font-size: 0.75rem;
+      color: ${DS.colors.fg2};
+      background: ${DS.colors.surfaceRaised};
+      border: 1px solid ${DS.colors.border};
+      border-radius: ${DS.radius.full};
+      padding: 4px 10px;
+    }
+    .evaluator-chip.done {
+      color: ${DS.colors.green};
+      background: ${DS.colors.greenSubtle};
+      border-color: ${DS.colors.greenBorder};
     }
     .staff-stats {
       display: grid;
@@ -495,6 +533,120 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       border-color: ${DS.colors.redBorder};
       color: ${DS.colors.red};
     }
+        .passkey-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      background: ${DS.colors.violetSubtle};
+      border: 1px solid ${DS.colors.violetBorder};
+      border-radius: ${DS.radius.md};
+    }
+    .passkey-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: ${DS.colors.fg2};
+      margin-bottom: 2px;
+    }
+    .passkey-value {
+      font-family: ${DS.fonts.mono};
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: ${DS.colors.violet};
+    }
+    .passkey-hint {
+      font-size: 0.75rem;
+      color: ${DS.colors.fg3};
+      max-width: 200px;
+      text-align: right;
+    }
+    /* Grade & feedback */
+    .grade-inner {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .grade-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .feedback-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 16px;
+      border-radius: ${DS.radius.lg};
+      background: ${DS.colors.surface};
+      border: 1px solid ${DS.colors.border};
+    }
+    .feedback-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .feedback-evaluator {
+      font-weight: 600;
+      font-size: 0.875rem;
+      color: ${DS.colors.fg1};
+    }
+    .feedback-marks {
+      font-family: ${DS.fonts.mono};
+      font-size: 0.8125rem;
+      color: ${DS.colors.fg3};
+    }
+    .feedback-comment {
+      margin: 0;
+      font-size: 0.875rem;
+      color: ${DS.colors.fg2};
+      line-height: 1.6;
+    }
+    .feedback-reply {
+      padding-top: 8px;
+      border-top: 1px solid ${DS.colors.borderSubtle};
+    }
+    .feedback-reply-label {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: ${DS.colors.violet};
+      margin-bottom: 4px;
+    }
+    .feedback-reply-text {
+      margin: 0;
+      font-size: 0.875rem;
+      color: ${DS.colors.fg2};
+      line-height: 1.6;
+    }
+    .feedback-reply-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid ${DS.colors.borderSubtle};
+    }
+    .feedback-reply-input {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 64px;
+      padding: 8px 10px;
+      background: ${DS.colors.bg};
+      border: 1px solid ${DS.colors.border};
+      border-radius: ${DS.radius.md};
+      color: ${DS.colors.fg1};
+      font-family: ${DS.fonts.body};
+      font-size: 0.8125rem;
+      resize: vertical;
+      outline: none;
+    }
   `],
 })
 export class AssignmentDetailComponent implements OnInit {
@@ -515,6 +667,7 @@ export class AssignmentDetailComponent implements OnInit {
   private groupService  = inject(GroupService);
   private subService    = inject(SubmissionService);
   private enrollService = inject(EnrollService);
+  private evalService   = inject(EvalService);
   private loading       = inject(LoadingService);
 
   readonly role    = this.auth.role;
@@ -538,6 +691,10 @@ export class AssignmentDetailComponent implements OnInit {
   uploadingFile = signal(false);
   uploadedFileMeta = signal<{ name: string; size: string; ext: string; type: string } | null>(null);
   groupName    = signal<string>('');
+  myEvaluators = signal<EvalAssignment[]>([]);
+  myResponses  = signal<EvalResponse[]>([]);
+  replyDrafts  = signal<Map<number, string>>(new Map());
+  replyError   = signal<string | null>(null);
 
   // Staff state
   allSubs = signal<Submission[]>([]);
@@ -548,10 +705,15 @@ export class AssignmentDetailComponent implements OnInit {
     return 'no-group';
   });
 
+  isLeader = computed(() => {
+    const group = this.myGroup();
+    return !!group && group.leaderId === this.currentUserId();
+  });
+
   statusBadge = computed(() => {
     const sub = this.mySubmission();
     if (!sub) return 'pending' as const;
-    if (sub.status === 'Close' && (sub.responses?.length ?? 0) >= (this.assignment()?.req_eval ?? 1)) {
+    if (sub.status === 'Close' && this.myResponses().length >= (this.assignment()?.req_eval ?? 1)) {
       return sub.passed ? 'validated' as const : 'failed' as const;
     }
     if (sub.status === 'Close') return 'under_review' as const;
@@ -559,7 +721,7 @@ export class AssignmentDetailComponent implements OnInit {
   });
 
   evalSlots      = computed(() => Array.from({ length: this.assignment()?.req_eval ?? 3 }, (_, i) => i));
-  completedEvals = computed(() => this.mySubmission()?.responses?.length ?? 0);
+  completedEvals = computed(() => this.myResponses().length);
 
   selectedFileMeta = computed(() => {
     const file = this.selectedFile();
@@ -615,6 +777,10 @@ export class AssignmentDetailComponent implements OnInit {
     this.mySubmission.set(null);
     this.myInvites.set([]);
     this.allSubs.set([]);
+    this.myEvaluators.set([]);
+    this.myResponses.set([]);
+    this.replyDrafts.set(new Map());
+    this.replyError.set(null);
     this.actionError.set(null);
     this.groupName.set('');
     this.isEnrolled.set(false);
@@ -656,6 +822,7 @@ export class AssignmentDetailComponent implements OnInit {
           if (mine) {
             this.myGroup.set(mine.group);
             this.mySubmission.set(mine);
+            this.loadEvaluatorsIfClosed(id, mine);
             this.loading.hide();
           } else if (userId) {
             this.groupService.getMyGroupForAssignment(userId, id).subscribe({
@@ -665,6 +832,7 @@ export class AssignmentDetailComponent implements OnInit {
                   const existingSubmission = subs.find(sub => sub.groupId === group.id);
                   if (existingSubmission) {
                     this.mySubmission.set(existingSubmission);
+                    this.loadEvaluatorsIfClosed(id, existingSubmission);
                   }
                   this.loading.hide();
                 } else {
@@ -690,6 +858,55 @@ export class AssignmentDetailComponent implements OnInit {
     });
   }
 
+  /** Once a submission is closed, the assignees who'll evaluate it (and any feedback already left) are known. */
+  private loadEvaluatorsIfClosed(assignmentId: number, submission: Submission) {
+    if (submission.status !== 'Close') { this.myEvaluators.set([]); this.myResponses.set([]); return; }
+
+    this.evalService.getEvalAssignments(assignmentId).subscribe({
+      next: (assignments) => {
+        this.myEvaluators.set(assignments.filter(ea => ea.evalueeGroupId === submission.groupId));
+      },
+      error: () => this.myEvaluators.set([]),
+    });
+
+    this.evalService.getResponsesForSubmission(submission.id).subscribe({
+      next: (responses) => this.myResponses.set(responses),
+      error: () => this.myResponses.set([]),
+    });
+  }
+
+  replyDraft(responseId: number): string {
+    return this.replyDrafts().get(responseId) ?? '';
+  }
+
+  setReplyDraft(responseId: number, value: string) {
+    this.replyDrafts.update(map => new Map(map).set(responseId, value));
+  }
+
+  submitReply(response: EvalResponse) {
+    const userId = this.currentUserId();
+    const reply = this.replyDraft(response.id).trim();
+    if (!userId) return;
+    if (!reply) { this.replyError.set('Write a reply before submitting.'); return; }
+
+    this.replyError.set(null);
+    this.loading.show();
+    this.evalService.replyToResponse(response.id, { userId, reply }).subscribe({
+      next: (updated) => {
+        this.myResponses.update(list => list.map(r => r.id === updated.id ? { ...r, reply: updated.reply } : r));
+        this.replyDrafts.update(map => { const m = new Map(map); m.delete(response.id); return m; });
+        const assId = this.assignment()?.id;
+        // loadSubmissions hides the loading indicator itself once it settles (refreshes finalScore/passed too).
+        if (assId) this.loadSubmissions(assId);
+        else this.loading.hide();
+      },
+      error: (err) => {
+        this.replyError.set(err?.error?.error ?? 'Failed to submit reply.');
+        this.loading.hide();
+      },
+    });
+  }
+
   joinSoloAssignment() {
     const a = this.assignment();
     const userId = this.currentUserId();
@@ -709,7 +926,7 @@ export class AssignmentDetailComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_join_assignment_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_join_assignment_failed'));
         this.loading.hide();
       },
     });
@@ -739,7 +956,7 @@ export class AssignmentDetailComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_create_group_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_create_group_failed'));
         this.loading.hide();
       },
     });
@@ -758,7 +975,7 @@ export class AssignmentDetailComponent implements OnInit {
         this.loading.hide();
       },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_accept_invite_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_accept_invite_failed'));
         this.loading.hide();
       },
     });
@@ -846,9 +1063,14 @@ export class AssignmentDetailComponent implements OnInit {
     this.submissionError.set(null);
     this.loading.show();
     this.subService.closeSubmission(group.id, { userId }).subscribe({
-      next: (sub) => { this.mySubmission.set(sub); this.loading.hide(); },
+      next: (sub) => {
+        this.mySubmission.set(sub);
+        const assId = this.assignment()?.id;
+        if (assId) this.loadEvaluatorsIfClosed(assId, sub);
+        this.loading.hide();
+      },
       error: (err) => {
-        this.actionError.set(err?.error?.message ?? this.translate.instant('error_close_submission_failed'));
+        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_close_submission_failed'));
         this.loading.hide();
       },
     });

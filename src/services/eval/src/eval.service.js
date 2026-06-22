@@ -1,5 +1,5 @@
 const { prisma } = require('../packages/database')
-const {NotFoundError, ValidationError, ConflictError} = require('../packages/errors')
+const {NotFoundError, ValidationError, ConflictError, UnauthorizedError} = require('../packages/errors')
 const utils = require('../packages/utils')
 
 // TODO Move to Class Service cuz its not place here XD
@@ -117,7 +117,8 @@ const getEvalAssignments = async (assignmentId)=>{
 
   const select = { id: true, assignmentId: true, evalueeGroupId: true, evaluatorGroupId: true,
                    evaluatorUserId: true, round: true, status: true, submissionId: true,
-                   evalResponseId: true, createdAt: true }
+                   evalResponseId: true, createdAt: true,
+                   evaluatorUser: { select: { id: true, username: true, email: true } } }
   return await utils.getEvalAssignments(assignmentIdInt, select)
 }
 
@@ -395,8 +396,191 @@ const generateSimpleEvalAssignmentPairings = async (assignmentId) => {
 }
 
 
+const getAssignmentWithSheet = async (assignmentId)=>{
+    return await utils.getAssignmentById(assignmentId, null, {evalSheet: {include: {sections: true}}})
+}
+
+const startEvaluation = async ({evaluatorUserId, leaderEmail, passkey})=>{
+    const evaluatorUserIdInt = parseInt(evaluatorUserId)
+    if(!evaluatorUserIdInt || !leaderEmail || !passkey)
+        throw new ValidationError('evaluatorUserId, leaderEmail and passkey are required')
+
+    const leader = await utils.searchUser(leaderEmail)
+    if(!leader)
+        throw new NotFoundError('No user found with that email')
+
+    const submission = await utils.getSubmissionByPasskey(passkey, null, {group: true, file: true})
+    if(!submission)
+        throw new NotFoundError('Invalid passkey')
+    if(submission.status !== 'Close')
+        throw new ValidationError('Submission is not closed yet')
+    if(submission.group.leaderId !== leader.id)
+        throw new ValidationError("That email is not the leader of this submission's group")
+
+    const evalAssignment = await prisma.evalAssignment.findFirst({
+        where: { evaluatorUserId: evaluatorUserIdInt, evalueeGroupId: submission.groupId, status: 'Pending' },
+        orderBy: { round: 'asc' }
+    })
+    if(!evalAssignment)
+        throw new UnauthorizedError("You haven't been assigned to evaluate this group")
+
+    if(evalAssignment.submissionId && evalAssignment.submissionId !== submission.id)
+        throw new ValidationError('Mismatched submission for this evaluation pairing')
+    if(!evalAssignment.submissionId){
+        await prisma.evalAssignment.update({
+            where: { id: evalAssignment.id },
+            data: { submissionId: submission.id }
+        })
+    }
+
+    const assignment = await getAssignmentWithSheet(evalAssignment.assignmentId)
+    if(!assignment?.evalSheet)
+        throw new NotFoundError('This assignment has no eval sheet yet')
+
+    return {
+        evalAssignmentId: evalAssignment.id,
+        assignment: { id: assignment.id, name: assignment.name, description: assignment.description, max_score: assignment.max_score },
+        group: { id: submission.group.id, name: submission.group.name },
+        submission: { id: submission.id, file: submission.file },
+        evalSheet: assignment.evalSheet
+    }
+}
+
+const submitEvaluation = async ({evalAssignmentId, evaluatorUserId, comment, scores})=>{
+    const evalAssignmentIdInt = parseInt(evalAssignmentId)
+    const evaluatorUserIdInt = parseInt(evaluatorUserId)
+    if(!evalAssignmentIdInt || !evaluatorUserIdInt || !validateString(comment) || !Array.isArray(scores) || scores.length === 0)
+        throw new ValidationError('evalAssignmentId, evaluatorUserId, comment and scores are required')
+
+    const evalAssignment = await utils.getEvalAssignmentById(evalAssignmentIdInt)
+    if(!evalAssignment)
+        throw new NotFoundError('Eval assignment not found')
+    if(evalAssignment.evaluatorUserId !== evaluatorUserIdInt)
+        throw new UnauthorizedError('This is not your evaluation')
+    if(evalAssignment.status !== 'Pending')
+        throw new ConflictError('This evaluation has already been submitted')
+    if(!evalAssignment.submissionId)
+        throw new ValidationError('No submission attached to this evaluation — start the evaluation again')
+
+    const assignment = await getAssignmentWithSheet(evalAssignment.assignmentId)
+    const sections = assignment?.evalSheet?.sections ?? []
+    if(sections.length === 0)
+        throw new NotFoundError('This assignment has no eval sheet')
+
+    const sectionsById = new Map(sections.map(s => [s.id, s]))
+    if(scores.length !== sections.length)
+        throw new ValidationError('Every section must be scored exactly once')
+
+    const seen = new Set()
+    for(const {sectionId, score} of scores){
+        const sectionIdInt = parseInt(sectionId)
+        const scoreInt = parseInt(score)
+        const section = sectionsById.get(sectionIdInt)
+        if(!section)
+            throw new ValidationError(`Section ${sectionId} does not belong to this eval sheet`)
+        if(seen.has(sectionIdInt))
+            throw new ValidationError(`Section ${sectionId} was scored more than once`)
+        seen.add(sectionIdInt)
+        if(isNaN(scoreInt) || scoreInt < 0 || scoreInt > section.marks)
+            throw new ValidationError(`Score for "${section.name}" must be between 0 and ${section.marks}`)
+        if(section.sectionType === 'Toggle' && scoreInt !== 0 && scoreInt !== section.marks)
+            throw new ValidationError(`"${section.name}" is a yes/no section — score must be 0 or ${section.marks}`)
+    }
+
+    const givenMarks = scores.reduce((sum, s) => sum + parseInt(s.score), 0)
+
+    const response = await prisma.evalResponse.create({
+        data: {
+            subId: evalAssignment.submissionId,
+            userId: evaluatorUserIdInt,
+            givenMarks,
+            comment,
+            scores: { create: scores.map(s => ({ sectionId: parseInt(s.sectionId), score: parseInt(s.score) })) }
+        },
+        include: { scores: true }
+    })
+
+    await prisma.evalAssignment.update({
+        where: { id: evalAssignment.id },
+        data: { status: 'Submitted', evalResponseId: response.id }
+    })
+
+    return response
+}
+
+// get all eval feedback (EvalResponse rows) left on one submission
+const getEvalResponsesForSubmission = async (subId) => {
+    const subIdInt = parseInt(subId)
+    if(!subIdInt)
+        throw new ValidationError('Invalid submission id')
+
+    return await prisma.evalResponse.findMany({
+        where: { subId: subIdInt },
+        select: {
+            id: true, isStaffReview: true, givenMarks: true, comment: true, reply: true, rating: true, userId: true,
+            user: { select: { id: true, username: true } },
+            scores: { select: { id: true, sectionId: true, score: true,
+                       section: { select: { id: true, name: true, description: true, marks: true, sectionType: true } } } }
+        },
+        orderBy: { id: 'asc' }
+    })
+}
+
+// recomputes a submission's finalScore/passed from the avg of givenMarks across replied-to EvalResponses
+const recomputeFinalScore = async (subId) => {
+    const replied = await prisma.evalResponse.findMany({
+        where: { subId, reply: { not: null } },
+        select: { givenMarks: true }
+    })
+
+    if(replied.length === 0){
+        await prisma.submission.update({ where: { id: subId }, data: { finalScore: null, passed: null } })
+        return
+    }
+
+    const avg = replied.reduce((sum, r) => sum + r.givenMarks, 0) / replied.length
+
+    const submission = await prisma.submission.findUnique({
+        where: { id: subId },
+        include: { group: { include: { assignment: true } } }
+    })
+    const assignment = submission.group.assignment
+    const passed = assignment.max_score > 0 && (avg / assignment.max_score) * 100 >= assignment.pass_threshold
+
+    await prisma.submission.update({ where: { id: subId }, data: { finalScore: avg, passed } })
+}
+
+// the group leader replies to one piece of eval feedback — once replied, its marks count toward the final grade
+const replyToEvalResponse = async (responseId, { userId, reply }) => {
+    const responseIdInt = parseInt(responseId)
+    const userIdInt = parseInt(userId)
+    if(!responseIdInt || !userIdInt || !validateString(reply))
+        throw new ValidationError('userId and reply are required')
+
+    const response = await prisma.evalResponse.findUnique({
+        where: { id: responseIdInt },
+        include: { submission: { include: { group: true } } }
+    })
+    if(!response)
+        throw new NotFoundError('Eval response not found')
+    if(response.submission.group.leaderId !== userIdInt)
+        throw new UnauthorizedError('Only the group leader can reply to this feedback')
+    if(response.reply)
+        throw new ConflictError('This feedback has already been replied to')
+
+    const updated = await prisma.evalResponse.update({
+        where: { id: responseIdInt },
+        data: { reply }
+    })
+
+    await recomputeFinalScore(response.subId)
+
+    return updated
+}
+
 module.exports = {getEvalSheetById, getEvalSheetByAssId, getAssignment, createEvalSheet, createEvalSection,
-    updateEvalSheetSection, removeSection, 
-    getEvalAssignments, deleteEvalAssignments, getEvalAssignmentById, createEvalAssignment, 
-    updateEvalAssignment, deleteEvalAssignment, generateSimpleEvalAssignmentPairings
+    updateEvalSheetSection, removeSection,
+    getEvalAssignments, deleteEvalAssignments, getEvalAssignmentById, createEvalAssignment,
+    updateEvalAssignment, deleteEvalAssignment, generateSimpleEvalAssignmentPairings,
+    startEvaluation, submitEvaluation, getEvalResponsesForSubmission, replyToEvalResponse
 }

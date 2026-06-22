@@ -105,5 +105,30 @@ route.post('/assignment/:id/generate-simple-pairings', async(req, res, next) => 
     }catch(err){next(err)}
 })
 
+route.post('/evaluate/start', async (req, res, next) => {
+    try{
+        res.json(await service.startEvaluation(req.body))
+    }catch(err){next(err)}
+})
+
+route.post('/evaluate/submit', async (req, res, next) => {
+    try{
+        res.json(await service.submitEvaluation(req.body))
+    }catch(err){next(err)}
+})
+
+// get all eval feedback left on one submission (GET /api/eval/submission/:subId/responses)
+route.get('/submission/:subId/responses', async (req, res, next) => {
+    try{
+        res.json(await service.getEvalResponsesForSubmission(req.params.subId))
+    }catch(err){next(err)}
+})
+
+// group leader replies to one piece of eval feedback (PATCH /api/eval/responses/:id/reply)
+route.patch('/responses/:id/reply', async (req, res, next) => {
+    try{
+        res.json(await service.replyToEvalResponse(req.params.id, req.body))
+    }catch(err){next(err)}
+})
 
 module.exports = route

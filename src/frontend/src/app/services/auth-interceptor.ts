@@ -31,18 +31,21 @@ export class AuthInterceptor implements HttpInterceptor {
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshSubject.next(null);
+      // catchError sits directly on the refresh call so it only fires when the refresh token
+      // itself is invalid/expired — not when a successfully-retried request 401s again for an
+      // unrelated, non-auth reason (e.g. a business-logic 401 from the endpoint itself).
       return this.auth.refreshToken().pipe(
-        switchMap((res: any) => {
-          this.isRefreshing = false;
-          this.auth.setToken(res.accessToken);
-          this.refreshSubject.next(res.accessToken);
-          return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${res.accessToken}` } }));
-        }),
         catchError(err => {
           this.isRefreshing = false;
           this.auth.clearToken();
           window.location.href = '/login';
           return throwError(() => err);
+        }),
+        switchMap((res: any) => {
+          this.isRefreshing = false;
+          this.auth.setToken(res.accessToken);
+          this.refreshSubject.next(res.accessToken);
+          return next.handle(req.clone({ setHeaders: { Authorization: `Bearer ${res.accessToken}` } }));
         })
       );
     } else {

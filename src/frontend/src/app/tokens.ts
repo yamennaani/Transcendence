@@ -254,6 +254,7 @@ export interface Submission {
   groupId: number;
   fileId?: number;
   status: SubmissionStatus;
+  passkey: string
   type: SubmissionType;
   group: Group;
   file?: File;
@@ -295,13 +296,13 @@ export interface EvalSectionScore {
 export interface EvalResponse {
   id: number;
   isStaffReview: boolean;
-  subId: number;
-  submission: Submission;
+  subId?: number;
+  submission?: Submission;
   userId: number;
-  user: User;
+  user?: Partial<User>;
   givenMarks: number;
   comment: string;
-  reply?: string;
-  rating?: number;
+  reply?: string | null;
+  rating?: number | null;
   scores?: EvalSectionScore[];
 }

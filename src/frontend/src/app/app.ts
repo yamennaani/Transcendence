@@ -41,6 +41,6 @@ export class AppComponent {
     background: DS.colors.bg,
   };
   readonly mainStyle = {
-    flex: '1', overflow: 'hidden', display: 'flex',
+    flex: '1', display: 'flex', overflowY: 'auto', overflowX: 'hidden',
   };
 }

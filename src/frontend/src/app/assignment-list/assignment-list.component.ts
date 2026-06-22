@@ -1,7 +1,8 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NgStyle, SlicePipe } from '@angular/common';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS, BadgeVariant } from '../tokens';
 import { AssignmentResponse } from '../core/services/course-service/Assignment.service';
@@ -82,7 +83,9 @@ export class AssignmentListComponent implements OnInit {
           return;
         }
 
-        forkJoin(pairs.map(p => this.subService.getSubmissionsForAssignment(p.assignment.id))).subscribe({
+        forkJoin(pairs.map(p =>
+          this.subService.getSubmissionsForAssignment(p.assignment.id).pipe(catchError(() => of([])))
+        )).subscribe({
           next: (allSubs) => {
             this.items.set(pairs.map((p, i) => ({ ...p, status: this.statusFor(allSubs[i] ?? [], userId) })));
             this.loaded.set(true);
