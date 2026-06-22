@@ -160,11 +160,24 @@ echo
 
 echo -e "${BLUE}OAuth${RESET}"
 
-GOOGLE_CLIENT_ID=$(ask "Google Client ID" "your-google-client-id")
-GOOGLE_CLIENT_SECRET=$(ask "Google Client Secret" "your-google-secret" "yes")
-GITHUB_CLIENT_ID=$(ask "GitHub Client ID" "your-github-client-id")
-GITHUB_CLIENT_SECRET=$(ask "GitHub Client Secret" "your-github-secret" "yes")
+GOOGLE_CLIENT_ID=$(ask \
+    "Google Client ID" \
+    "your-google-client-id")
 
+GOOGLE_CLIENT_SECRET=$(ask \
+    "Google Client Secret" \
+    "your-google-secret" \
+    "yes")
+
+GITHUB_CLIENT_ID=$(ask \
+    "GitHub Client ID" \
+    "your-github-client-id")
+
+GITHUB_CLIENT_SECRET=$(ask \
+    "GitHub Client Secret" \
+    "your-github-secret" \
+    "yes")
+    
 GITHUB_REDIRECT_URI=$(ask \
     "GitHub Redirect URI" \
     "http://localhost/api/auth/github/callback")
