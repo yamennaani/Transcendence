@@ -43,11 +43,17 @@ The project follows a **microservice architecture**, with an Angular frontend, E
 
 # Team Information
 
+*Change the team info into something more descriptive rather then bull points 
+
 ## Project Owner — Katrin Rabitsch (Karabitsc)
 
 * Original project concept
 * Requirements planning
 * Feature discussions
+* Feed back and idea/additional features from interested "customers"
+* Creator of the Evaluation Alogitherm 
+* Evaluation feature, worked on both the backend and frontend 
+* Worked on the populateDB
 
 ## Project Manager — Albert Ruckenbauer (Aruckenb)
 
@@ -63,11 +69,13 @@ The project follows a **microservice architecture**, with an Angular frontend, E
 * Microservice design
 * Database architecture
 * Infrastructure decisions
+* Worked on both the backend and frontend 
 
 ## Developer — Adam Ghanam (Aghanam)
 
 * Authentication system
 * OAuth implementation
+* Frontend Authentication 
 * Backend development
 
 ## Developer — Peter Vass (Pvass)
@@ -77,6 +85,7 @@ The project follows a **microservice architecture**, with an Angular frontend, E
 * Database design
 * Entity Relationship Diagram
 * Backend structure
+* Worked on the populateDB
 
 ---
 
@@ -582,11 +591,21 @@ feat(scope): description
 
 # Journey
 
+The Beginning of the Journey is the same for all users, when openning the appilication for the first time, the user sees our wonderful landing page, their the user can login in. In the Login page the user can simply enter their email and password or choose to login with github or google. From their depending on the user they will three different pages and have privileges to differetn things. 
+
+All users have accesss to 4 standard things, the settings, their own profile the language changer and the sign out!
+
 ## Students Journey
+
+*rough notes: Students have access to the classic dashboard, what classes they are apart of, what assignments they have, what evauluations they most complete and lastly their overall progress! (Note Porgress is bugged)
 
 ## Bocal Journey
 
+*rought notes: Bocal/teachers can create classes and assignments, activate the evaulation pairing process, add new users 
+
 ## Admin Journey 
+
+*rought notes: Admins have access to create new organizations, adding bocal and student users. 
 
 ---
 
