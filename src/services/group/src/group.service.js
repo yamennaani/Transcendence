@@ -22,13 +22,28 @@ const createGroup = async ({assId, userId, name, size})=>{
         throw new ConflictError("User is already a memeber in another group")
 
     const group = await prisma.group.create({
-        data:{assId: parseInt(assId), name, size: parseInt(size), 
+        data: {
+            assId: parseInt(assId),
+            name,
+            size: parseInt(size),
             leaderId: parseInt(userId),
-            members:{
-                create: {userId: parseInt(userId)}
+            members: {
+                create: { userId: parseInt(userId) }
             }
         },
-        include: {members: true}
+        include: {
+            members: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true
+                        }
+                    }
+                }
+            }
+        }
     })
     return group
 }
@@ -71,6 +86,51 @@ const inviteMember = async (groupId, {leaderId, inviteeId})=>{
     })
 }
 
+// add member to an existing group (as bocal)
+const addMemberAdmin = async (groupId, { userId }) => {
+    if (!groupId || !userId)
+        throw new ValidationError('Invalid request')
+    const group = await utils.getGroupById(groupId, null, { assignment: true })
+    if (!group)
+        throw new NotFoundError('Group not found')
+    const user = await utils.getUserById(userId)
+    if (!user)
+        throw new NotFoundError('User not found')
+
+    const targetClass = group.assignment.classid
+    const isEnrolledAndActive = await utils.isEnrolledAndActive(userId, targetClass)
+    if (!isEnrolledAndActive)
+        throw new ConflictError('User is not enrolled or active for this class')
+    const existingMembership = await utils.existingMembership(userId, group.assId)
+    if (existingMembership)
+        throw new ConflictError('User is already a member of a group for this assignment')
+
+    await prisma.groupMember.create({ data: { userId: parseInt(userId), groupId: parseInt(groupId) } })
+
+    const memberCount = await utils.getGroupCurrentCount(groupId)
+    if (memberCount > group.size) {
+        await prisma.group.update({
+            where: { id: parseInt(groupId) },
+            data: { size: memberCount } })
+    }
+
+    return await prisma.group.findUnique({
+        where: { id: parseInt(groupId) },
+        include: {
+            members: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true
+                        }
+                    }
+                }
+            }
+        }
+    })
+}
 
 //get the group profile
 const getGroup = async(groupId)=>{
@@ -202,5 +262,5 @@ const getMyGroupForAssignment = async ({ userId, assId }) => {
     return membership?.group ?? null
 }
 
-module.exports = {createGroup, inviteMember, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites,
+module.exports = {createGroup, inviteMember, addMemberAdmin, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites,
     getMyGroupForAssignment, getGroupsForAssignment, deleteGroup}

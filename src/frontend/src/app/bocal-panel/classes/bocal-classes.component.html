@@ -75,6 +75,234 @@
     </div>
   }
 
+  <!-- ── Edit assignment modal ──────────────────────────────── -->
+  @if (editingAssignment()) {
+    <div [ngStyle]="overlayStyle" (click)="closeEditAssignmentModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          {{ 'bocal_edit_assignment_title' | translate }} — {{ editingAssignment()?.name }}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_name' | translate }}</label>
+            <input [ngStyle]="inputStyle" type="text"
+                   [value]="editAssignName()"
+                   (input)="editAssignName.set($any($event.target).value)" />
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_description' | translate }}</label>
+            <textarea [ngStyle]="textAreaStyle"
+                      [value]="editAssignDesc()"
+                      (input)="editAssignDesc.set($any($event.target).value)"></textarea>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_group_size' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1"
+                     [value]="editAssignGroupSize()"
+                     (input)="editAssignGroupSize.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">{{ 'label_max_score' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1"
+                     [value]="editAssignMaxScore()"
+                     (input)="editAssignMaxScore.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">{{ 'label_required_evals' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1"
+                     [value]="editAssignReqEval()"
+                     (input)="editAssignReqEval.set(+$any($event.target).value)" />
+            </div>
+            <div>
+              <label [ngStyle]="fieldLabelStyle">{{ 'bocal_label_pass_threshold_pct' | translate }}</label>
+              <input [ngStyle]="inputStyle" type="number" min="1" max="100"
+                     [value]="editAssignThreshold()"
+                     (input)="editAssignThreshold.set(+$any($event.target).value)" />
+            </div>
+          </div>
+          <div>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_subject_file' | translate }}</label>
+            <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
+              {{ editAssignFileName() ?? ('bocal_no_subject_file' | translate) }}
+            </div>
+            <input [ngStyle]="inputStyle" type="file"
+                   accept=".pdf,.zip,.doc,.docx,.txt"
+                   (change)="onEditAssignFilePicked($event)" />
+          </div>
+        </div>
+        @if (editAssignError()) {
+          <div [ngStyle]="errorStyle">{{ editAssignError() }}</div>
+        }
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn variant="ghost"   size="md" (clicked)="closeEditAssignmentModal()">{{ 'btn_cancel' | translate }}</app-btn>
+          <app-btn variant="primary" size="md" (clicked)="onSaveAssignmentEdit()">{{ 'bocal_btn_save_changes' | translate }}</app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Create Group modal ──────────────────────────────────── -->
+  @if (showCreateGroup()) {
+    <div [ngStyle]="overlayStyle" (click)="closeCreateGroupModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          Create group — {{ createGroupAssignment()?.name }}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Group name</label>
+            <input
+              [ngStyle]="inputStyle"
+              type="text"
+              [value]="createGroupName()"
+              (input)="createGroupName.set($any($event.target).value)" />
+          </div>
+
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Student</label>
+
+            @if (createGroupAssignment(); as a) {
+              @if (ungroupedStudentsFor(a).length === 0) {
+                <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                  No ungrouped enrolled students available for this assignment.
+                </div>
+              } @else {
+                <select
+                  [ngStyle]="inputStyle"
+                  [value]="createGroupStudentId() ?? ''"
+                  (change)="createGroupStudentId.set(+$any($event.target).value)">
+                  @for (student of ungroupedStudentsFor(a); track student.id) {
+                    <option [value]="student.id">
+                      {{ student.username }} · {{ student.email }}
+                    </option>
+                  }
+                </select>
+              }
+            }
+          </div>
+        </div>
+
+        @if (createGroupError()) {
+          <div [ngStyle]="errorStyle">{{ createGroupError() }}</div>
+        }
+
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn
+            variant="ghost"
+            size="md"
+            (clicked)="closeCreateGroupModal()">
+            Cancel
+          </app-btn>
+
+          <app-btn
+            variant="primary"
+            size="md"
+            [disabled]="!createGroupStudentId()"
+            (clicked)="onCreateGroup()">
+            Create group
+          </app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ── Edit Group members modal ──────────────────────────────────── -->
+  @if (showEditGroupMembers()) {
+    <div [ngStyle]="overlayStyle" (click)="closeEditGroupMembersModal()">
+      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
+        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
+          Edit members — {{ editGroup()?.name }}
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Current members</label>
+
+            @if (!editGroup() || editGroup()!.members.length === 0) {
+              <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                No members in this group.
+              </div>
+            } @else {
+              @for (member of editGroup()!.members; track member.id) {
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid oklch(22% 0.025 272)">
+                  <div>
+                    <div style="font-size:0.875rem;font-weight:600;color:oklch(94% 0.005 272)">
+                      {{ member.user?.username ?? ('user #' + member.userId) }}
+                      @if (member.userId === editGroup()?.leaderId) {
+                        ({{ 'badge_leader' | translate }})
+                      }
+                    </div>
+
+                    <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
+                      {{ member.user?.email }}
+                    </div>
+                  </div>
+
+                  <app-btn
+                    variant="ghost"
+                    size="sm"
+                    [disabled]="editGroup()!.members.length <= 1"
+                    (clicked)="removeMemberFromGroup(member.userId)">
+                    Remove
+                  </app-btn>
+                </div>
+              }
+            }
+          </div>
+
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Add enrolled student</label>
+
+            @if (editGroupAssignment(); as a) {
+              @if (ungroupedStudentsFor(a).length === 0) {
+                <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
+                  No ungrouped enrolled students available for this assignment.
+                </div>
+              } @else {
+                <div style="display:flex;gap:8px;align-items:center">
+                  <select
+                    [ngStyle]="inputStyle"
+                    [value]="editGroupAddStudentId() ?? ''"
+                    (change)="editGroupAddStudentId.set(+$any($event.target).value)">
+                    @for (student of ungroupedStudentsFor(a); track student.id) {
+                      <option [value]="student.id">
+                        {{ student.username }} · {{ student.email }}
+                      </option>
+                    }
+                  </select>
+
+                  <app-btn
+                    variant="secondary"
+                    size="sm"
+                    [disabled]="!editGroupAddStudentId()"
+                    (clicked)="addMemberToGroup()">
+                    Add
+                  </app-btn>
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+        @if (editGroupMembersError()) {
+          <div [ngStyle]="errorStyle">{{ editGroupMembersError() }}</div>
+        }
+
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <app-btn
+            variant="primary"
+            size="md"
+            (clicked)="closeEditGroupMembersModal()">
+            Close
+          </app-btn>
+        </div>
+      </div>
+    </div>
+  }
+
+
   <!-- ── Class detail view ──────────────────────────────────── -->
   @if (selectedClass()) {
     <div style="display:flex;flex-direction:column;gap:12px">
@@ -141,17 +369,44 @@
                   @for (g of groupsFor(a); track g.id) {
                     <div style="padding-top:12px;display:flex;justify-content:space-between;align-items:center">
                       <div>
-                        <div style="font-size:0.875rem;font-weight:600;color:oklch(94% 0.005 272)">{{ g.name }}</div>
+                        <div style="font-size:0.875rem;font-weight:600;color:oklch(94% 0.005 272)">
+                          {{ g.name }}
+                        </div>
+
                         <div style="font-size:0.75rem;color:oklch(48% 0.01 272)">
                           @for (m of g.members; track m.id; let last = $last) {
                             {{ m.user?.username }}@if (m.userId === g.leaderId) { ({{ 'badge_leader' | translate }}) }@if (!last) { · }
                           }
                         </div>
                       </div>
-                      <app-btn variant="ghost" size="sm" (clicked)="removeGroup(a, g)">{{ 'btn_remove' | translate }}</app-btn>
+
+                      <span style="display:flex;gap:8px">
+                        <app-btn
+                          variant="ghost"
+                          size="sm"
+                          (clicked)="openEditGroupMembers(a, g)">
+                          Edit members
+                        </app-btn>
+                        <app-btn
+                          variant="ghost"
+                          size="sm"
+                          (clicked)="removeGroup(a, g)">
+                          {{ 'btn_remove' | translate }}
+                        </app-btn>
+                      </span>
                     </div>
                   }
                 }
+
+                <div style="padding-top:12px;display:flex;justify-content:flex-end">
+                  <app-btn
+                    variant="secondary"
+                    size="sm"
+                    [disabled]="ungroupedStudentsFor(a).length === 0"
+                    (clicked)="openCreateGroup(a)">
+                    + Group
+                  </app-btn>
+                </div>
               </div>
             }
           </app-container>

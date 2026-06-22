@@ -31,6 +31,14 @@ export interface BocalClass {
   assignmentCount: number;
 }
 
+export interface EnrolledStudent {
+  id: number;
+  username: string;
+  email: string;
+  role: string;
+  created_at: string;
+}
+
 @Component({
   selector: 'app-bocal-classes',
   standalone: true,
@@ -55,23 +63,39 @@ export class BocalClassesComponent implements OnInit {
   // ── Modal visibility ───────────────────────────────────────
   showNew         = signal(false);
   showEditClass   = signal(false);
+  showCreateGroup = signal(false);
+  editingAssignment = signal<AssignmentResponse | null>(null);
+  showEditGroupMembers = signal(false);
 
   // ── Data signals ───────────────────────────────────────────
   classes          = signal<BocalClass[]>([]);
   selectedClass    = signal<BocalClass | null>(null);
   classAssignments = signal<AssignmentResponse[]>([]);
+  classStudents    = signal<EnrolledStudent[]>([]);
 
   // ── Groups (per-assignment, lazily loaded) ─────────────────
   expandedAssignment = signal<number | null>(null);
   assignmentGroups   = signal<Map<number, AssignmentGroup[]>>(new Map());
 
   // ── Form error signals ─────────────────────────────────────
-  editClassError  = signal<string | null>(null);
+  assignmentError  = signal<string | null>(null);
+  editClassError   = signal<string | null>(null);
+  editAssignError  = signal<string | null>(null);
+  createGroupError = signal<string | null>(null);
 
   // ── Edit class form state ──────────────────────────────────
-  editClassName      = signal('');
-  editClassDesc      = signal('');
-  editClassThreshold = signal(80);
+  editClassName         = signal('');
+  editClassDesc         = signal('');
+  editClassThreshold    = signal(80);
+
+  // ── Create group form state ──────────────────────────────────
+  createGroupAssignment = signal<AssignmentResponse | null>(null);
+  createGroupName       = signal('');
+  createGroupStudentId  = signal<number | null>(null);
+  editGroupAssignment   = signal<AssignmentResponse | null>(null);
+  editGroup             = signal<AssignmentGroup | null>(null);
+  editGroupAddStudentId = signal<number | null>(null);
+  editGroupMembersError = signal<string | null>(null);
 
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
@@ -165,12 +189,20 @@ export class BocalClassesComponent implements OnInit {
   /** Loads a class's assignments and shows its detail view (does not touch the URL). */
   private openClass(c: BocalClass) {
     this.selectedClass.set(c);
+    this.loadClassStudents(c.id);
     this.loading.show();
     this.assignService.getAssignments(c.id).subscribe({
       next: (list) => { this.classAssignments.set(list); this.loading.hide(); },
       error: ()     =>   this.loading.hide(),
     });
   }
+
+  private loadClassStudents(classId: number): void {
+    this.courseService.getClassStudents(classId).subscribe({
+      next: students => { this.classStudents.set(students); },
+      error: () => { this.classStudents.set([]); },
+    });
+  }  
 
   backToClasses() {
     this.router.navigate([], {
@@ -330,6 +362,142 @@ export class BocalClassesComponent implements OnInit {
       error: () => this.loading.hide(),
     });
   }
+
+  ungroupedStudentsFor(a: AssignmentResponse): EnrolledStudent[] {
+  const groups = this.groupsFor(a);
+  const groupedUserIds = new Set<number>();
+  for (const group of groups) {
+    for (const member of group.members ?? []) {
+      groupedUserIds.add(member.userId);
+    }
+  }
+  return this.classStudents()
+    .filter(student => student.role === 'Student')
+    .filter(student => !groupedUserIds.has(student.id))
+    .sort((a, b) => a.username.localeCompare(b.username));
+}
+
+  // method for group modal:
+  openCreateGroup(a: AssignmentResponse): void {
+    const ungrouped = this.ungroupedStudentsFor(a);
+    this.createGroupAssignment.set(a);
+    this.createGroupName.set(`group${this.groupsFor(a).length + 1}`);
+    this.createGroupStudentId.set(ungrouped[0]?.id ?? null);
+    this.createGroupError.set(null);
+    this.showCreateGroup.set(true);
+  }
+  // method for group modal:
+  closeCreateGroupModal(): void {
+    this.showCreateGroup.set(false);
+    this.createGroupAssignment.set(null);
+    this.createGroupName.set('');
+    this.createGroupStudentId.set(null);
+    this.createGroupError.set(null);
+  }
+  onCreateGroup(): void {
+    const a = this.createGroupAssignment();
+    const name = this.createGroupName().trim();
+    const studentId = this.createGroupStudentId();
+    if (!a) return;
+    if (!name) { this.createGroupError.set('Please enter a group name.'); return; }
+    if (!studentId) { this.createGroupError.set('Please select a student.'); return; }
+    this.createGroupError.set(null);
+    this.loading.show();
+    this.groupService.createGroup({
+      assId: a.id,
+      userId: studentId,
+      name,
+      size: 1,
+    }).subscribe({
+      next: group => {
+        this.assignmentGroups.update(map => {
+          const m = new Map(map);
+          m.set(a.id, [...(m.get(a.id) ?? []), group]);
+          return m; });
+        this.closeCreateGroupModal();
+        this.loading.hide(); },
+      error: err => {
+        this.createGroupError.set(
+          err?.error?.message ?? 'Failed to create group.'
+        );
+        this.loading.hide(); },
+    });
+  }
+
+  openEditGroupMembers(a: AssignmentResponse, g: AssignmentGroup): void {
+    const ungrouped = this.ungroupedStudentsFor(a);
+
+    this.editGroupAssignment.set(a);
+    this.editGroup.set(g);
+    this.editGroupAddStudentId.set(ungrouped[0]?.id ?? null);
+    this.editGroupMembersError.set(null);
+    this.showEditGroupMembers.set(true);
+  }
+
+  closeEditGroupMembersModal(): void {
+    this.showEditGroupMembers.set(false);
+    this.editGroupAssignment.set(null);
+    this.editGroup.set(null);
+    this.editGroupAddStudentId.set(null);
+    this.editGroupMembersError.set(null);
+  }
+
+  removeMemberFromGroup(userId: number): void {
+    const a = this.editGroupAssignment();
+    const g = this.editGroup();
+    if (!a || !g) return;
+    if (g.members.length <= 1) {
+      this.editGroupMembersError.set('Cannot remove the last member of a group. Remove the whole group instead.');
+      return;
+    }
+    const ok = confirm('Remove this student from the group?');
+    if (!ok) return;
+    this.editGroupMembersError.set(null);
+    this.loading.show();
+    this.groupService.leaveGroup(g.id, { userId }).subscribe({
+      next: () => {
+        const updatedGroup: AssignmentGroup = { ...g, members: g.members.filter(member => member.userId !== userId), };
+        this.editGroup.set(updatedGroup);
+        this.assignmentGroups.update(map => {
+          const m = new Map(map);
+          m.set( a.id, (m.get(a.id) ?? []).map(group =>
+              group.id === g.id ? updatedGroup : group) );
+          return m; });
+        this.loading.hide(); },
+      error: err => {
+        this.editGroupMembersError.set(
+          err?.error?.message ?? 'Failed to remove group member.');
+        this.loading.hide(); },
+    });
+  }  
+
+  addMemberToGroup(): void {
+    const a = this.editGroupAssignment();
+    const g = this.editGroup();
+    const userId = this.editGroupAddStudentId();
+    if (!a || !g) return;
+    if (!userId) { this.editGroupMembersError.set('Please select a student to add.'); return; }
+    this.editGroupMembersError.set(null);
+    this.loading.show();
+    this.groupService.addMemberAdmin(g.id, { userId }).subscribe({
+      next: (updatedGroup: AssignmentGroup) => {
+        this.editGroup.set(updatedGroup);
+        this.assignmentGroups.update(map => {
+          const m = new Map(map);
+          m.set( a.id, (m.get(a.id) ?? []).map(group =>
+              group.id === updatedGroup.id ? updatedGroup : group) );
+          return m; });
+        const remainingUngrouped = this.ungroupedStudentsFor(a).filter(
+          student => student.id !== userId);
+        this.editGroupAddStudentId.set(remainingUngrouped[0]?.id ?? null);
+        this.loading.hide();
+      },
+      error: (err: any) => {
+        this.editGroupMembersError.set(
+          err?.error?.message ?? 'Failed to add group member.');
+        this.loading.hide(); },
+    });
+  }  
 
   // ── Styles ─────────────────────────────────────────────────
   readonly pageStyle     = { display: 'flex', flexDirection: 'column' as const, gap: '0' };
