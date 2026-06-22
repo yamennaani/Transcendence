@@ -281,6 +281,9 @@
     "sub_avg_evaluations": "target: 3.0",
     "sub_pass_rate": "students hitting threshold",
     "sub_pending_evaluations": "across all assignments",
+    "sub_month" : "month",
+    "sub_waiting" : "Waiting for evaluations",
+
 
     "submission_join_first": "Join or create a group first.",
     "submission_not_started": "No submission started yet.",

@@ -279,6 +279,9 @@
     "sub_avg_evaluations": "Ziel: 3,0",
     "sub_pass_rate": "Schüler, die den Schwellenwert erreichen",
     "sub_pending_evaluations": "über alle Aufgaben hinweg",
+    "sub_month": "Monat",
+    "sub_waiting": "Warten auf Bewertungen",
+
 
     "submission_join_first": "Tritt zuerst einer Gruppe bei oder erstelle eine.",
     "submission_not_started": "Noch keine Abgabe begonnen.",

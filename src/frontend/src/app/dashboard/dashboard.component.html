@@ -30,7 +30,7 @@
       </div>
       <div [ngStyle]="sectionPanelStyle">
         @for (c of courses(); track c.name) {
-          <app-progress-bar [value]="c.done" [max]="c.assignments?.length ?? 0" [label]="c.name" [sublabel]="sublabel(c)"/>
+          <app-progress-bar [value]="c.done" [max]="c.assignments.length" [label]="c.name" [sublabel]="sublabel(c)"/>
         }
       </div>
     </div>

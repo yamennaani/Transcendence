@@ -35,7 +35,7 @@
             </div>
 
             <p [ngStyle]="descStyle">
-              {{ item.assignment.description | slice:0:140 }}{{ (item.assignment.description?.length ?? 0) > 140 ? '…' : '' }}
+              {{ item.assignment.description | slice:0:140 }}{{ (item.assignment.description.length) > 140 ? '…' : '' }}
             </p>
 
             <div [ngStyle]="metaStyle">

@@ -195,10 +195,10 @@ export class DashboardComponent implements OnInit {
   }
 
   sublabel(c: Course) {
-    const pct = Math.round((c.done / c.assignments?.length) * 100);
-    return pct >= c.pass_threshold
-      ? 'Passed — threshold met'
-      : `Threshold: ${c.pass_threshold}% · ${Math.ceil(c.assignments?.length * c.pass_threshold / 100) - c.done} more to pass`;
+  const pct = Math.round((c.done / c.assignments.length) * 100);
+  return pct >= c.pass_threshold
+    ? 'Passed — threshold met'
+    : `Threshold: ${c.pass_threshold}% · ${Math.ceil(c.assignments.length * c.pass_threshold / 100) - c.done} more to pass`;
   }
 
   goToAssignment() { this.router.navigate(['/assignment']); }
