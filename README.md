@@ -1,5 +1,30 @@
+*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, Krabitsc* 
+
 # Transcendence
 A peer-to-peer learning platform inspired by 42 School — built with Angular, Express microservices, PostgreSQL, and nginx, fully containerized with Docker.
+
+## Description
+
+### Team Info 
+
+#### PO - Katrin Rabitsch (Karabitsc)
+The Project Owner. Came up with idea. 
+
+#### PM - Albert Ruckenbauer (Aruckenb)
+Project Manager, Key developer in the localization feature of the frontend. 
+
+#### Tech Lead - Yamen Alnaani (Yalnaani)
+Tech Lead and Architect, idea behind the backend and the microservices
+
+#### Developer - Adam Ghanam (Aghanam)
+Key Developer in Authincation, helped in the development of the backend
+
+#### Developer - Peter Vass (Pvass)
+Key Developer in Frontend frame work and helped with database, Enitiy relationship diagram. Helped with strucutre the backend 
+
+### Project Management 
+Github and Treelo, our main source of communication was discord in a Discord channel we created, their we managed and scheduled various meetings and discussed issues/bugs as well as shared various resources or updates. 
+
 
 ## Stack
 | Layer | Technology |
@@ -9,6 +34,75 @@ A peer-to-peer learning platform inspired by 42 School — built with Angular, E
 | Database | PostgreSQL 16 + Prisma v5 |
 | Reverse proxy | nginx |
 | Containerization | Docker + Docker Compose |
+
+The reason behind these frame works:
+
+## Modules 
+
+#### Major Modules - Points 12
+
+Use of framework for both frontend and backend!
+- Here we use Angular for the frontend and for the backend we used Express.js with microservices. We as a group decided to use Angular for the frontend due to it being widely used and popular believing developing this programming skill will be useful for the future. The backend was decided by our Tech Lead early on during the development.
+
+A Public API that Interacts with the database 
+- 
+
+Standard Usermanangement and Authentication
+- Yes
+
+Advanced Permissions system
+- Admin bocal student 
+
+An Organization system
+- Yes
+
+Microservices Backend
+- 
+
+#### Minor Modules - Points 10
+
+Use of an ORM for the Database
+- The ORM that we used was none other then Prisma. *provide a reason why  
+
+Real Time Collaborative Feature
+- A shared network for students and bocal 
+
+Custom Made design suystem with ressuable components
+- In the frontend 
+
+Advacne search funcitonality 
+- Frontend 
+
+File Upload and Management Sytem
+- users can upload and delete files 
+
+Support for multiple Languages
+- English german arabic hungarian 
+
+Right to left
+- Arabic 
+
+Support for addtional Broweser
+- should just work
+
+Implement remote Authenication With OAtuh 2.0
+- adam
+
+User Activity Insight 
+- Peter dashboard 
+
+### Custom Modules 
+
+Minor Module - Evaluation Pairing Alogorthim 
+- 
+
+## Features 
+
+
+### Database Schema 
+*Use prisma is display the Database and the Visualisation of it! 
+
+## Instructions
 
 ## Requirements
 - Docker
@@ -173,5 +267,12 @@ See [DEV_DOC.md](./DEV_DOC.md) for the full Git workflow.
 4. Never push directly to `main` or `develop`
 
 ---
+
+## Resources 
+System was inspired by 42
+
+
+### Usage of AI 
+Ai was used to aid and understand the framework, and assit in our vision of the project 
 
 > Maintained by [@yamennaani](https://github.com/yamennaani)
