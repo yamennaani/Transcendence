@@ -144,29 +144,22 @@ Discord served as our primary communication platform where we:
 | Reverse Proxy    | nginx                    |
 | Containerization | Docker & Docker Compose  |
 | Authentication   | JWT + OAuth 2.0          |
+| File Storage     | MinIO                    |
 | Localization     | ngx-translate            |
 
 ### Why these technologies?
 
-**Angular**
+**Angular** was chosen for its scalability, component-based architecture, strong TypeScript integration, and built-in tooling. The project makes heavy use of Angular signals, computed values, and the standalone component pattern introduced in Angular 17.
 
-Chosen because of its scalability, component architecture, built-in tooling, and popularity within enterprise applications.
+**Express.js Microservices** allow each domain (users, auth, organizations, classes, enrollments, groups, submissions, evaluations) to evolve independently. Services share common packages for the database client, structured logging, error classes, and read-only query utilities, keeping each service thin and focused on its own business logic.
 
-**Express.js Microservices**
+**PostgreSQL** provides reliable relational storage with strong support for transactions, cascading deletes, and complex joins — all of which are used extensively across the Prisma schema.
 
-Separating the backend into multiple services improves maintainability, scalability, and allows each service to evolve independently. In the case that one would end up failing it does not disrupt the eco-system. 
+**Prisma ORM** drives all database access. A single `schema.prisma` file defines every model across all services, migrations are tracked in version control, and the generated client provides full TypeScript type safety.
 
-**PostgreSQL**
+**MinIO** is used as an S3-compatible object store for user avatars, assignment subject files, and student submission files. A shared `packages/fileManager` package wraps the MinIO client and Multer uploader so every service that needs file handling uses the same interface.
 
-Reliable relational database with excellent support for transactions and complex relationships.
-
-**Prisma ORM**
-
-Provides excellent type safety, automatic client generation, migrations, and significantly simplifies database development.
-
-**Docker**
-
-Ensures every developer has an identical development environment while simplifying deployment.
+**Docker** ensures every developer runs an identical environment. The `Makefile` automates environment generation, database health-gating, migration deployment, and service startup so a fresh clone is a single `make` command away.
 
 ---
 
@@ -179,11 +172,9 @@ The project fulfills several **Major** and **Minor** modules from the **42 ft_tr
 # Major Modules 
 (Total Points = 12)
 
-## ✔ Framework for Frontend and Backend (2 Points)
+### ✔ Framework for Frontend and Backend
 
-The project makes use of modern frameworks for both the frontend and backend to provide a scalable and maintainable application architecture. The frontend was developed using **Angular**, allowing the team to build a responsive single-page application using reusable components, dependency injection, routing, and reactive programming principles. Angular's modular architecture enabled different sections of the application, such as user management, organizations, assignments, and evaluations, to be developed independently while maintaining a consistent user experience.
-
-The backend was built using **Express.js** and follows a microservice architecture. Rather than creating a single monolithic application, the backend is divided into multiple independent services, each responsible for a specific domain such as authentication, users, organizations, classes, enrollments, and groups. This separation of concerns improves maintainability, simplifies testing, and allows new services to be added without affecting the rest of the platform.
+The frontend is a single-page Angular 17 application using standalone components, the new signals API, and `@ngx-translate/core` for internationalization. It communicates with the backend exclusively through the nginx reverse proxy, which routes `/api/*` paths to the appropriate microservice. The backend is a set of Express.js services, each built from a shared template: an Express app, a `/health` endpoint, a central error handler using the shared `errors` package, and structured JSON logging via the shared `logger` package.
 
 **Who Implented this Feature?**
 Everyone, both the backend and frontend was actively worked on by the group as a whole. The Desicion to use these features were decided together in our very first meeting on Transcendence. 
@@ -192,9 +183,7 @@ Everyone, both the backend and frontend was actively worked on by the group as a
 
 ## ✔ Public API Interacting with the Database (2 Points)
 
-Communication between the frontend and backend is performed through a RESTful API that exposes secure endpoints for every major resource within the application. Each service provides its own collection of CRUD endpoints for managing users, organizations, classes, assignments, groups, enrollments, evaluations, and other application data. Requests are authenticated using JWT tokens before protected resources can be accessed, ensuring that only authorized users may perform sensitive operations.
-
-The API was designed following REST principles, making it predictable and easy to extend. Validation is performed on incoming requests before they reach the database, while standardized responses allow the frontend to handle both successful requests and errors consistently across every service. This modular API structure also makes it possible for future services or third-party integrations to interact with the platform without requiring major architectural changes.
+Every service exposes a REST API for CRUD operations on its domain. The user service manages user accounts and profiles. The organization service handles organizations, membership, and org profiles. The class service owns classes, assignments, and their associated evaluation sheets. The enrollment service manages the student–class relationship. The group service handles assignment groups and peer invitations. The submission service manages file uploads to MinIO and submission lifecycle. The evaluation service drives the eval sheet, pairing algorithm, and scoring flow. All services share a single Prisma client generated from one central schema.
 
 **Who Implented this Feature?**
 Everyone, though the largest contributors were Yamen, Adam and Katrin working on a large potion of the API.  
@@ -203,9 +192,7 @@ Everyone, though the largest contributors were Yamen, Adam and Katrin working on
 
 ## ✔ Standard User Management & Authentication (2 Points)
 
-A complete user management system was implemented to securely authenticate users while providing personalized profiles and role-based access throughout the platform. New users may register accounts, authenticate using secure credentials, and maintain active sessions through JSON Web Tokens (JWT). Passwords are never stored in plain text and are securely hashed before being persisted in the database.
-
-Each user has a customizable profile containing personal information, profile images, and account settings. The authentication system also manages session validation, protected routes, user identity verification, and secure communication between the frontend and backend. Together these features provide a reliable security foundation for every other component of the platform.
+Authentication is handled by a dedicated auth service. Registration requires an invited email address (stored in `auth_allowed_emails`), a strong password validated by `zxcvbn`, and email verification before the account can be used. Login issues a short-lived JWT access token (default 15 minutes) and a long-lived refresh token stored as a hashed value in the database and delivered via an httpOnly cookie. The Angular `AuthInterceptor` attaches the Bearer token to every outgoing request and transparently refreshes it on 401 responses using a queued retry mechanism.
 
 **Who Implented this Feature?**
 This feature was mainly worked on by both Adam and Yamen, Yamen design the overall profile system where Adam worked on the authencation, registion process, Peter did add in this with the Admin user registering a bulk amount of users. 
@@ -214,9 +201,7 @@ This feature was mainly worked on by both Adam and Yamen, Yamen design the overa
 
 ## ✔ Advanced Permission System (2 Points)
 
-To support the educational workflow, the platform implements a comprehensive role-based permission system consisting of three primary user roles: **Student**, **Bocal**, and **Administrator**. Rather than simply restricting page access, permissions are enforced throughout both the frontend and backend to ensure that every operation is validated before execution.
-
-Students are able to participate in organizations, classes, assignments, and peer evaluations while only accessing information relevant to their own learning. Bocals are granted additional privileges allowing them to manage classes, create assignments, oversee evaluations, and monitor student progress. Administrators possess complete control over the platform, including user management, organization administration, and system-wide configuration. By enforcing permissions on both the client and server, the application maintains security while providing each user with an interface tailored to their responsibilities.
+Three roles — Student, Bocal, and Admin — gate access throughout both the backend and frontend. On the backend, the auth middleware's `requireRole` helper fetches the user's current role from the database and enforces it per route. On the frontend, Angular route guards (`authGuard`, `bocalGuard`, `adminGuard`) protect sections of the application, and the sidebar dynamically filters navigation items by role. Bocal users see the class management and evaluation pairing panels; Admin users additionally see the organization and whitelist management screens.
 
 **Who Implented this Feature?**
 this feature was a collabritive feature worked on by everyone as alot of the core concept is tied to waht permissions the various users have. 
@@ -225,9 +210,7 @@ this feature was a collabritive feature worked on by everyone as alot of the cor
 
 ## ✔ Organization System (2 Points)
 
-Organizations serve as one of the central components of the platform by grouping users into independent educational communities. Administrators can create organizations, manage membership, assign administrative staff, and configure permissions that determine how users interact within each organization. Every organization may contain multiple classes, assignments, and members while maintaining its own administrative structure.
-
-This hierarchical design allows the platform to support multiple educational institutions simultaneously without data conflicts. The organization system also integrates closely with the permission system, ensuring that administrative actions remain isolated within their respective organizations while preserving the integrity of the overall application.
+Organizations are the top-level grouping entity. An organization has an email, name, tag, and an optional profile (bio, phone number, avatar). Users belong to at most one organization and carry a role scoped to that organization. Bocal users manage classes and students within their organization. Admins can create and delete organizations, manage the allowed-email whitelist, and invite or revoke users across the platform. The org service exposes endpoints for member management, profile management, and fetching the org's classes.
 
 **Who Implented this Feature?**
 This has strong ties with the modual mentioned before however the frontend implemention was heavily worked on by Peter. 
@@ -236,9 +219,7 @@ This has strong ties with the modual mentioned before however the frontend imple
 
 ## ✔ Backend as Microservices (2 Points)
 
-Rather than implementing a single backend application, the project follows a microservice architecture in which every major domain is developed as an independent Express service. Dedicated services manage authentication, users, organizations, classes, enrollments, groups, and additional business logic while sharing common packages for logging, error handling, utilities, and database access.
-
-This architecture improves maintainability by reducing coupling between different parts of the application and allows individual services to evolve independently. It also simplifies debugging, testing, and future expansion, as new services can be introduced without requiring significant changes to the existing codebase. The use of Docker further isolates each service, providing consistent deployment across all development environments.
+The backend is split into eight independent services: `user` (port 3001), `auth` (port 3002), `org` (port 3003), `class` (port 3004), `enroll` (port 3005), `group` (port 3006), `submission` (port 3007), and `eval` (port 3008). Each service is built and run as its own Docker container. They share three internal Docker networks: `database-network` (services to PostgreSQL), `backend-network` (nginx to services), and `frontend-network` (nginx to the Angular container). Services never talk directly to each other; all cross-service data needs are resolved by the frontend or by the shared `packages/utils` read-only query helpers.
 
 **Who Implented this Feature?**
 The overall Microservices and backend was a collactive feature the idea behind and the main developer behind this was none other then our Lead Archicture and Technical Lead Yamen. 
@@ -250,9 +231,7 @@ Total 11 Points
 
 ## ✔ ORM Database (1 Point)
 
-Database communication is handled using **Prisma ORM**, providing a type-safe and maintainable interface between the application and PostgreSQL. Rather than writing raw SQL queries throughout the codebase, Prisma generates a strongly typed client that simplifies database operations while significantly reducing the likelihood of runtime errors.
-
-Prisma also manages database migrations, schema evolution, and client generation, allowing the database structure to remain synchronized across every developer's environment. This streamlined workflow made collaborative development considerably easier while improving long-term maintainability.
+All database access goes through Prisma v5. A single `schema.prisma` in `packages/database` defines every model — User, Organization, Class, Assignment, Enrollment, Group, Submission, EvalSheet, EvalSection, EvalResponse, EvalAssignment, GroupInvite, RefreshToken, AuthAllowedEmail, and more. Migrations are generated locally with `prisma migrate dev` and applied in Docker with `prisma migrate deploy`. The `packages/database/index.js` exports a singleton `PrismaClient` instance required by every service via relative path.
 
 **Who Implented this Feature?**
 The ORM and the use of Prisma was primarily lead by three developers, Peter, Yamen and Katrin each strongly contributing to the database, its overall structure and its use.  
@@ -261,7 +240,7 @@ The ORM and the use of Prisma was primarily lead by three developers, Peter, Yam
 
 ## ✔ Real-Time Collaborative Features (1 Point)
 
-The platform encourages collaboration by allowing students to work together within shared assignment groups and participate in peer evaluations. Group members can collaborate on assignments, receive invitations, and complete shared evaluation workflows that are synchronized across the application. These collaborative features reflect the educational philosophy of 42 School by encouraging teamwork, peer learning, and shared responsibility throughout the learning process.
+Students collaborate on assignments through a group system. A student creates or joins a group for an assignment, and the group leader can invite other enrolled students by sending a `groupInvite` record. Invitees see pending invitations on their assignment detail page and can accept or decline. All group members share a single submission, and the group leader is the one who closes it and receives evaluator feedback, to which they can reply. The reply triggers a `finalScore` recomputation averaged over all replied-to evaluations.
 
 **Who Implented this Feature?**
 No oen person implement this feature as this Moduel represents our core idea and goal behind this project which was making an application for peer to peer learning. 
@@ -270,9 +249,7 @@ No oen person implement this feature as this Moduel represents our core idea and
 
 ## ✔ Custom Design System (1 Point)
 
-To ensure a consistent user experience across the application, the frontend was built around a custom design system composed of reusable Angular components. Rather than recreating interface elements for each page, the team developed standardized buttons, forms, tables, dialogs, cards, navigation components, and layout containers that are reused throughout the project.
-
-This component-driven approach improves maintainability while providing a consistent visual identity across every section of the application. Updates to shared components automatically propagate throughout the platform, reducing duplicated code and simplifying future design improvements.
+The frontend uses a bespoke design system defined in `src/tokens.ts` and `src/colors_and_type.css`. It provides typed TypeScript constants for all colors (using OKLCH color space), typography scales (Space Grotesk for display, DM Sans for body, JetBrains Mono for code), spacing, border radius, and shadow tokens. Reusable Angular components — `BtnComponent`, `BadgeComponent`, `ContainerComponent`, `ListComponent`, `ProgressBarComponent`, `ScorePillComponent`, `FieldComponent`, `AvatarComponent`, and `SidebarComponent` — are all built from these tokens, ensuring visual consistency across every screen.
 
 **Who Implented this Feature?**
 This feature was primarily developed by Yamen with the goal of creating a simpler workflow and code strucutre allowing other members of the project to easily implement and use the resuable tokens. 
@@ -281,7 +258,7 @@ This feature was primarily developed by Yamen with the goal of creating a simple
 
 ## ✔ Advanced Search (1 Point)
 
-A comprehensive search system allows users to efficiently locate organizations, classes, users, and other resources throughout the platform. Search functionality integrates directly with the backend API to retrieve relevant information while supporting filtering and dynamic updates as users refine their queries. This significantly improves navigation within larger datasets and helps users quickly locate the information required for their daily workflow.
+The `packages/utils` shared query helpers provide flexible search across entities. `searchUser` accepts email and/or username and constructs an OR filter. `searchOrg` accepts email and/or name. These are used throughout the org service (duplicate detection on member add, user lookup on removal) and the auth service (email lookup on login and registration).
 
 **Who Implented this Feature?**
 This feature can primarily be seen with the bocal and admin user, allowing them to search for only students/bocal or admins, the search feature can also be used to search for students who are specifc classes, the lead developer behind this feature was both Peter and Yamen. 
@@ -290,9 +267,7 @@ This feature can primarily be seen with the bocal and admin user, allowing them 
 
 ## ✔ File Upload & Management (1 Point)
 
-The platform includes a secure file management system that allows users to upload, store, retrieve, and delete assignment submissions and supporting documents. Uploaded files undergo server-side validation before being stored to ensure only supported file types and acceptable file sizes are accepted. Access permissions are enforced so that only authorized users may view or manage uploaded content.
-
-This functionality integrates directly with assignments and evaluations, enabling students to submit work electronically while allowing instructors to access and assess submissions through the platform.
+File handling is centralized in `packages/fileManager`, which wraps `multer` (memory storage, 50 MB limit, MIME type allowlist) and the MinIO client. It exposes `uploader` for route middleware and `createStorage(bucket)` for per-bucket upload, presigned URL generation, public URL generation, and deletion. Three separate MinIO buckets are used in production: `user-profile` for avatars, `assignment-subjects` for Bocal-uploaded subject PDFs, and `submissions` for student submission files.
 
 **Who Implented this Feature?**
 The core developer behind this feature was none other then Yamen, implemnting it for both file submissions and profile picture and more. 
@@ -302,7 +277,8 @@ The core developer behind this feature was none other then Yamen, implemnting it
 
 ## ✔ Multi-language Support (1 Point)
 
-Internationalization was implemented using Angular's localization framework, allowing every user-facing element of the application to be translated into multiple languages. The platform currently supports English, German, Hungarian, and Arabic, with all interface text stored separately from the application's source code to simplify future translations. Users may switch languages dynamically without requiring the application to be restarted, ensuring an accessible experience for a diverse user base.
+The application supports four locales: English (`en`), German (`de`), Hungarian (`hu`), and Arabic (`ar`). Translation files live in `src/frontend/src/app/languages/`. `@ngx-translate/core` is configured with a custom `MissingTranslationHandler` that falls back to the English value for any key missing in the active language, so partial translations never show raw keys to users. The language selection is persisted to `localStorage` and applied on startup. 
+
 
 **Who Implented this Feature?**
 The Core developer behind this feature was Albert, localizing a majority of the frontend. Peter did aid in the translation between English to Hungarian, Both Yamen and Adam aided in the Translation to Arabic. 
@@ -311,7 +287,7 @@ The Core developer behind this feature was Albert, localizing a majority of the 
 
 ## ✔ Right-to-Left (RTL) Support (1 Point)
 
-To complement the multilingual functionality, the application fully supports right-to-left layouts for Arabic users. This required more than simply changing text direction; interface layouts, navigation elements, spacing, alignment, and component positioning were mirrored where necessary to create a natural experience for RTL languages. Users can seamlessly switch between left-to-right and right-to-left languages while maintaining a consistent and intuitive interface.
+When Arabic is selected, `document.documentElement.dir` is set to `rtl` and `document.documentElement.lang` to `ar`. This is done both in the `APP_INITIALIZER` on startup and immediately in the language switcher component on language change. The CSS custom properties and flex-based layout respond correctly to the RTL direction without additional overrides.
 
 **Who Implented this Feature?**
 The right to left feature was an additonal implemention from Yamen to the overall Language system.
@@ -320,7 +296,7 @@ The right to left feature was an additonal implemention from Yamen to the overal
 
 ## ✔ Cross-Browser Support (1 Point)
 
-Throughout development, the application was tested across multiple modern web browsers to ensure a consistent user experience regardless of platform. Browser-specific rendering differences were identified and resolved so that layouts, interactive components, authentication workflows, and application functionality behaved consistently across supported browsers. This testing process improved both reliability and accessibility for users operating in different environments.
+The Angular application targets ES2022 and uses standard Web APIs. The landing page animation system is carefully guarded against Angular Material's zone.js interference, using `!important` on transition durations, double `requestAnimationFrame` delays before starting scroll-triggered animations, and `NgZone.runOutsideAngular` to prevent change-detection cycles from interrupting CSS transitions.
 
 **Who Implented this Feature?**
 This feature was a collabitive effort, implemented by default while working on the project. 
@@ -329,7 +305,7 @@ This feature was a collabitive effort, implemented by default while working on t
 
 ## ✔ OAuth 2.0 Authentication (1 Point)
 
-In addition to traditional email and password authentication, the platform supports remote authentication using OAuth 2.0 providers including GitHub and Google. This feature allows users to securely sign in using existing accounts while reducing the need to manage additional credentials. OAuth authentication is fully integrated into the existing user management system, allowing externally authenticated users to access the same features and permissions as locally registered accounts.
+GitHub and Google OAuth flows are implemented in the auth service. Both use a `state` cookie for CSRF protection. On successful OAuth callback the service finds or creates a user (checking the allowed-email list for new accounts), issues access and refresh tokens, sets the refresh cookie, and redirects to the Angular `OAuthCallbackComponent` with the access token in the URL fragment. The Angular `AuthService.handleOAuthCallback()` extracts the token and calls `getMe()` to complete the session.
 
 **Who Implented this Feature?**
 The Core developer behind this was Adam, implementing this both within the frontend and backend. 
@@ -338,7 +314,7 @@ The Core developer behind this was Adam, implementing this both within the front
 
 ## ✔ User Activity Dashboard (1 Point)
 
-A personalized dashboard provides users with a centralized overview of their activity within the platform. Students can monitor assignment completion, evaluation progress, submission history, and overall learning progress, while instructors and administrators gain insight into participation and platform usage. By presenting this information through a clean and intuitive interface, the dashboard helps users quickly understand their current status and identify outstanding tasks without navigating through multiple sections of the application.
+The dashboard aggregates data from multiple backend APIs. It fetches the user's enrolled classes and their assignments via the enroll service, then enriches each assignment with submission data from the submission service to derive live status badges and scores. Four stat tiles display average completion score, assignment progress, evaluations given, and pending reviews. The "Recent assignments" panel links directly to assignment detail pages. All labels and stat subtitles are translated through ngx-translate.
 
 **Who Implented this Feature?**
 This was a collabritive part worked on by everyone however a honorbale mention to both Peter and Yamen, peter working on the progress feat and Yamen working on the overall structure. 
@@ -348,7 +324,7 @@ This was a collabritive part worked on by everyone however a honorbale mention t
 
 ### Evaluation Pairing Algorithm (1 Point)
 
-Custom pairing algorithm that automatically assigns peer evaluations while balancing fairness and workload across students.
+The evaluation pairing system (`eval.service.js → generateSimpleEvalAssignmentPairings`) automatically assigns peer evaluators to every group for a given assignment. Groups are first sorted by ID for determinism, then shuffled using a seeded LCG random function keyed to the assignment ID, ensuring the same assignment always produces the same schedule regardless of database return order. The algorithm generates circular offset pairings across rounds: in round `r`, group `i` is evaluated by the group at position `(i + r) % n`. This guarantees no group evaluates itself and every group receives exactly `req_eval` evaluations. The evaluator user within each group is rotated across rounds. The algorithm validates that enough groups exist for the required number of rounds and surfaces a clear error message if not. Bocal users can also manually edit, delete, or regenerate pairings from the eval assignment list page.
 
 **Who Implented this Feature?**
 Katrin is the mastermind behind the Evaluation system and implementing it into the project.  
@@ -400,40 +376,29 @@ Katrin is the mastermind behind the Evaluation system and implementing it into t
 
 ### Student
 
-* Join organizations
-* Enroll in classes
-* Submit assignments
-* Form groups
-* Evaluate peers
-* View progress
-
----
+Students log in and land on the dashboard, which shows their enrolled classes, assignment progress, and recent submissions. From the "My Classes" page they can browse available classes within their organization and self-enroll. The "Assignments" page lists all assignments across enrolled classes, filtered by status. On the assignment detail page a student creates or joins a group, uploads submission files to MinIO via the submission service, and closes the submission when ready. Once closed, the page displays a six-digit passkey that the student shares with their evaluator. The evaluation flow page lets a student act as evaluator: they enter the evaluee's leader email and passkey, then score each eval sheet section (Toggle yes/no or Slider 0–max) and submit written feedback. The group leader can reply to feedback, which triggers the final score computation. Progress is tracked on the progress page, which shows per-class submission rates and per-assignment evaluation results.
 
 ### Bocal
 
-* Manage classes
-* Create assignments
-* Manage evaluations
-* Review student progress
-* Moderate organizations
-
----
+Bocal users access the Bocal Panel, which has three tabs: Classes, Students, and Analytics. In Classes they create and manage courses with configurable pass thresholds, create assignments with an attached eval sheet (sections must sum exactly to the max score), upload subject files, view and manage groups per assignment, and launch the evaluation pairing algorithm. In Students they see all org members with search, role, class, and assignment filters. They can add members individually, remove students from classes (which also removes them from groups), and manage enrollment. The Analytics tab provides a placeholder for aggregate statistics. Bocal users can also view any assignment in student mode to check the submission and evaluation experience first-hand.
 
 ### Administrator
 
-* Full system management
-* User management
-* Organization management
-* Permission management
-* Administrative dashboard
+Admins access the Admin Panel at `/admin/orgs`. They can create organizations (with name, email, tag, bio, and phone), view all organizations, and navigate to an organization's detail page. On the detail page they see current members, manage the `AuthAllowedEmail` whitelist (add single emails, bulk-import a newline-separated list, or revoke pending invites), and remove members from the organization. These operations interact with both the org service and the auth service's invite endpoints.
 
 ---
 
 # Database Schema
 
-The project uses **Prisma** for schema management.
+The project uses Prisma v5 for schema management. The schema is defined in `src/packages/database/prisma/schema.prisma`.
 
-Below is a Enitiy Relationship Diagram, showing how the database is structure and how it is connected. If you want a further deep dive in what the database is currently storing, you can execute the command make studio which opens up prisma studio showing all the data within the database. 
+Below is a Enitiy Relationship Diagram, showing how the database is structure and how it is connected. If you want a further deep dive in what the database is currently storing, you can execute the command 
+
+```
+make studio
+```
+
+which opens up prisma studio showing all the data within the database. *Note that this can only work after you have made the project
 
 ![Alt text](diagram.png)
 
@@ -441,14 +406,11 @@ Below is a Enitiy Relationship Diagram, showing how the database is structure an
 
 # Instructions
 
-The “Instructions” section should mention all the needed prerequisites (software, tools, versions, configuration like .env setup, etc.), and step-by-step instructions to
-run the project.!
-
 ## Requirements
 
-* Docker
-* Docker Compose
-* Make
+- Docker
+- Docker Compose
+- Make
 
 ---
 
@@ -469,35 +431,41 @@ make
 
 On first startup the project will automatically:
 
-* Generate `src/.env`
-* Link the Prisma environment
-* Build all Docker containers
-* Apply database migrations
-* Start every microservice
+1. Generate `src/.env` with default values (or prompt for custom values)
+2. Symlink `src/packages/database/.env` to `src/.env`
+3. Build all Docker containers
+4. Wait for the database to be healthy (`pg_isready`)
+5. Apply all pending Prisma migrations
+6. Start every microservice and the Angular frontend
 
-Open:
+Open your browser at **http://localhost**
 
+To populate the database with realistic seed data (two organizations, 44 users, four classes, four assignments, groups, submissions, and sample evaluations):
+
+```bash
+make populateDB
 ```
-http://localhost
-```
+
+The seed password for all generated users is printed in green at the end of the seed output.
 
 ---
 
 ## Commands
 
-| Command        | Description                      |
-| -------------- | -------------------------------- |
-| `make`         | Start development                |
-| `make dev`     | Development mode with hot reload |
-| `make prod`    | Production mode                  |
-| `make down`    | Stop containers                  |
-| `make re`      | Rebuild project                  |
-| `make logs`    | View logs                        |
-| `make status`  | Show running containers          |
-| `make migrate` | Apply migrations                 |
-| `make studio`  | Open Prisma Studio               |
-| `make clean`   | Remove Docker resources          |
-| `make fclean`  | Complete reset                   |
+| Command          | Description                                  |
+| ---------------- | -------------------------------------------- |
+| `make`           | Start in dev mode (default)                  |
+| `make dev`       | Dev mode — hot reload, no healthcheck        |
+| `make prod`      | Production mode — full healthchecks          |
+| `make down`      | Stop all containers                          |
+| `make re`        | Stop, rebuild, restart                       |
+| `make logs`      | Follow all container logs                    |
+| `make status`    | Show running containers                      |
+| `make migrate`   | Apply pending Prisma migrations              |
+| `make studio`    | Open Prisma Studio at http://localhost:5555  |
+| `make clean`     | Stop + remove all Docker resources           |
+| `make fclean`    | `clean` + remove `.env`                      |
+| `make populateDB`| Wipe and reseed the database with sample data|
 
 ---
 
@@ -508,25 +476,45 @@ Transcendence/
 ├── Makefile
 ├── README.md
 ├── DEV_DOC.md
+├── scripts/
+│   ├── gen-env.sh        ← environment file generator
+│   └── populate-db.sh    ← seed script runner
 └── src/
     ├── docker-compose.yml
     ├── docker-compose.dev.yml
-    ├── .env
+    ├── .env                     ← auto-generated, never committed
     ├── nginx/
+    │   ├── Dockerfile
+    │   └── conf.d/default.conf  ← routing rules
     ├── frontend/
+    │   ├── Dockerfile
+    │   └── src/
+    │       └── app/
+    │           ├── languages/   ← en/de/hu/ar JSON translation files
+    │           ├── services/    ← auth service, interceptor
+    │           ├── core/services/ ← HTTP services per domain
+    │           ├── shared/      ← reusable components & design system
+    │           ├── tokens.ts    ← design tokens (colors, fonts, spacing)
+    │           └── ...pages & feature components
     ├── database/
+    │   └── docker-compose.yml
+    ├── minio/
+    │   └── docker-compose.yml
     ├── packages/
-    │   ├── database/
-    │   ├── logger/
-    │   ├── errors/
-    │   └── utils/
+    │   ├── database/            ← shared Prisma client + schema + migrations
+    │   ├── logger/              ← structured JSON logger
+    │   ├── errors/              ← AppError, NotFoundError, ValidationError, etc.
+    │   ├── utils/               ← read-only Prisma query helpers
+    │   └── fileManager/         ← MinIO client + Multer uploader
     └── services/
-        ├── user/
-        ├── auth/
-        ├── org/
-        ├── class/
-        ├── enroll/
-        └── group/
+        ├── user/                ← :3001
+        ├── auth/                ← :3002
+        ├── org/                 ← :3003
+        ├── class/               ← :3004
+        ├── enroll/              ← :3005
+        ├── group/               ← :3006
+        ├── submission/          ← :3007
+        └── eval/                ← :3008
 ```
 
 ---
@@ -536,83 +524,175 @@ Transcendence/
 ```text
 Internet
     │
- nginx
+ nginx :80 / :443          ← only public port (self-signed TLS in dev)
     │
- ├── Frontend
- ├── User Service
- ├── Auth Service
- ├── Organization Service
- ├── Class Service
- ├── Enrollment Service
- └── Group Service
-          │
-     PostgreSQL
+    ├── /                  → Angular frontend  (frontend-network)
+    ├── /api/user/         → user-service      (backend-network)
+    ├── /api/auth/         → auth-service
+    ├── /api/org/          → org-service
+    ├── /api/class/        → class-service
+    ├── /api/enroll/       → enroll-service
+    ├── /api/group/        → group-service
+    ├── /api/submission/   → submission-service
+    ├── /api/eval/         → eval-service
+    └── /files/            → MinIO object store
+               │
+           PostgreSQL       (database-network — internal only)
+           MinIO            (backend-network)
 ```
+
+| Network            | Services                        | Internet access |
+| ------------------ | ------------------------------- | --------------- |
+| `frontend-network` | nginx, frontend                 | yes (via nginx) |
+| `backend-network`  | nginx, all services, MinIO      | no (internal)   |
+| `database-network` | all services, PostgreSQL        | no (internal)   |
 
 ---
 
 ## API Endpoints
 
-### User Service
+### User Service (`/api/user/`)
 
-| Method | Endpoint                |
-| ------ | ----------------------- |
-| GET    | `/api/user`             |
-| POST   | `/api/user/register`    |
-| GET    | `/api/user/:id`         |
-| PATCH  | `/api/user/:id/profile` |
-| DELETE | `/api/user/:id`         |
+| Method | Endpoint              | Description                  |
+| ------ | --------------------- | ---------------------------- |
+| GET    | `/`                   | List all users               |
+| GET    | `/:id`                | Get user by ID               |
+| GET    | `/:id/role`           | Get user's role              |
+| GET    | `/:id/profile`        | Get user profile             |
+| PATCH  | `/:id/profile`        | Update bio                   |
+| POST   | `/:id/avatar`         | Upload avatar to MinIO       |
+| DELETE | `/:id`                | Delete user                  |
 
-### Organization Service
+### Auth Service (`/api/auth/`)
 
-| Method | Endpoint               |
-| ------ | ---------------------- |
-| GET    | `/api/org`             |
-| POST   | `/api/org`             |
-| GET    | `/api/org/:id`         |
-| POST   | `/api/org/:id/members` |
-| DELETE | `/api/org/:id/members` |
+| Method | Endpoint               | Description                        |
+| ------ | ---------------------- | ---------------------------------- |
+| POST   | `/register`            | Register with invited email        |
+| POST   | `/login`               | Login, returns access token        |
+| POST   | `/refresh`             | Rotate refresh token               |
+| POST   | `/logout`              | Invalidate refresh token           |
+| GET    | `/me`                  | Get current user from token        |
+| POST   | `/forgot-password`     | Send password reset email          |
+| POST   | `/reset-password`      | Reset password via token           |
+| GET    | `/verify-email`        | Verify email address               |
+| GET    | `/github`              | Start GitHub OAuth flow            |
+| GET    | `/github/callback`     | GitHub OAuth callback              |
+| GET    | `/google`              | Start Google OAuth flow            |
+| GET    | `/google/callback`     | Google OAuth callback              |
+| POST   | `/invite`              | Whitelist an email (Admin/Bocal)   |
+| GET    | `/invites`             | List whitelisted emails            |
+| DELETE | `/invite/:id`          | Revoke a whitelist entry           |
 
-### Class Service
+### Organization Service (`/api/org/`)
 
-| Method | Endpoint                     |
-| ------ | ---------------------------- |
-| GET    | `/api/class`                 |
-| POST   | `/api/class`                 |
-| GET    | `/api/class/:id`             |
-| GET    | `/api/class/:id/assignments` |
-| POST   | `/api/class/:id/assignments` |
+| Method | Endpoint              | Description                  |
+| ------ | --------------------- | ---------------------------- |
+| GET    | `/`                   | List all organizations       |
+| POST   | `/`                   | Create organization          |
+| GET    | `/:id`                | Get organization             |
+| DELETE | `/:id`                | Delete organization          |
+| POST   | `/:id/members`        | Add / update member          |
+| DELETE | `/:id/members`        | Remove member                |
+| GET    | `/:id/members`        | List org members             |
+| PUT    | `/:id/profile`        | Create or update org profile |
+| GET    | `/:id/profile`        | Get org profile              |
+| DELETE | `/:id/profile`        | Delete org profile           |
+| GET    | `/:id/courses`        | List org's classes           |
 
-### Enrollment Service
+### Class Service (`/api/class/`)
 
-| Method | Endpoint      |
-| ------ | ------------- |
-| POST   | `/api/enroll` |
-| PATCH  | `/api/enroll` |
+| Method | Endpoint                    | Description                        |
+| ------ | --------------------------- | ---------------------------------- |
+| GET    | `/`                         | List all classes                   |
+| POST   | `/`                         | Create class                       |
+| GET    | `/:id`                      | Get class                          |
+| PUT    | `/:id`                      | Update class                       |
+| DELETE | `/:id`                      | Delete class                       |
+| GET    | `/:id/students`             | List enrolled students             |
+| GET    | `/:id/assignments`          | List class assignments             |
+| POST   | `/:id/assignment`           | Create assignment (with file)      |
+| GET    | `/assignment/:id`           | Get assignment by ID               |
+| PUT    | `/assignment/:id`           | Update assignment (with file)      |
+| DELETE | `/assignment/:id`           | Delete assignment                  |
+| GET    | `/courses/:id`              | Get classes by org ID              |
 
-### Group Service
+### Enrollment Service (`/api/enroll/`)
 
-| Method | Endpoint                |
-| ------ | ----------------------- |
-| POST   | `/api/group`            |
-| POST   | `/api/group/:id/invite` |
-| PATCH  | `/api/group/invite/:id` |
+| Method | Endpoint          | Description                        |
+| ------ | ----------------- | ---------------------------------- |
+| POST   | `/`               | Enroll student in class            |
+| PATCH  | `/`               | Drop student from class            |
+| GET    | `/:id`            | Get enrollments for student        |
+| GET    | `/classes/:id`    | Get enrolled classes with assignments |
+
+### Group Service (`/api/group/`)
+
+| Method | Endpoint                  | Description                       |
+| ------ | ------------------------- | --------------------------------- |
+| POST   | `/`                       | Create group                      |
+| GET    | `/:id`                    | Get group profile                 |
+| DELETE | `/:id`                    | Leave group                       |
+| DELETE | `/:id/admin`              | Force-delete group (staff)        |
+| POST   | `/:id/invite`             | Invite member to group            |
+| GET    | `/invite`                 | List pending invites for user     |
+| PATCH  | `/invite/:id`             | Accept or decline invite          |
+| DELETE | `/invite/:id`             | Delete invite                     |
+| GET    | `/my-group`               | Get current user's group for an assignment |
+| GET    | `/assignment/:assId`      | List all groups for an assignment |
+
+### Submission Service (`/api/submission/`)
+
+| Method | Endpoint                        | Description                   |
+| ------ | ------------------------------- | ----------------------------- |
+| POST   | `/`                             | Create submission              |
+| GET    | `/:groupId`                     | Get group's submissions        |
+| PATCH  | `/:groupId/close`               | Close submission               |
+| POST   | `/:groupId/file`                | Upload file to MinIO           |
+| GET    | `/:groupId/file/download`       | Get presigned download URL     |
+| DELETE | `/:groupId/file`                | Remove uploaded file           |
+| GET    | `/assignment/:assId/`           | Get all submissions for assignment |
+
+### Evaluation Service (`/api/eval/`)
+
+| Method | Endpoint                                    | Description                              |
+| ------ | ------------------------------------------- | ---------------------------------------- |
+| POST   | `/sheet`                                    | Create eval sheet for assignment         |
+| GET    | `/sheet/:id`                                | Get eval sheet by ID                     |
+| GET    | `/sheet/ass/:id`                            | Get eval sheet by assignment ID          |
+| POST   | `/sheet/:id/section`                        | Add section to eval sheet                |
+| PATCH  | `/sheet/:id/section`                        | Update section                           |
+| DELETE | `/sheet/:id/section`                        | Remove section                           |
+| GET    | `/assignment/:id`                           | Get assignment (for eval context)        |
+| GET    | `/assignment/:id/eval-assignments`          | List eval assignments for an assignment  |
+| DELETE | `/assignment/:id/eval-assignments`          | Delete all pairings for an assignment    |
+| POST   | `/assignment/:id/generate-simple-pairings`  | Auto-generate evaluation pairings        |
+| POST   | `/eval-assignments`                         | Manually create one pairing             |
+| GET    | `/eval-assignments/:id`                     | Get pairing by ID                        |
+| PUT    | `/eval-assignments/:id`                     | Update pairing                           |
+| DELETE | `/eval-assignments/:id`                     | Delete pairing                           |
+| POST   | `/evaluate/start`                           | Start evaluation (passkey + email)       |
+| POST   | `/evaluate/submit`                          | Submit evaluation scores and feedback    |
+| GET    | `/submission/:subId/responses`              | Get all feedback for a submission        |
+| PATCH  | `/responses/:id/reply`                      | Leader replies to evaluator feedback     |
 
 ---
 
 ## Adding a New Service
 
-1. Create a new service directory.
-2. Copy the User service as a template.
-3. Register the service in Docker Compose.
-4. Configure nginx routing.
-5. Add Prisma models.
-6. Run:
+1. Create `src/services/your-service/` — copy the structure from `services/user/`.
+2. Add to `src/docker-compose.yml` under the `include:` list.
+3. Add an nginx route in `src/nginx/conf.d/default.conf`.
+4. Add your models to `src/packages/database/prisma/schema.prisma`.
+5. Run:
 
 ```bash
+cd src/packages/database
+npx prisma migrate dev --name your-change
 make migrate
 make re
 ```
+
+Every service must have a `/health` endpoint returning `{ status: 'ok', service: 'your-service' }` and a central error handler using `next(err)` with the shared error classes.
 
 ---
 
@@ -623,55 +703,74 @@ main
 │
 ├── develop
 │
-├── feature/*
+├── feature/frontend-*
+├── feature/service-*
 ├── fix/*
 └── chore/*
 ```
 
-* `main` — Production
-* `develop` — Integration
-* `feature/*` — New features
-* `fix/*` — Bug fixes
-* `chore/*` — Maintenance
+| Branch      | Purpose           | Merges via               |
+| ----------- | ----------------- | ------------------------ |
+| `main`      | Production only   | PR with 2 approvals      |
+| `develop`   | Integration       | PR with 1 approval       |
+| `feature/*` | Daily work        | PR → develop             |
+| `fix/*`     | Bug fixes         | PR → develop             |
+| `chore/*`   | Config / infra    | PR → develop             |
 
 ---
 
 ## Contributing
 
-1. Create a branch from `develop`.
-2. Follow the commit convention:
+1. Create a branch from `develop` following the naming convention (`feature/service-*`, `feature/frontend-*`, `fix/*`, `chore/*`).
+2. Write commits following the convention:
 
 ```text
-feat(scope): description
+feat(scope): short description
+fix(auth-service): handle expired refresh token edge case
+chore(docker): add eval service to compose
 ```
 
-3. Open a Pull Request.
-4. Request review.
-5. Merge into `develop`.
+3. Open a Pull Request targeting `develop` (never `main`).
+4. Ensure no `.env` files, `generated/` folders, or `node_modules/` are committed.
+5. Request a review and wait for CI to pass before merging.
 
 ---
 
 # Journey
 
-The Beginning of the Journey is the same for all users, when openning the appilication for the first time, the user sees our wonderful landing page, their the user can login in. In the Login page the user can simply enter their email and password or choose to login with github or google. From their depending on the user they will three different pages and have privileges to differetn things. 
+## Landing Page & Login
 
-All users have accesss to 4 standard things, the settings, their own profile the language changer and the sign out!
+Every visitor arrives at the landing page, which showcases the platform's peer-to-peer evaluation model with animated statistics, floating evaluation cards, and a peer network diagram. From there users navigate to the login page, where they can sign in with email and password, or use GitHub or Google OAuth. New users require an invitation from an Admin or Bocal before they can register.
 
-## Students Journey
+All authenticated users have access to four common features from the sidebar: their own user profile (editable bio and avatar), a language switcher (English, German, Hungarian, Arabic), application settings, and sign-out.
 
-*rough notes: Students have access to the classic dashboard, what classes they are apart of, what assignments they have, what evauluations they most complete and lastly their overall progress! (Note Porgress is bugged)
+## Student Journey
 
-Students also have access to the evaluation system and process, where they are assigned an evaluation, the evalue will generate a unique hash code from their device which the evalutor must enter in order to start the evaluation process! 
+After login a Student lands on the Dashboard, which shows four stat tiles (score average, assignment progress, evaluations given, pending reviews) and two panels: class progress bars and recent assignments with live status badges. From the sidebar the student can navigate to:
+
+**My Classes** — shows enrolled classes with progress bars and an expandable assignment list. Available (unenrolled) classes are shown below with an Enroll button.
+
+**Assignments** — lists all assignments across enrolled classes, filtered to show only in-progress items by default. Each card shows the assignment name, description, metadata (points, evals required, group size, threshold), a status badge (Not started / In progress / Awaiting review / Passed / Not passed yet), and an Open button.
+
+**Assignment Detail** — the core student workflow page. A student creates a group (or clicks "Join assignment" for solo work), waits for or accepts group invitations, starts a submission, uploads files, and closes the submission when ready. The closed submission displays a six-digit passkey. An evaluation progress tracker shows how many of the required peer evaluations have been received, and completed evaluations show the evaluator's score and comment, to which the group leader can reply. Replies trigger final score computation.
+
+**Evaluations** — navigates to the evaluation flow. The student enters the leader email and passkey of the group they are evaluating, loads the eval sheet, scores each section (Toggle or Slider), writes at least 20 characters of feedback, and submits.
+
+**Progress** — a drill-down view: class list → assignment list → evaluation results per assignment, showing each eval assignment's round, status, and final score if available.
 
 ## Bocal Journey
 
-*rought notes: Bocal/teachers can create classes and assignments, activate the evaulation pairing process, add new users 
+Bocal users land on the Bocal Panel after login.
 
-They also have access to a unique analytics page just for them!.
+**Classes tab** — create and manage courses. Select a class to view and manage its assignments. Each assignment card shows metadata, a subject file link if attached, a Groups button (loads all student groups for that assignment), an Edit button (opens the assignment + eval sheet editor), a View button (opens the student-facing assignment detail in a new tab for testing), and a Delete button. The assignment creation / edit form has two tabs: Assignment (name, description, max score, req evals, group size, pass threshold, subject file upload) and Eval Sheet (sections that must sum exactly to the max score). Bocal users can also generate evaluation pairings from the assignment detail page.
 
-## Admin Journey 
+**Students tab** — view all org members with search and filters by role, class, and assignment. Add members individually or remove students from a class (also removes them from all groups in that class).
 
-*rought notes: Admins have access to create new organizations, adding bocal and student users. 
+**Analytics tab** — placeholder for aggregate metrics (completion rate, average evaluations, pass rate, pending evaluations).
+
+## Admin Journey
+
+Admins access the Admin Panel from the sidebar. The Organizations page lists all orgs with name, contact email, and tag. Admins can create new organizations (with name, email, tag, bio, and phone) and click Manage on any org to open the detail page. The org detail page shows current members with a Remove button, a single-email whitelist form, a bulk email import textarea, and the full `AuthAllowedEmail` table with Revoke buttons for unused invites. All whitelist operations go through the auth service's invite endpoints.
 
 ---
 
@@ -679,19 +778,11 @@ They also have access to a unique analytics page just for them!.
 
 ### Inspiration
 
-The project was inspired by the educational platform used at **42 School**.
+The project was inspired by the educational platform and peer evaluation model used at **42 School**.
 
 ### AI Usage
 
-Artificial Intelligence tools were used to:
-
-* Understand unfamiliar frameworks
-* Research implementation approaches
-* Assist with debugging
-* Improve documentation
-* Accelerate development
-
-All architecture, implementation decisions, and final code were designed, reviewed, and validated by the development team.
+Artificial Intelligence tools were used to understand unfamiliar frameworks, research implementation approaches, assist with debugging, improve documentation, and accelerate development. All architecture, implementation decisions, and final code were designed, reviewed, and validated by the development team.
 
 ---
 
