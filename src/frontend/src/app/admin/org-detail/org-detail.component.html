@@ -34,11 +34,16 @@
         <div [ngStyle]="noticeStyle" style="margin-bottom:14px">{{ removeNotice }}</div>
       }
 
+      @if (roleNotice) {
+        <div [ngStyle]="noticeStyle" style="margin-bottom:14px">{{ roleNotice }}</div>
+      }
+
       <section [ngStyle]="tableWrapStyle">
         <div [ngStyle]="tableHeaderStyle">
           <div>Email</div>
           <div>Username</div>
           <div>Role</div>
+          <div>Actions</div>
         </div>
 
         @if (members().length === 0) {
@@ -48,22 +53,40 @@
             <div [ngStyle]="tableRowStyle">
               <div>{{ m.email }}</div>
               <div>{{ m.username }}</div>
-              <div>
-                <div [ngStyle]="roleCellStyle">
-                  <span [ngStyle]="pillStyle">{{ m.role }}</span>
-                  <app-btn
-                    variant="danger"
-                    size="sm"
-                    [disabled]="busy() || removingId() === m.id"
-                    (clicked)="removeMember(m)"
-                  >
-                    @if (removingId() === m.id) {
-                      Removing...
-                    } @else {
-                      Remove
-                    }
-                  </app-btn>
-                </div>
+              <div><span [ngStyle]="pillStyle">{{ m.role }}</span></div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <select
+                  [ngStyle]="selectStyle"
+                  [(ngModel)]="pendingRoles[m.id]"
+                >
+                  @for (role of validRoles; track role) {
+                    <option [value]="role">{{ role }}</option>
+                  }
+                </select>
+                <app-btn
+                  variant="secondary"
+                  size="sm"
+                  [disabled]="busy() || changingRoleId() === m.id || pendingRoles[m.id] === m.role"
+                  (clicked)="changeRole(m)"
+                >
+                  @if (changingRoleId() === m.id) {
+                    Saving...
+                  } @else {
+                    Change
+                  }
+                </app-btn>
+                <app-btn
+                  variant="danger"
+                  size="sm"
+                  [disabled]="busy() || removingId() === m.id"
+                  (clicked)="removeMember(m)"
+                >
+                  @if (removingId() === m.id) {
+                    Removing...
+                  } @else {
+                    Remove
+                  }
+                </app-btn>
               </div>
             </div>
           }

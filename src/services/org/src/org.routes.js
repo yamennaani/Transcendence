@@ -39,6 +39,12 @@ router.delete('/:id/members', async (req, res, next)=>{
     }catch(err){ next(err)}
 })
 
+router.patch('/:id/members', async (req, res, next)=>{
+    try{
+        res.json(await orgService.updateMemberRole(req.params.id, req.body))
+    }catch(err){ next(err)}
+})
+
 router.get('/:id/members', async (req, res, next)=>{
     try{
         res.json( await orgService.listOrgMembers(req.params.id))

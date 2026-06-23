@@ -80,6 +80,21 @@ const removeMember = async (orgId, {email})=>{
 }
 
 
+const updateMemberRole = async (orgId, { email, role }) => {
+  const id = parseInt(orgId)
+  await getOrg(id)
+  if (!email || !role) throw new ValidationError('email and role are required')
+  const validRoles = ['Admin', 'Bocal', 'Student']
+  if (!validRoles.includes(role)) throw new ValidationError('Invalid role')
+  const user = await prisma.user.findUnique({ where: { email } })
+  if (!user) throw new NotFoundError('User not found')
+  return prisma.user.update({
+    where: { email },
+    data: { role },
+    select: { id: true, email: true, username: true, role: true }
+  })
+}
+
 const deleteOrg = async (orgId)=>{
   const id = parseInt(orgId)
   await getOrg(id)
@@ -161,4 +176,4 @@ const getOrgProfile = async (orgId) => {
   }
 
 
-module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, deleteOrg, listOrgMembers, createOrgProfile, getOrgProfile, deleteOrgProfile, getOrgCourses}
+module.exports = {getAllOrgs, getOrg, createOrg, createMember, removeMember, updateMemberRole, deleteOrg, listOrgMembers, createOrgProfile, getOrgProfile, deleteOrgProfile, getOrgCourses}
