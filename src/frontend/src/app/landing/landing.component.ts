@@ -1,5 +1,6 @@
 import {
   Component,
+  OnInit,
   AfterViewInit,
   OnDestroy,
   HostBinding,
@@ -7,19 +8,27 @@ import {
   NgZone,
   inject,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { RouterLink, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import type { Subscription } from 'rxjs';
+import { LogoComponent } from '../shared/logo.component';
+import { isSupportedLang, setLanguage } from '../languages/language.service';
 
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, LogoComponent, TranslateModule],
   templateUrl: './landing.component.html',
   styleUrl: './landing.component.css',
   encapsulation: ViewEncapsulation.None,
 })
-export class LandingComponent implements AfterViewInit, OnDestroy {
+export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostBinding('style.display') readonly display = 'block';
   @HostBinding('style.overflowX') readonly overflowX = 'hidden';
+
+  private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
+  private langChangeSub?: Subscription;
 
   // ─── Inject NgZone so we can run all DOM/animation work OUTSIDE it ───────
   // Angular Material imports BrowserAnimationsModule, which makes zone.js
@@ -35,11 +44,21 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   private observers: IntersectionObserver[] = [];
   private rafId = 0;
 
+  ngOnInit(): void {
+    // /:lang (e.g. /en, /de, /ar, /hu) pins the active language before the
+    // page renders. Bare "/" leaves whatever language is already active.
+    const lang = this.route.snapshot.paramMap.get('lang');
+    if (isSupportedLang(lang)) {
+      setLanguage(this.translate, lang);
+    }
+  }
+
   ngAfterViewInit(): void {
     this.zone.runOutsideAngular(() => {
       // Title and float-cards can start immediately – they use CSS keyframes,
       // not transitions, so they're safe before the first paint.
-      this.initTitleChars();
+      this.buildHeroTitle();
+      this.langChangeSub = this.translate.onLangChange.subscribe(() => this.buildHeroTitle());
       this.initCursorGlow();
       this.initNavScroll();
 
@@ -75,6 +94,7 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
     this.intervals.forEach(clearInterval);
     this.observers.forEach(o => o.disconnect());
     cancelAnimationFrame(this.rafId);
+    this.langChangeSub?.unsubscribe();
   }
 
   // ─── Helper: register a listener so it's cleaned up on destroy ───────────
@@ -89,20 +109,52 @@ export class LandingComponent implements AfterViewInit, OnDestroy {
   }
 
   // ─── Title: character-by-character reveal via CSS keyframes ──────────────
-  private initTitleChars(): void {
-    const PARTS = ["You don't pass.", '\n', 'Your peers ', 'pass you', '.'];
-    // To change the hero title, edit PARTS above.
-    // Current line 1: plain text  →  "You don't pass."
-    // Current line 2: plain + gradient + plain  →  "Your peers [pass you]."
+  // The title is built from translation keys rather than a static string, so
+  // it must be rebuilt whenever the active language changes (see the
+  // onLangChange subscription in ngAfterViewInit).
+  private buildHeroTitle(): void {
+    this.translate.get([
+      'hero_title_line1',
+      'hero_title_line2_pre',
+      'hero_title_line2_gradient',
+      'hero_title_line2_post',
+    ]).subscribe(t => {
+      const PARTS = [
+        t['hero_title_line1'], '\n',
+        t['hero_title_line2_pre'], t['hero_title_line2_gradient'], t['hero_title_line2_post'],
+      ];
+      // Line 1: plain text. Line 2: plain prefix + gradient phrase + plain suffix.
+      this.renderTitleChars(PARTS, 3);
+    });
+  }
+
+  private renderTitleChars(parts: string[], gradientPartIdx: number): void {
     const titleEl = document.getElementById('title');
     if (!titleEl) return;
 
+    // Arabic letters join with their neighbours to form connected script —
+    // splitting them into one span per character (as the Latin char-reveal
+    // does below) breaks that shaping entirely. Reveal whole words instead.
+    if (this.translate.currentLang === 'ar') {
+      let html = '';
+      let delay = 0;
+      for (let partIdx = 0; partIdx < parts.length; partIdx++) {
+        const part = parts[partIdx];
+        if (part === '\n') { html += '<br>'; continue; }
+        const cls = partIdx === gradientPartIdx ? 'word gradient' : 'word';
+        html += `<span class="${cls}" style="animation-delay:${delay}ms">${part}</span>`;
+        delay += 120;
+      }
+      titleEl.innerHTML = html;
+      return;
+    }
+
     let html = '';
     let delay = 0;
-    for (let partIdx = 0; partIdx < PARTS.length; partIdx++) {
-      const part = PARTS[partIdx];
+    for (let partIdx = 0; partIdx < parts.length; partIdx++) {
+      const part = parts[partIdx];
       if (part === '\n') { html += '<br>'; continue; }
-      const isGradient = partIdx === 3;
+      const isGradient = partIdx === gradientPartIdx;
       for (const ch of part) {
         if (ch === ' ') {
           html += `<span class="char" style="animation-delay:${delay}ms">&nbsp;</span>`;

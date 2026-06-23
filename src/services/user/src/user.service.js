@@ -28,13 +28,13 @@ const uploadAvatar = async (userId, reqFile) => {
   const publicUrl = storage.getPublicUrl(fileName)
 
   // save the url to user profile
-  await prisma.userProfile.upsert({
+  const profile = await prisma.userProfile.upsert({
     where:  { userId: parseInt(userId) },
     update: { avatar: publicUrl, last_update: new Date() },
     create: { userId: parseInt(userId), avatar: publicUrl, bio: '', last_update: new Date() },
   })
 
-  return { message: 'Avatar uploaded', url: publicUrl }
+  return profile
 }
 
 const getAllUsers = async () => {

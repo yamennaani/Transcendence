@@ -1,25 +1,15 @@
 <div class="cursor-glow" id="glow"></div>
 
 <nav class="top" id="topnav">
-  <a href="/" class="logo">
-    <svg class="logo-mark" viewBox="0 0 44 40" fill="none">
-      <defs>
-        <linearGradient id="lgrad" x1="0" x2="1" y1="0" y2="0">
-          <stop offset="0%" stop-color="oklch(72% 0.28 296)"/>
-          <stop offset="100%" stop-color="oklch(72% 0.15 200)"/>
-        </linearGradient>
-      </defs>
-      <rect x="0" y="5" width="44" height="6" rx="3" fill="url(#lgrad)"/>
-      <rect x="19" y="5" width="6" height="32" rx="3" fill="url(#lgrad)"/>
-    </svg>
-    <span class="logo-text">43</span>
+  <a routerLink="/" class="logo">
+    <app-logo [size]="28"/>
   </a>
   <div class="nav-right">
-    <a href="#how" class="nav-link">How it works</a>
-    <a href="#features" class="nav-link">Features</a>
-    <a href="#institutes" class="nav-link">For institutes</a>
-    <a routerLink="/login" class="btn btn-ghost">Sign in</a>
-    <a routerLink="/login" class="btn btn-primary">Get started</a>
+    <a href="#how" class="nav-link">{{ 'nav_how_it_works' | translate }}</a>
+    <a href="#features" class="nav-link">{{ 'nav_features' | translate }}</a>
+    <a href="#institutes" class="nav-link">{{ 'nav_for_institutes' | translate }}</a>
+    <a routerLink="/login" class="btn btn-ghost">{{ 'nav_sign_in' | translate }}</a>
+    <a routerLink="/login" class="btn btn-primary">{{ 'nav_get_started' | translate }}</a>
   </div>
 </nav>
 
@@ -38,25 +28,21 @@
   <div class="hero-content">
     <div class="hero-tag">
       <span class="pulse"></span>
-      <span>peer-validated learning · all disciplines</span>
+      <span>{{ 'hero_tag' | translate }}</span>
     </div>
 
     <h1 class="hero-title" id="title"></h1>
 
-    <p class="hero-sub">
-      Submit your work. Evaluate your peers. Advance only when others validate your effort.
-      No grades from above — your score comes from the people learning beside you,
-      across every field and every campus.
-    </p>
+    <p class="hero-sub">{{ 'hero_sub' | translate }}</p>
 
     <div class="hero-actions">
-      <a routerLink="/login" class="btn btn-primary btn-lg">Start learning</a>
-      <a href="#how" class="btn btn-ghost btn-lg">How it works →</a>
+      <a routerLink="/login" class="btn btn-primary btn-lg">{{ 'hero_btn_start' | translate }}</a>
+      <a href="#how" class="btn btn-ghost btn-lg">{{ 'hero_btn_how' | translate }}</a>
     </div>
   </div>
 
   <div class="scroll-hint">
-    <span>scroll</span>
+    <span>{{ 'hero_scroll_hint' | translate }}</span>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
   </div>
 </section>
@@ -64,30 +50,30 @@
 <!-- ─── MARQUEE ─── -->
 <div class="marquee-wrap">
   <div class="marquee">
-    <div class="marquee-item">architecture</div>
-    <div class="marquee-item">medicine &amp; health</div>
-    <div class="marquee-item">literature</div>
-    <div class="marquee-item">economics</div>
-    <div class="marquee-item">software engineering</div>
-    <div class="marquee-item">fine arts</div>
-    <div class="marquee-item">law</div>
-    <div class="marquee-item">biology</div>
-    <div class="marquee-item">product design</div>
-    <div class="marquee-item">psychology</div>
-    <div class="marquee-item">mathematics</div>
-    <div class="marquee-item">philosophy</div>
-    <div class="marquee-item">architecture</div>
-    <div class="marquee-item">medicine &amp; health</div>
-    <div class="marquee-item">literature</div>
-    <div class="marquee-item">economics</div>
-    <div class="marquee-item">software engineering</div>
-    <div class="marquee-item">fine arts</div>
-    <div class="marquee-item">law</div>
-    <div class="marquee-item">biology</div>
-    <div class="marquee-item">product design</div>
-    <div class="marquee-item">psychology</div>
-    <div class="marquee-item">mathematics</div>
-    <div class="marquee-item">philosophy</div>
+    <div class="marquee-item">{{ 'marquee_architecture' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_medicine' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_literature' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_economics' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_software' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_fine_arts' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_law' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_biology' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_product_design' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_psychology' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_mathematics' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_philosophy' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_architecture' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_medicine' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_literature' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_economics' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_software' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_fine_arts' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_law' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_biology' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_product_design' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_psychology' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_mathematics' | translate }}</div>
+    <div class="marquee-item">{{ 'marquee_philosophy' | translate }}</div>
   </div>
 </div>
 
@@ -96,19 +82,14 @@
   <div class="container">
     <div class="peer-section">
       <div>
-        <div class="overline reveal">How it works</div>
-        <h2 class="section-title reveal reveal-d1">Your peers<br>are your professors.</h2>
-        <p class="section-sub reveal reveal-d2">
-          Every submission requires three validated peer reviews before it counts.
-          Your evaluators are fellow students tackling the same challenges —
-          in medicine, design, law, or code. The discipline changes. The process doesn't.
-          The network is the curriculum.
-        </p>
+        <div class="overline reveal">{{ 'how_overline' | translate }}</div>
+        <h2 class="section-title reveal reveal-d1">{{ 'how_title_line1' | translate }}<br>{{ 'how_title_line2' | translate }}</h2>
+        <p class="section-sub reveal reveal-d2">{{ 'how_sub' | translate }}</p>
 
         <div class="reveal reveal-d3" style="display:flex;gap:24px;margin-top:32px;font-family:var(--font-mono);font-size:0.8125rem">
-          <div><div style="color:var(--fg3);margin-bottom:4px">YOU SUBMIT</div><div style="color:var(--violet-bright)">→ 1 work</div></div>
-          <div><div style="color:var(--fg3);margin-bottom:4px">PEERS EVAL</div><div style="color:var(--cyan)">→ 3 reviews</div></div>
-          <div><div style="color:var(--fg3);margin-bottom:4px">YOU PASS</div><div style="color:var(--green)">→ ≥60 avg</div></div>
+          <div><div style="color:var(--fg3);margin-bottom:4px">{{ 'how_stat_submit_label' | translate }}</div><div style="color:var(--violet-bright)">{{ 'how_stat_submit_value' | translate }}</div></div>
+          <div><div style="color:var(--fg3);margin-bottom:4px">{{ 'how_stat_eval_label' | translate }}</div><div style="color:var(--cyan)">{{ 'how_stat_eval_value' | translate }}</div></div>
+          <div><div style="color:var(--fg3);margin-bottom:4px">{{ 'how_stat_pass_label' | translate }}</div><div style="color:var(--green)">{{ 'how_stat_pass_value' | translate }}</div></div>
         </div>
       </div>
 
@@ -150,12 +131,9 @@
 <!-- ─── EVAL DEMO ─── -->
 <section style="padding-top:0">
   <div class="container">
-    <div class="overline reveal">An evaluation looks like this</div>
-    <h2 class="section-title reveal reveal-d1">Three voices, one verdict.</h2>
-    <p class="section-sub reveal reveal-d2">
-      Whether it's an architectural proposal, a legal brief, or a product prototype —
-      every piece of work gets the same rigorous, structured peer review.
-    </p>
+    <div class="overline reveal">{{ 'eval_overline' | translate }}</div>
+    <h2 class="section-title reveal reveal-d1">{{ 'eval_title_line1' | translate }} {{ 'eval_title_line2' | translate }}</h2>
+    <p class="section-sub reveal reveal-d2">{{ 'eval_sub' | translate }}</p>
 
     <div class="eval-demo">
       <div class="eval-card d1" style="--w:88%">
@@ -163,12 +141,12 @@
           <div class="eval-avatar a">SR</div>
           <div>
             <div class="eval-name">Sofia Reyes</div>
-            <div class="eval-meta">Urban Planning · 2026-04-19</div>
+            <div class="eval-meta">{{ 'eval_field' | translate }} · 2026-04-19</div>
           </div>
         </div>
         <div class="score-num">88<small>/100</small></div>
         <div class="score-bar"><div class="score-bar-fill"></div></div>
-        <p class="eval-feedback">Strong spatial analysis. The zoning rationale is well-argued. Sustainability section could go deeper on long-term impact modelling.</p>
+        <p class="eval-feedback">{{ 'eval_feedback_1' | translate }}</p>
       </div>
 
       <div class="eval-card d2" style="--w:91%">
@@ -176,12 +154,12 @@
           <div class="eval-avatar b">MK</div>
           <div>
             <div class="eval-name">Marcus K.</div>
-            <div class="eval-meta">Urban Planning · 2026-04-20</div>
+            <div class="eval-meta">{{ 'eval_field' | translate }} · 2026-04-20</div>
           </div>
         </div>
         <div class="score-num">91<small>/100</small></div>
         <div class="score-bar"><div class="score-bar-fill"></div></div>
-        <p class="eval-feedback">Compelling proposal. Visual presentation is clear. The traffic flow diagrams are a highlight — exactly what the rubric asks for.</p>
+        <p class="eval-feedback">{{ 'eval_feedback_2' | translate }}</p>
       </div>
 
       <div class="eval-card d3" style="--w:85%">
@@ -189,20 +167,20 @@
           <div class="eval-avatar c">JL</div>
           <div>
             <div class="eval-name">Jordan Lee</div>
-            <div class="eval-meta">Urban Planning · 2026-04-21</div>
+            <div class="eval-meta">{{ 'eval_field' | translate }} · 2026-04-21</div>
           </div>
         </div>
         <div class="score-num">85<small>/100</small></div>
         <div class="score-bar"><div class="score-bar-fill"></div></div>
-        <p class="eval-feedback">Meets all base criteria. Community engagement strategy is underdeveloped compared to the rest of the submission.</p>
+        <p class="eval-feedback">{{ 'eval_feedback_3' | translate }}</p>
       </div>
     </div>
 
     <div class="reveal reveal-d3" style="margin-top:32px;display:flex;align-items:center;justify-content:center;gap:14px;font-family:var(--font-mono);font-size:0.875rem;color:var(--fg2)">
-      <span>avg</span>
+      <span>{{ 'eval_avg_label' | translate }}</span>
       <span style="font-family:var(--font-display);font-size:1.5rem;font-weight:700;color:var(--green)">88</span>
       <span>→</span>
-      <span style="background:oklch(18% 0.06 145);color:var(--green);border:1px solid oklch(36% 0.10 145);padding:3px 10px;border-radius:9999px;font-size:0.6875rem;font-weight:600;letter-spacing:0.08em">VALIDATED</span>
+      <span style="background:oklch(18% 0.06 145);color:var(--green);border:1px solid oklch(36% 0.10 145);padding:3px 10px;border-radius:9999px;font-size:0.6875rem;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">{{ 'badge_validated' | translate }}</span>
     </div>
   </div>
 </section>
@@ -210,51 +188,51 @@
 <!-- ─── FEATURES ─── -->
 <section id="features">
   <div class="container">
-    <div class="overline reveal">Built for every field</div>
-    <h2 class="section-title reveal reveal-d1">Everything you need.<br>Nothing you don't.</h2>
+    <div class="overline reveal">{{ 'features_overline' | translate }}</div>
+    <h2 class="section-title reveal reveal-d1">{{ 'features_title_line1' | translate }}<br>{{ 'features_title_line2' | translate }}</h2>
 
     <div class="features-grid" style="margin-top:48px">
       <div class="feature-card reveal reveal-d1">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
         </div>
-        <div class="feature-title">Any type of work</div>
-        <div class="feature-desc">Submit essays, code, design files, case studies, lab reports, or presentations. Bonus scoring rewards work that exceeds the brief.</div>
+        <div class="feature-title">{{ 'feature_1_title' | translate }}</div>
+        <div class="feature-desc">{{ 'feature_1_desc' | translate }}</div>
       </div>
       <div class="feature-card reveal reveal-d2">
         <div class="feature-icon cyan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         </div>
-        <div class="feature-title">Calibrated reviews</div>
-        <div class="feature-desc">Reviewer quality is tracked. Evaluators who score unfairly or inconsistently lose review privileges — protecting every submission.</div>
+        <div class="feature-title">{{ 'feature_2_title' | translate }}</div>
+        <div class="feature-desc">{{ 'feature_2_desc' | translate }}</div>
       </div>
       <div class="feature-card reveal reveal-d3">
         <div class="feature-icon green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
         </div>
-        <div class="feature-title">Threshold-based passing</div>
-        <div class="feature-desc">Each institution sets its own passing bar. Students advance on merit, at their own pace, with no arbitrary deadlines.</div>
+        <div class="feature-title">{{ 'feature_3_title' | translate }}</div>
+        <div class="feature-desc">{{ 'feature_3_desc' | translate }}</div>
       </div>
       <div class="feature-card reveal reveal-d1">
         <div class="feature-icon cyan">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </div>
-        <div class="feature-title">Group projects</div>
-        <div class="feature-desc">Form ad-hoc teams for collaborative work. Shared submissions with individual reviewer feedback for every contributor.</div>
+        <div class="feature-title">{{ 'feature_4_title' | translate }}</div>
+        <div class="feature-desc">{{ 'feature_4_desc' | translate }}</div>
       </div>
       <div class="feature-card reveal reveal-d2">
         <div class="feature-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/></svg>
         </div>
-        <div class="feature-title">Institute panel</div>
-        <div class="feature-desc">Schools and universities define programmes, set thresholds, and monitor entire cohorts from a single dashboard. No grading. Pure oversight.</div>
+        <div class="feature-title">{{ 'feature_5_title' | translate }}</div>
+        <div class="feature-desc">{{ 'feature_5_desc' | translate }}</div>
       </div>
       <div class="feature-card reveal reveal-d3">
         <div class="feature-icon green">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div class="feature-title">Transparent progress</div>
-        <div class="feature-desc">Every score, every reviewer, every assignment — fully visible on the student's profile. No hidden rubrics. No surprises.</div>
+        <div class="feature-title">{{ 'feature_6_title' | translate }}</div>
+        <div class="feature-desc">{{ 'feature_6_desc' | translate }}</div>
       </div>
     </div>
   </div>
@@ -265,32 +243,28 @@
   <div class="container">
     <div class="peer-section">
       <div>
-        <div class="overline reveal">For schools &amp; universities</div>
-        <h2 class="section-title reveal reveal-d1">You set the structure.<br>Students do the rest.</h2>
-        <p class="section-sub reveal reveal-d2">
-          43 gives institutions a lightweight layer of control without turning
-          administrators into graders. Define your programmes, assign thresholds,
-          and let peer evaluation do the heavy lifting — at any scale, across any discipline.
-        </p>
+        <div class="overline reveal">{{ 'institutes_overline' | translate }}</div>
+        <h2 class="section-title reveal reveal-d1">{{ 'institutes_title_line1' | translate }}<br>{{ 'institutes_title_line2' | translate }}</h2>
+        <p class="section-sub reveal reveal-d2">{{ 'institutes_sub' | translate }}</p>
 
         <div class="reveal reveal-d3" style="display:flex;flex-direction:column;gap:16px;margin-top:32px;font-size:0.9375rem;color:var(--fg2);line-height:1.6">
           <div style="display:flex;gap:12px;align-items:flex-start">
             <span style="color:var(--violet);font-family:var(--font-mono);font-size:0.75rem;padding-top:3px">01</span>
-            <span>Create your institution and invite students — no per-seat pricing, no vendor lock-in.</span>
+            <span>{{ 'institutes_step_1' | translate }}</span>
           </div>
           <div style="display:flex;gap:12px;align-items:flex-start">
             <span style="color:var(--violet);font-family:var(--font-mono);font-size:0.75rem;padding-top:3px">02</span>
-            <span>Build courses with your own rubrics, passing thresholds, and submission formats.</span>
+            <span>{{ 'institutes_step_2' | translate }}</span>
           </div>
           <div style="display:flex;gap:12px;align-items:flex-start">
             <span style="color:var(--violet);font-family:var(--font-mono);font-size:0.75rem;padding-top:3px">03</span>
-            <span>Monitor cohort progress in real time. Flag outliers. Intervene only when it matters.</span>
+            <span>{{ 'institutes_step_3' | translate }}</span>
           </div>
         </div>
 
         <div class="reveal reveal-d3" style="margin-top:36px;display:flex;gap:12px">
-          <a href="#" class="btn btn-primary">Request a demo</a>
-          <a href="#" class="btn btn-ghost">Read the docs</a>
+          <a href="#" class="btn btn-primary">{{ 'institutes_btn_demo' | translate }}</a>
+          <a href="#" class="btn btn-ghost">{{ 'institutes_btn_docs' | translate }}</a>
         </div>
       </div>
 
@@ -349,19 +323,19 @@
     <div class="stats-grid">
       <div class="stat-block reveal">
         <div class="stat-num" data-target="4200">0</div>
-        <div class="stat-label">active learners</div>
+        <div class="stat-label">{{ 'stats_active_learners' | translate }}</div>
       </div>
       <div class="stat-block reveal reveal-d1">
         <div class="stat-num" data-target="89">0</div>
-        <div class="stat-label">avg validation score</div>
+        <div class="stat-label">{{ 'stats_avg_score' | translate }}</div>
       </div>
       <div class="stat-block reveal reveal-d2">
         <div class="stat-num" data-target="34">0</div>
-        <div class="stat-label">institutions onboarded</div>
+        <div class="stat-label">{{ 'stats_institutions' | translate }}</div>
       </div>
       <div class="stat-block reveal reveal-d3">
         <div class="stat-num" data-target="61000">0</div>
-        <div class="stat-label">evaluations given</div>
+        <div class="stat-label">{{ 'stats_evaluations' | translate }}</div>
       </div>
     </div>
   </div>
@@ -370,26 +344,25 @@
 <!-- ─── CTA ─── -->
 <section class="cta-section">
   <div class="cta-bg"></div>
-  <div class="overline reveal">Ready when you are</div>
+  <div class="overline reveal">{{ 'cta_overline' | translate }}</div>
   <h2 class="cta-title reveal reveal-d1">
-    Learning only counts<br><span class="gradient">when others validate it.</span>
+    {{ 'cta_title_line1' | translate }}<br><span class="gradient">{{ 'cta_title_line2' | translate }}</span>
   </h2>
-  <p class="cta-sub reveal reveal-d2">
-    For students who want to grow through honest feedback.
-    For institutions that trust their learners to lead the process.
-  </p>
+  <p class="cta-sub reveal reveal-d2">{{ 'cta_sub' | translate }}</p>
   <div class="cta-actions reveal reveal-d3">
-    <a routerLink="/login" class="btn btn-primary btn-lg">Join as a student</a>
-    <a href="#institutes" class="btn btn-ghost btn-lg">For institutions →</a>
+    <a routerLink="/login" class="btn btn-primary btn-lg">{{ 'cta_btn_join' | translate }}</a>
+    <a href="#institutes" class="btn btn-ghost btn-lg">{{ 'cta_btn_institutions' | translate }}</a>
   </div>
 </section>
 
 <!-- ─── FOOTER ─── -->
 <footer>
-  <div>43 · peer-validated learning · v0.1</div>
+  <div>43 · {{ 'footer_tagline' | translate }} · v0.1</div>
   <div class="links">
     <a href="#">github</a>
     <a href="#">docs</a>
     <a href="#">manifesto</a>
+    <a routerLink="/privacy-policy">{{ 'legal_footer_privacy' | translate }}</a>
+    <a routerLink="/terms-of-service">{{ 'legal_footer_terms' | translate }}</a>
   </div>
 </footer>

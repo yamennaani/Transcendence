@@ -1,0 +1,76 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: oklch(10% 0.025 272);
+  color: oklch(94% 0.005 272);
+  font-family: 'DM Sans', sans-serif;
+}
+
+.legal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 32px;
+  border-bottom: 1px solid oklch(22% 0.025 272);
+}
+
+.logo-link {
+  text-decoration: none;
+}
+
+.back-link {
+  color: oklch(68% 0.01 272);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color 150ms;
+}
+
+.back-link:hover {
+  color: oklch(94% 0.005 272);
+}
+
+.legal-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 56px 24px 96px;
+}
+
+.legal-content h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+
+.updated {
+  color: oklch(48% 0.01 272);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  margin: 0 0 32px;
+}
+
+.intro {
+  color: oklch(68% 0.01 272);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+section {
+  margin-bottom: 32px;
+}
+
+section h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+section p {
+  color: oklch(68% 0.01 272);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  margin: 0;
+}

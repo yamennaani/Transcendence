@@ -29,6 +29,7 @@ export class AdminOrgDetailComponent {
   busy = signal(false)
   removingId = signal<number | null>(null)
   removingInviteId = signal<number | null>(null)
+  changingRoleId = signal<number | null>(null)
 
   email: string = ''
   csvText: string = ''
@@ -36,6 +37,10 @@ export class AdminOrgDetailComponent {
   bulkNotice: string = ''
   removeNotice: string = ''
   inviteNotice: string = ''
+  roleNotice: string = ''
+
+  pendingRoles: Record<number, string> = {}
+  readonly validRoles = ['Admin', 'Bocal', 'Student']
 
   constructor(){ this.load() }
 
@@ -43,7 +48,10 @@ export class AdminOrgDetailComponent {
     const id = Number(this.route.snapshot.paramMap.get('id'))
     if(!id) return
     this.orgService.getOrg(id).subscribe({ next: (o:any)=> this.org.set(o) })
-    this.orgService.listOrgMembers(id).subscribe({ next: (m:any[])=> this.members.set(m || []) })
+    this.orgService.listOrgMembers(id).subscribe({ next: (m:any[])=> {
+      this.members.set(m || [])
+      this.pendingRoles = Object.fromEntries((m || []).map((mem: any) => [mem.id, mem.role]))
+    }})
     this.loadAllowedEmails()
   }
 
@@ -126,6 +134,25 @@ export class AdminOrgDetailComponent {
       error: () => {
         this.removingId.set(null)
         this.removeNotice = `Failed to remove ${label}`
+      },
+    })
+  }
+
+  changeRole(member: any) {
+    const id = Number(this.route.snapshot.paramMap.get('id'))
+    const newRole = this.pendingRoles[member.id]
+    if (!newRole || newRole === member.role) return
+    this.changingRoleId.set(member.id)
+    this.roleNotice = ''
+    this.http.patch(`${this.orgBase}/${id}/members`, { email: member.email, role: newRole }).subscribe({
+      next: () => {
+        this.changingRoleId.set(null)
+        this.roleNotice = `Updated ${member.username ?? member.email} to ${newRole}`
+        this.load()
+      },
+      error: (err) => {
+        this.changingRoleId.set(null)
+        this.roleNotice = err?.error?.error ?? 'Failed to update role'
       },
     })
   }
@@ -281,7 +308,7 @@ export class AdminOrgDetailComponent {
 
   readonly tableHeaderStyle = {
     display: 'grid',
-    gridTemplateColumns: '1.2fr 1fr 1fr',
+    gridTemplateColumns: '1.2fr 1fr 0.7fr 1.8fr',
     gap: '12px',
     padding: '14px 20px',
     fontSize: '0.72rem',
@@ -295,12 +322,24 @@ export class AdminOrgDetailComponent {
 
   readonly tableRowStyle = {
     display: 'grid',
-    gridTemplateColumns: '1.2fr 1fr 1fr',
+    gridTemplateColumns: '1.2fr 1fr 0.7fr 1.8fr',
     gap: '12px',
     alignItems: 'center',
     padding: '16px 20px',
     borderBottom: `1px solid ${DS.colors.borderSubtle}`,
     color: DS.colors.fg2,
+  }
+
+  readonly selectStyle = {
+    background: DS.colors.surfaceRaised,
+    border: `1px solid ${DS.colors.border}`,
+    borderRadius: DS.radius.md,
+    padding: '4px 8px',
+    fontSize: '0.85rem',
+    fontFamily: DS.fonts.body,
+    color: DS.colors.fg1,
+    outline: 'none',
+    cursor: 'pointer',
   }
 
   readonly inviteTableHeaderStyle = {

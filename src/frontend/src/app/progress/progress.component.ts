@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
@@ -10,11 +10,9 @@ import { SubmissionService } from '../core/services/submission-service/submissio
 import { EvalService } from '../core/services/eval-service/eval-service';
 import { DS } from '../tokens';
 
-import { ListComponent } from '../shared/list.component';
 import { BadgeComponent } from '../shared/badge.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
 import { ProgressBarComponent } from '../shared/progress-bar.component';
-import { BtnComponent } from '../shared/btn.component';
 
 interface AssStatus {
   groupId: number | null;
@@ -33,174 +31,143 @@ interface EvalRow {
 @Component({
   selector: 'app-progress',
   standalone: true,
-  imports: [NgStyle, ListComponent, BadgeComponent, ScorePillComponent, ProgressBarComponent, BtnComponent],
+  imports: [NgStyle, BadgeComponent, ScorePillComponent, ProgressBarComponent],
   template: `
     <div [ngStyle]="pageStyle">
+      <div>
+        <div [ngStyle]="overlineStyle">Overview</div>
+        <h1 [ngStyle]="h1Style">Your progress</h1>
+      </div>
 
-      <!-- ── Classes view ────────────────────────────────────────── -->
-      @if (view() === 'classes') {
-        @if (loading()) {
-          <div [ngStyle]="dimStyle">Loading classes…</div>
-        } @else if (error()) {
-          <div [ngStyle]="errorStyle">{{ error() }}</div>
-        } @else {
-          <app-list
-            [items]="classes()"
-            [trackBy]="trackById"
-            title="Your progress"
-            overline="Overview"
-            emptyMessage="You are not enrolled in any classes."
-            (rowClick)="onClassClick($event)"
-          >
-            <ng-template let-cls>
-              <div [ngStyle]="classRowStyle">
-                <div [ngStyle]="classRowHeaderStyle">
-                  <span [ngStyle]="rowTitleStyle">{{ cls.name }}</span>
+      @if (loading()) {
+        <div [ngStyle]="dimStyle">Loading classes…</div>
+      } @else if (error()) {
+        <div [ngStyle]="errorStyle">{{ error() }}</div>
+      } @else if (!classes() || classes()!.length === 0) {
+        <div [ngStyle]="dimStyle">You are not enrolled in any classes.</div>
+      } @else {
+        <div [ngStyle]="accordionWrapStyle">
+          @for (cls of classes()!; track cls.id) {
+            <div [ngStyle]="clsCardStyle">
+
+              <!-- Class header -->
+              <div class="row-clickable" [ngStyle]="clsHeaderStyle" (click)="toggleClass(cls.id)">
+                <span [ngStyle]="chevronStyle">{{ expandedClassIds().has(cls.id) ? '▼' : '▶' }}</span>
+                <div [ngStyle]="clsInfoStyle">
+                  <div [ngStyle]="clsTopRowStyle">
+                    <span [ngStyle]="rowTitleStyle">{{ cls.name }}</span>
+                    @if (!statusLoading()) {
+                      <span [ngStyle]="progressTextStyle">
+                        {{ classProgress(cls).submitted }} / {{ classProgress(cls).total }} submitted
+                      </span>
+                    }
+                  </div>
+                  @if (!statusLoading()) {
+                    <app-progress-bar
+                      [value]="classProgress(cls).submitted"
+                      [max]="classProgress(cls).total || 1"
+                    />
+                  }
+                </div>
+              </div>
+
+              <!-- Assignments dropdown -->
+              @if (expandedClassIds().has(cls.id)) {
+                <div [ngStyle]="assAreaStyle">
                   @if (statusLoading()) {
-                    <span [ngStyle]="dimStyle">Loading…</span>
+                    <div [ngStyle]="paddedDimStyle">Loading assignments…</div>
+                  } @else if (!cls.assignments || cls.assignments.length === 0) {
+                    <div [ngStyle]="paddedDimStyle">No assignments in this class.</div>
                   } @else {
-                    <span [ngStyle]="progressTextStyle">
-                      {{ classProgress(cls).submitted }} / {{ classProgress(cls).total }} submitted
-                    </span>
+                    @for (ass of cls.assignments; track ass.id; let last = $last) {
+                      <div [ngStyle]="assItemWrapStyle(last)">
+
+                        <!-- Assignment header -->
+                        <div class="row-clickable" [ngStyle]="assHeaderStyle" (click)="toggleAssignment(ass)">
+                          <span [ngStyle]="chevronSmStyle">{{ expandedAssIds().has(ass.id) ? '▼' : '▶' }}</span>
+                          <div [ngStyle]="assInfoStyle">
+                            <span [ngStyle]="rowTitleStyle">{{ ass.name }}</span>
+                            @if (ass.description) {
+                              <span [ngStyle]="rowMetaStyle">{{ ass.description }}</span>
+                            }
+                          </div>
+                          <app-badge
+                            [variant]="assBadgeVariant(ass.id)"
+                            [customLabel]="assBadgeLabel(ass.id)"
+                          />
+                        </div>
+
+                        <!-- Eval results dropdown -->
+                        @if (expandedAssIds().has(ass.id)) {
+                          <div [ngStyle]="evalAreaStyle">
+                            @if (!assStatus(ass.id)?.isSubmitted) {
+                              <div [ngStyle]="dimStyle">You haven't submitted this assignment yet.</div>
+                            } @else if (evalLoadingIds().has(ass.id)) {
+                              <div [ngStyle]="dimStyle">Loading evaluations…</div>
+                            } @else {
+                              @if (assStatus(ass.id)?.finalScore != null) {
+                                <div [ngStyle]="scoreRowStyle">
+                                  <span [ngStyle]="scoreLabelStyle">Final score</span>
+                                  <div style="display:flex;align-items:center;gap:10px">
+                                    <app-score-pill [score]="assStatus(ass.id)!.finalScore!" [max]="100" />
+                                    <app-badge [variant]="assStatus(ass.id)!.passed ? 'validated' : 'failed'" />
+                                  </div>
+                                </div>
+                              }
+                              @if (!evalRowsMap()[ass.id] || evalRowsMap()[ass.id].length === 0) {
+                                <div [ngStyle]="dimStyle">No evaluations yet.</div>
+                              } @else {
+                                <div [ngStyle]="evalPanelStyle">
+                                  <div [ngStyle]="panelTitleStyle">Evaluations received</div>
+                                  @for (row of evalRowsMap()[ass.id]; track row.id; let last = $last) {
+                                    <div [ngStyle]="evalRowItemStyle(last)">
+                                      <span [ngStyle]="roundStyle">Round {{ row.round }}</span>
+                                      <app-badge
+                                        [variant]="row.status === 'Submitted' ? 'submitted' : row.status === 'Cancelled' ? 'failed' : 'pending'"
+                                        [customLabel]="row.status === 'Submitted' ? 'badge_submitted' : row.status === 'Cancelled' ? 'badge_failed' : 'badge_pending'"
+                                      />
+                                    </div>
+                                  }
+                                </div>
+                              }
+                            }
+                          </div>
+                        }
+
+                      </div>
+                    }
                   }
-                </div>
-                @if (!statusLoading()) {
-                  <app-progress-bar
-                    [value]="classProgress(cls).submitted"
-                    [max]="classProgress(cls).total || 1"
-                  />
-                }
-              </div>
-            </ng-template>
-          </app-list>
-        }
-      }
-
-      <!-- ── Assignments view ─────────────────────────────────────── -->
-      @else if (view() === 'assignments') {
-        <div [ngStyle]="headerStyle">
-          <app-btn variant="ghost" size="sm" (clicked)="backToClasses()">← Classes</app-btn>
-          <div>
-            <div [ngStyle]="overlineStyle">Class</div>
-            <h1 [ngStyle]="h1Style">{{ selectedClass()?.name }}</h1>
-          </div>
-        </div>
-
-        @if (statusLoading()) {
-          <div [ngStyle]="dimStyle">Loading assignments…</div>
-        } @else {
-          <app-list
-            [items]="selectedAssignments()"
-            [trackBy]="trackById"
-            emptyMessage="No assignments in this class."
-            (rowClick)="onAssignmentClick($event)"
-          >
-            <ng-template let-ass>
-              <div [ngStyle]="assRowStyle">
-                <div [ngStyle]="assInfoStyle">
-                  <span [ngStyle]="rowTitleStyle">{{ ass.name }}</span>
-                  @if (ass.description) {
-                    <span [ngStyle]="rowMetaStyle">{{ ass.description }}</span>
-                  }
-                </div>
-                <app-badge
-                  [variant]="assStatus(ass.id)?.isSubmitted ? 'submitted' : 'pending'"
-                  [customLabel]="assStatus(ass.id)?.isSubmitted ? 'Submitted' : 'Not submitted'"
-                />
-              </div>
-            </ng-template>
-          </app-list>
-        }
-      }
-
-      <!-- ── Eval results view ────────────────────────────────────── -->
-      @else if (view() === 'results') {
-        <div [ngStyle]="headerStyle">
-          <app-btn variant="ghost" size="sm" (clicked)="backToAssignments()">← {{ selectedClass()?.name }}</app-btn>
-          <div>
-            <div [ngStyle]="overlineStyle">Assignment</div>
-            <h1 [ngStyle]="h1Style">{{ selectedAss()?.name }}</h1>
-          </div>
-        </div>
-
-        @if (!hasSubmission()) {
-          <div [ngStyle]="emptyPanelStyle">You haven't submitted this assignment yet.</div>
-        } @else if (evalLoading()) {
-          <div [ngStyle]="dimStyle">Loading evaluations…</div>
-        } @else {
-
-          @if (selectedStatus()?.finalScore != null) {
-            <div [ngStyle]="scoreCardStyle">
-              <span [ngStyle]="scoreLabelStyle">Final score</span>
-              <div style="display:flex;align-items:center;gap:10px">
-                <app-score-pill [score]="selectedStatus()!.finalScore!" [max]="100" />
-                <app-badge [variant]="selectedStatus()!.passed ? 'validated' : 'failed'" />
-              </div>
-            </div>
-          }
-
-          <div [ngStyle]="panelStyle">
-            <div [ngStyle]="panelTitleStyle">Evaluations received</div>
-            @if (!evalRows() || evalRows()!.length === 0) {
-              <div [ngStyle]="emptyStyle">No evaluations yet</div>
-            } @else {
-              @for (row of evalRows()!; track row.id; let last = $last) {
-                <div [ngStyle]="evalRowStyle(last)">
-                  <span [ngStyle]="roundStyle">Round {{ row.round }}</span>
-                  <app-badge
-                    [variant]="row.status === 'Submitted' ? 'submitted' : row.status === 'Cancelled' ? 'failed' : 'pending'"
-                    [customLabel]="row.status"
-                  />
                 </div>
               }
-            }
-          </div>
-        }
-      }
 
+            </div>
+          }
+        </div>
+      }
     </div>
   `,
+  styles: [`
+    .row-clickable { cursor: pointer; transition: background 100ms ease; }
+    .row-clickable:hover { background: ${DS.colors.surfaceRaised}; }
+  `],
 })
 export class ProgressComponent implements OnInit {
-  private auth = inject(AuthService);
-  private enrollService = inject(EnrollService);
-  private groupService = inject(GroupService);
+  private auth            = inject(AuthService);
+  private enrollService   = inject(EnrollService);
+  private groupService    = inject(GroupService);
   private submissionService = inject(SubmissionService);
-  private evalService = inject(EvalService);
-
-  view = signal<'classes' | 'assignments' | 'results'>('classes');
+  private evalService     = inject(EvalService);
 
   classes            = signal<any[] | null>(null);
-  selectedClass      = signal<any | null>(null);
   assignmentStatuses = signal<Record<number, AssStatus>>({});
   statusLoading      = signal(false);
-  selectedAss        = signal<any | null>(null);
-  evalRows           = signal<EvalRow[] | null>(null);
-  evalLoading        = signal(false);
   loading            = signal(false);
   error              = signal<string | null>(null);
 
-  readonly trackById = (item: { id: number }) => item.id;
-
-  selectedAssignments = computed(() => this.selectedClass()?.assignments ?? []);
-
-  selectedStatus = computed(() => {
-    const ass = this.selectedAss();
-    return ass ? (this.assignmentStatuses()[ass.id] ?? null) : null;
-  });
-
-  hasSubmission = computed(() => this.selectedStatus()?.isSubmitted ?? false);
-
-  assStatus(assId: number): AssStatus | null {
-    return this.assignmentStatuses()[assId] ?? null;
-  }
-
-  classProgress(cls: any): { submitted: number; total: number } {
-    const assignments: any[] = cls.assignments ?? [];
-    const total = assignments.length;
-    const submitted = assignments.filter((a: any) => this.assignmentStatuses()[a.id]?.isSubmitted).length;
-    return { submitted, total };
-  }
+  expandedClassIds = signal<Set<number>>(new Set());
+  expandedAssIds   = signal<Set<number>>(new Set());
+  evalRowsMap      = signal<Record<number, EvalRow[]>>({});
+  evalLoadingIds   = signal<Set<number>>(new Set());
 
   ngOnInit(): void {
     const userId = this.auth.user()?.id;
@@ -220,36 +187,56 @@ export class ProgressComponent implements OnInit {
     });
   }
 
-  onClassClick(cls: any): void {
-    this.selectedClass.set(cls);
-    this.view.set('assignments');
+  toggleClass(classId: number): void {
+    this.expandedClassIds.update(s => {
+      const n = new Set(s);
+      n.has(classId) ? n.delete(classId) : n.add(classId);
+      return n;
+    });
   }
 
-  backToClasses(): void {
-    this.view.set('classes');
-    this.selectedClass.set(null);
-  }
-
-  onAssignmentClick(ass: any): void {
-    this.selectedAss.set(ass);
-    this.view.set('results');
-    const status = this.assStatus(ass.id);
-    if (status?.groupId) {
-      this.loadEvalResults(ass.id, status.groupId);
-    } else {
-      this.evalRows.set([]);
+  toggleAssignment(ass: any): void {
+    const wasOpen = this.expandedAssIds().has(ass.id);
+    this.expandedAssIds.update(s => {
+      const n = new Set(s);
+      wasOpen ? n.delete(ass.id) : n.add(ass.id);
+      return n;
+    });
+    if (!wasOpen) {
+      const status = this.assStatus(ass.id);
+      if (status?.isSubmitted && status.groupId && !(ass.id in this.evalRowsMap())) {
+        this.loadEvalResults(ass.id, status.groupId);
+      }
     }
   }
 
-  backToAssignments(): void {
-    this.view.set('assignments');
-    this.selectedAss.set(null);
-    this.evalRows.set(null);
+  assStatus(assId: number): AssStatus | null {
+    return this.assignmentStatuses()[assId] ?? null;
+  }
+
+  assBadgeVariant(assId: number) {
+    const s = this.assStatus(assId);
+    if (s?.finalScore != null) return s.passed ? 'validated' : 'failed';
+    if (s?.isSubmitted) return 'submitted';
+    return 'pending';
+  }
+
+  assBadgeLabel(assId: number): string {
+    const s = this.assStatus(assId);
+    if (s?.finalScore != null) return s.passed ? 'badge_passed' : 'badge_failed';
+    if (s?.isSubmitted) return 'badge_submitted';
+    return 'badge_pending';
+  }
+
+  classProgress(cls: any): { submitted: number; total: number } {
+    const assignments: any[] = cls.assignments ?? [];
+    const total = assignments.length;
+    const submitted = assignments.filter((a: any) => this.assignmentStatuses()[a.id]?.isSubmitted).length;
+    return { submitted, total };
   }
 
   private loadAllStatuses(classes: any[], userId: number): void {
     const allAssignments: any[] = classes.flatMap((cls: any) => cls.assignments ?? []);
-
     if (allAssignments.length === 0) return;
 
     this.statusLoading.set(true);
@@ -291,23 +278,23 @@ export class ProgressComponent implements OnInit {
   }
 
   private loadEvalResults(assId: number, groupId: number): void {
-    this.evalLoading.set(true);
+    this.evalLoadingIds.update(s => { const n = new Set(s); n.add(assId); return n; });
     this.evalService.getEvalAssignments(assId).subscribe({
       next: rows => {
         const myRows: EvalRow[] = rows
-          .filter(r => r.evalueeGroupId === groupId)
-          .map(r => ({
+          .filter((r: any) => r.evalueeGroupId === groupId)
+          .map((r: any) => ({
             id: r.id,
             round: r.round,
             status: r.status,
             evalResponseId: r.evalResponseId,
           }));
-        this.evalRows.set(myRows);
-        this.evalLoading.set(false);
+        this.evalRowsMap.update(m => ({ ...m, [assId]: myRows }));
+        this.evalLoadingIds.update(s => { const n = new Set(s); n.delete(assId); return n; });
       },
       error: () => {
-        this.evalRows.set([]);
-        this.evalLoading.set(false);
+        this.evalRowsMap.update(m => ({ ...m, [assId]: [] }));
+        this.evalLoadingIds.update(s => { const n = new Set(s); n.delete(assId); return n; });
       },
     });
   }
@@ -317,7 +304,6 @@ export class ProgressComponent implements OnInit {
     flex: '1', overflowY: 'auto', padding: '32px',
     display: 'flex', flexDirection: 'column' as const, gap: '24px',
   };
-  readonly headerStyle = { display: 'flex', flexDirection: 'column' as const, gap: '16px' };
   readonly h1Style = {
     fontFamily: DS.fonts.display, fontSize: '2rem', fontWeight: '700',
     letterSpacing: '-0.03em', color: DS.colors.fg1, margin: '0',
@@ -326,46 +312,39 @@ export class ProgressComponent implements OnInit {
     fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.12em',
     textTransform: 'uppercase' as const, color: DS.colors.violet, marginBottom: '4px',
   };
-  readonly dimStyle        = { fontSize: '0.875rem', color: DS.colors.fg3 };
+  readonly dimStyle       = { fontSize: '0.875rem', color: DS.colors.fg3 };
+  readonly paddedDimStyle = { fontSize: '0.875rem', color: DS.colors.fg3, padding: '14px 18px' };
   readonly progressTextStyle = {
-    fontFamily: DS.fonts.mono, fontSize: '0.75rem', color: DS.colors.fg3,
+    fontFamily: DS.fonts.mono, fontSize: '0.75rem', color: DS.colors.fg3, flexShrink: '0' as const,
   };
   readonly errorStyle = {
     fontSize: '0.875rem', color: DS.colors.red,
     background: DS.colors.redSubtle, border: `1px solid ${DS.colors.redBorder}`,
     borderRadius: DS.radius.md, padding: '12px 16px',
   };
-  readonly panelStyle = {
+  readonly accordionWrapStyle = {
+    display: 'flex', flexDirection: 'column' as const, gap: '12px',
+  };
+  readonly clsCardStyle = {
     background: DS.colors.surface, border: `1px solid ${DS.colors.border}`,
-    borderRadius: DS.radius.lg, padding: '20px 22px',
-    display: 'flex', flexDirection: 'column' as const, gap: '14px', maxWidth: '640px',
+    borderRadius: DS.radius.xl, overflow: 'hidden',
   };
-  readonly panelTitleStyle = {
-    fontFamily: DS.fonts.display, fontSize: '1rem', fontWeight: '600', color: DS.colors.fg1,
+  readonly clsHeaderStyle = {
+    display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 18px',
   };
-  readonly scoreCardStyle = {
-    background: DS.colors.surface, border: `1px solid ${DS.colors.border}`,
-    borderRadius: DS.radius.lg, padding: '16px 22px',
-    display: 'flex', flexDirection: 'row' as const,
-    justifyContent: 'space-between', alignItems: 'center', maxWidth: '640px',
+  readonly clsInfoStyle = {
+    flex: '1', display: 'flex', flexDirection: 'column' as const, gap: '8px', minWidth: '0',
   };
-  readonly scoreLabelStyle = {
-    fontFamily: DS.fonts.display, fontSize: '0.9375rem', fontWeight: '600', color: DS.colors.fg2,
-  };
-  readonly emptyStyle      = { fontSize: '0.875rem', color: DS.colors.fg3 };
-  readonly emptyPanelStyle = { fontSize: '0.9375rem', color: DS.colors.fg3, padding: '24px 0' };
-  readonly classRowStyle = {
-    padding: '14px 16px', display: 'flex', flexDirection: 'column' as const, gap: '10px',
-  };
-  readonly classRowHeaderStyle = {
+  readonly clsTopRowStyle = {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
   };
-  readonly assRowStyle = {
-    padding: '14px 16px', display: 'flex',
-    justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+  readonly chevronStyle = {
+    fontSize: '0.75rem', color: DS.colors.fg3, flexShrink: '0' as const,
+    width: '14px', userSelect: 'none' as const,
   };
-  readonly assInfoStyle = {
-    display: 'flex', flexDirection: 'column' as const, gap: '3px', flex: '1', minWidth: '0',
+  readonly chevronSmStyle = {
+    fontSize: '0.625rem', color: DS.colors.fg3, flexShrink: '0' as const,
+    width: '12px', userSelect: 'none' as const,
   };
   readonly rowTitleStyle = {
     fontFamily: DS.fonts.display, fontSize: '1rem', fontWeight: '600',
@@ -376,12 +355,50 @@ export class ProgressComponent implements OnInit {
     fontSize: '0.8125rem', color: DS.colors.fg3,
     whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis',
   };
+  readonly assAreaStyle = {
+    borderTop: `1px solid ${DS.colors.border}`,
+    display: 'flex', flexDirection: 'column' as const,
+  };
+  readonly assHeaderStyle = {
+    display: 'flex', alignItems: 'center', gap: '12px',
+    padding: '12px 18px 12px 32px',
+  };
+  readonly assInfoStyle = {
+    flex: '1', display: 'flex', flexDirection: 'column' as const, gap: '3px', minWidth: '0',
+  };
+  readonly evalAreaStyle = {
+    padding: '14px 18px 14px 56px',
+    borderTop: `1px solid ${DS.colors.borderSubtle}`,
+    background: DS.colors.bg,
+    display: 'flex', flexDirection: 'column' as const, gap: '12px',
+  };
+  readonly scoreRowStyle = {
+    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    padding: '10px 14px', background: DS.colors.surface,
+    border: `1px solid ${DS.colors.border}`, borderRadius: DS.radius.md,
+  };
+  readonly scoreLabelStyle = {
+    fontFamily: DS.fonts.display, fontSize: '0.9375rem', fontWeight: '600', color: DS.colors.fg2,
+  };
+  readonly evalPanelStyle = {
+    display: 'flex', flexDirection: 'column' as const, gap: '10px',
+  };
+  readonly panelTitleStyle = {
+    fontFamily: DS.fonts.display, fontSize: '0.875rem', fontWeight: '600',
+    color: DS.colors.fg2, marginBottom: '2px',
+  };
   readonly roundStyle = { fontFamily: DS.fonts.mono, fontSize: '0.875rem', color: DS.colors.fg2 };
 
-  evalRowStyle(last: boolean) {
+  assItemWrapStyle(last: boolean) {
+    return {
+      borderBottom: last ? 'none' : `1px solid ${DS.colors.borderSubtle}`,
+    };
+  }
+
+  evalRowItemStyle(last: boolean) {
     return {
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      paddingBottom: last ? '0' : '10px',
+      paddingBottom: last ? '0' : '8px',
       borderBottom: last ? 'none' : `1px solid ${DS.colors.borderSubtle}`,
     };
   }

@@ -18,21 +18,7 @@ check_env:
 	@echo "$(BLUE)Checking .env...$(RESET)"
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "$(YELLOW).env not found — generating...$(RESET)"; \
-		echo "POSTGRES_USER=user" > $(ENV_FILE); \
-		echo "POSTGRES_DB=db" >> $(ENV_FILE); \
-		echo "DB_HOST=database" >> $(ENV_FILE); \
-		echo "DB_PORT=5432" >> $(ENV_FILE); \
-		echo "PORT=3000" >> $(ENV_FILE); \
-		echo "DB_PASSWORD=password" >> $(ENV_FILE); \
-		echo "DB_LOCAL_PORT=5433" >> $(ENV_FILE); \
-		echo "DATABASE_URL=\"postgresql://user:password@localhost:5433/db\"" >> $(ENV_FILE); \
-		echo "MINIO_ENDPOINT=minio" >> $(ENV_FILE); \
-		echo "MINIO_PORT=9000" >> $(ENV_FILE); \
-		echo "MINIO_ACCESS_KEY=minioadmin" >> $(ENV_FILE); \
-		echo "MINIO_SECRET_KEY=minioadmin" >> $(ENV_FILE); \
-		echo "MINIO_BUCKET=submissions" >> $(ENV_FILE); \
-		echo "MINIO_PUBLIC_HOST=localhost" >> $(ENV_FILE); \
-		echo "MINIO_PUBLIC_PORT=9000" >> $(ENV_FILE); \
+		bash scripts/gen-env.sh && \
 		echo "$(GREEN).env created at $(ENV_FILE)$(RESET)"; \
 	else \
 		echo "$(GREEN).env found.$(RESET)"; \
@@ -50,19 +36,19 @@ migrate:
 
 genPrismaClient:
 	@echo "$(BLUE)Generating Prisma client...$(RESET)"
-	@cd src/packages/database && npm install && npx prisma generate
+	@cd src/packages/database && npm install && npx prisma@5.22.0 generate
 	@echo "$(GREEN)Prisma client generated.$(RESET)"
 
-build: setup
+build: setup genPrismaClient
 	@echo "$(GREEN)Building images...$(RESET)"
 	@docker compose -f $(COMPOSE_FILE) build
 
-prod: setup
+prod: setup genPrismaClient
 	@echo "$(GREEN)Starting production...$(RESET)"
 	@docker compose -f $(COMPOSE_FILE) up -d
 	@$(MAKE) print_url
 
-dev: setup
+dev: setup genPrismaClient
 	@echo "$(YELLOW)Starting dev mode...$(RESET)"
 	@docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV_FILE) up -d
 	@$(MAKE) migrate

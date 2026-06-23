@@ -1,5 +1,6 @@
 import { Component, HostListener } from '@angular/core';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { isSupportedLang, setLanguage } from './language.service';
 
 @Component({
   selector: 'app-language-switcher',
@@ -153,11 +154,9 @@ export class LanguageSwitcherComponent {
   }
 
   switchLanguage(languageCode: string): void {
+    if (!isSupportedLang(languageCode)) return;
     this.currentLanguage = languageCode;
-    this.translate.use(languageCode);
-    localStorage.setItem('language', languageCode);
-    document.documentElement.dir = languageCode === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.lang = languageCode;
+    setLanguage(this.translate, languageCode);
   }
 
   getFlag(languageCode: string): string {

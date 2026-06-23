@@ -112,7 +112,7 @@ import { IconComponent } from "./icon.component";
                         (input)="onTextChange($event)"
                         />
                     }@else {
-                        <span>{{ field().value || '—' }}</span>
+                        <span>{{ formatDate(field().value) }}</span>
                     }
                 }
                 @case ('file') {
@@ -309,6 +309,12 @@ import { IconComponent } from "./icon.component";
 
     asIconField(){
         return this.field() as IconField
+    }
+
+    formatDate(value: FieldValue): string {
+        if (!value) return '—';
+        const date = new Date(value as string);
+        return Number.isNaN(date.getTime()) ? '—' : date.toLocaleString();
     }
 
     onChangeOption(event:Event){

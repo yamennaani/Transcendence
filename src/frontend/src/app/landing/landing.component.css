@@ -239,6 +239,22 @@ nav.top.scrolled { border-bottom-color: var(--border-subtle); }
   to { opacity: 1; transform: translateY(0) rotateX(0); }
 }
 
+/* Word-level reveal — used instead of .char for scripts (e.g. Arabic) where
+   splitting text into one span per character breaks letter joining/shaping. */
+.hero-title .word {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px);
+  animation-name: word-reveal !important;
+  animation-duration: 600ms !important;
+  animation-timing-function: cubic-bezier(0, 0, 0.2, 1) !important;
+  animation-fill-mode: forwards !important;
+  will-change: transform, opacity;
+}
+@keyframes word-reveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .hero-title .gradient {
   background: var(--gradient);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;

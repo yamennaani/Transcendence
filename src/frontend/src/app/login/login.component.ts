@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NgStyle } from '@angular/common';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
@@ -9,7 +9,7 @@ import { LogoComponent } from '../shared/logo.component';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [NgStyle, LogoComponent, TranslateModule],
+  imports: [NgStyle, LogoComponent, TranslateModule, RouterLink],
   template: `
     <div [ngStyle]="pageStyle">
       <div [ngStyle]="gridStyle"></div>
@@ -100,6 +100,12 @@ import { LogoComponent } from '../shared/logo.component';
             <p [ngStyle]="feedbackStyle('error')">{{ errorMsg() }}</p>
           }
 
+        </div>
+
+        <div [ngStyle]="legalLinksStyle">
+          <a routerLink="/privacy-policy" [ngStyle]="legalLinkStyle">{{ 'privacy_title' | translate }}</a>
+          <span [ngStyle]="legalLinkStyle">·</span>
+          <a routerLink="/terms-of-service" [ngStyle]="legalLinkStyle">{{ 'terms_title' | translate }}</a>
         </div>
       </div>
     </div>
@@ -233,6 +239,11 @@ export class LoginComponent implements OnInit {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
   };
   readonly forgotLinkStyle = { color: DS.colors.violet, cursor: 'pointer', fontWeight: '400' };
+  readonly legalLinksStyle = {
+    display: 'flex', justifyContent: 'center', gap: '8px',
+    marginTop: '20px', fontSize: '0.75rem',
+  };
+  readonly legalLinkStyle = { color: DS.colors.fg3, textDecoration: 'none' };
 
   bannerStyle(color: 'green' | 'red') {
     const c = color === 'green'
