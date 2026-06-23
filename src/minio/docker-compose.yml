@@ -11,6 +11,11 @@ services:
       - "9001:9001"   # Web console
     volumes:
       - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 3s
+      timeout: 3s
+      retries: 5
     networks:
       - backend-network
 

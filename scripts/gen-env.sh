@@ -279,3 +279,14 @@ rm -f "$DB_ENV_LINK"
 ln -sf "$(realpath "$ENV_FILE")" "$DB_ENV_LINK"
 
 echo -e "${GREEN}✔ Linked $DB_ENV_LINK -> $ENV_FILE${RESET}"
+
+# -----------------------------------------------------------------------------
+# Generate Prisma client
+# -----------------------------------------------------------------------------
+
+echo
+echo -e "${BLUE}Generating Prisma client...${RESET}"
+
+(cd "$REPO_ROOT/src/packages/database" && npx prisma@5.22.0 generate)
+
+echo -e "${GREEN}✔ Prisma client generated.${RESET}"
