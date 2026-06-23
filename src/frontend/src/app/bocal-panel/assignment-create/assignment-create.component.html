@@ -25,28 +25,39 @@
           <label [ngStyle]="fieldLabelStyle">Description</label>
           <textarea [ngStyle]="textAreaStyle" [value]="description()" (input)="description.set($any($event.target).value)"></textarea>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
           <div>
             <label [ngStyle]="fieldLabelStyle">Max score</label>
-            <input [ngStyle]="inputStyle" type="number" min="1" [value]="maxScore()" (input)="maxScore.set(+$any($event.target).value)" />
+            <input
+              [ngStyle]="inputStyle"
+              type="number"
+              min="1"
+              [value]="maxScore()"
+              (input)="maxScore.set(+$any($event.target).value)" />
           </div>
+
           <div>
             <label [ngStyle]="fieldLabelStyle">Required evals</label>
-            <input [ngStyle]="inputStyle" type="number" min="1" [value]="reqEval()" (input)="reqEval.set(+$any($event.target).value)" />
+            <input
+              [ngStyle]="inputStyle"
+              type="number"
+              min="1"
+              [value]="reqEval()"
+              (input)="reqEval.set(+$any($event.target).value)" />
+          </div>
+
+          <div>
+            <label [ngStyle]="fieldLabelStyle">Pass threshold (%)</label>
+            <input
+              [ngStyle]="inputStyle"
+              type="number"
+              min="1"
+              max="100"
+              [value]="passThreshold()"
+              (input)="passThreshold.set(+$any($event.target).value)" />
           </div>
         </div>
-        @if (editMode()) {
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div>
-              <label [ngStyle]="fieldLabelStyle">Group size</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" [value]="groupSize()" (input)="groupSize.set(+$any($event.target).value)" />
-            </div>
-            <div>
-              <label [ngStyle]="fieldLabelStyle">Pass threshold (%)</label>
-              <input [ngStyle]="inputStyle" type="number" min="1" max="100" [value]="passThreshold()" (input)="passThreshold.set(+$any($event.target).value)" />
-            </div>
-          </div>
-        }
         <div>
           <label [ngStyle]="fieldLabelStyle">Subject file</label>
           <div style="font-size:0.8125rem;color:oklch(68% 0.01 272);margin-bottom:6px">
