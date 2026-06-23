@@ -272,7 +272,7 @@ const revokeAllowedEmail = async (id) => {
 const findUserById = async (userId) => {
   const rows = await prisma.$queryRaw`
     SELECT u.id, u.email, u.username, u.role, u.created_at, u."orgId",
-           up.bio, up.avatar
+           up.bio, up.avatar, up.last_update
     FROM "user" u
     LEFT JOIN "userProfile" up ON u.id = up."userId"
     WHERE u.id = ${userId}
@@ -286,7 +286,9 @@ const findUserById = async (userId) => {
     role: r.role,
     created_at: r.created_at,
     orgId: r.orgId,
-    profile: (r.bio !== null || r.avatar !== null) ? { bio: r.bio, avatar: r.avatar } : null,
+    profile: (r.bio !== null || r.avatar !== null)
+      ? { bio: r.bio, avatar: r.avatar, last_update: r.last_update }
+      : null,
   };
 };
 

@@ -18,13 +18,13 @@ const ACTIVE_ALIASES: Record<string, string[]> = {
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: 'label_dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student','Bocal','Admin'] },
-  { label: 'label_my_classes',  route: '/classes',            icon: 'book',       roles: ['Student','Bocal','Admin'] },
-  { label: 'label_assignments', route: '/assignment',         icon: 'file',       roles: ['Student','Bocal','Admin'] },
-  { label: 'label_evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student','Bocal','Admin'], badge: 2 },
-  { label: 'label_progress1',   route: '/progress',           icon: 'trending',   roles: ['Student','Bocal','Admin'] },
-  { label: 'label_bocal',       route: '/bocal',              icon: 'building',   roles: ['Student','Bocal','Admin'] },
-  { label: 'label_admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Student','Bocal','Admin'] },
+  { label: 'label_dashboard',   route: '/dashboard',          icon: 'dashboard',  roles: ['Student'] },
+  { label: 'label_my_classes',  route: '/classes',            icon: 'book',       roles: ['Student'] },
+  { label: 'label_assignments', route: '/assignment',         icon: 'file',       roles: ['Student'] },
+  { label: 'label_evaluations', route: '/evaluation',         icon: 'star',       roles: ['Student']},
+  { label: 'label_progress1',   route: '/progress',           icon: 'trending',   roles: ['Student'] },
+  { label: 'label_bocal',       route: '/bocal',              icon: 'building',   roles: ['Bocal','Admin'] },
+  { label: 'label_admin',       route: '/admin/orgs',         icon: 'users',      roles: ['Admin'] },
 ];
 
 @Component({
@@ -71,7 +71,6 @@ const NAV_ITEMS: NavItem[] = [
         <div [ngStyle]="itemStyle('')" style="text-decoration:none">
           <app-language-switcher/>
         </div>
-        <a [ngStyle]="itemStyle('/settings')" style="text-decoration:none" href="#">{{ 'btn_settings' | translate }}</a>
         <a [ngStyle]="itemStyle('/logout')" (click)="logout()" style="text-decoration:none;cursor:pointer">{{ 'btn_sign_out' | translate }}</a>
       </div>
     </nav>

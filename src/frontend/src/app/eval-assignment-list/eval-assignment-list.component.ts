@@ -47,6 +47,47 @@ interface AssignmentGroup {
   }[];
 }
 
+// interface to know how many times student acts in the role of evaluator:
+interface EvaluatorWorkloadRow {
+  userId: number;
+  username: string;
+  groupName: string;
+  count: number;
+}
+
+interface EnrolledStudent {
+  userId: number;
+  username: string;
+  email: string;
+}
+
+interface UnmatchedStudentRow {
+  userId: number;
+  username: string;
+  email: string;
+  evalueeAssignments: number;
+  requiredRounds: number;
+  missingRounds: number;
+  groupNames: string;
+}
+
+interface ManualPairingEvalueeGroupOption {
+  groupId: number;
+  groupName: string;
+  members: string;
+  round: number;
+  evalueeAssignments: number;
+  requiredRounds: number;
+}
+
+interface ManualPairingEvaluatorOption {
+  userId: number;
+  username: string;
+  groupId: number;
+  groupName: string;
+  count: number;
+}
+
 @Component({
   selector: 'app-eval-assignment-list',
   standalone: true,
@@ -55,6 +96,7 @@ interface AssignmentGroup {
   templateUrl: './eval-assignment-list.component.html',
 })
 export class EvalAssignmentListComponent implements OnInit {
+  // ── Services ───────────────────────────────────────────────  
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private evalService = inject(EvalService);
@@ -62,20 +104,43 @@ export class EvalAssignmentListComponent implements OnInit {
   private groupService = inject(GroupService);
   private loadingService = inject(LoadingService);
 
+  // ── Assignment context ─────────────────────────────────────
   assignmentId = signal<number | null>(null);
+  classId = signal<number | null>(null);
+  requiredRounds = signal<number | null>(null);
   assignmentName = signal<string | null>(null)
   courseName = signal<string | null>(null)
+
+  // ── Loaded data ────────────────────────────────────────────  
+  enrolledStudents = signal<EnrolledStudent[]>([]);
+  assignmentGroups = signal<AssignmentGroup[]>([]);
   evalAssignments = signal<EvalAssignmentDisplayRow[]>([]);
+
+  // ── Page state ─────────────────────────────────────────────
   loading = signal(false);
   error = signal<string | null>(null);
 
-  // Assignment groups for edit-functionality:
-  assignmentGroups = signal<AssignmentGroup[]>([]);
+  // ── Round display state ────────────────────────────────────
+  selectedRound = signal<number | null>(null);
+
+  // ── Edit existing pairing modal ────────────────────────────
   editingPairing = signal<EvalAssignmentDisplayRow | null>(null);
   editEvaluatorGroupId = signal<number | null>(null);
   editEvaluatorUserId = signal<number | null>(null);
   editPairingError = signal<string | null>(null);
 
+  // ── Diagnostic modals ──────────────────────────────────────
+  showEvaluatorWorkload = signal(false);
+  showUnmatchedStudents = signal(false);
+  
+  // ── Create single pairing modal ────────────────────────────
+  showCreateSinglePairing = signal(false);
+  createPairingEvalueeGroup = signal<ManualPairingEvalueeGroupOption | null>(null);
+  createPairingEvaluator = signal<ManualPairingEvaluatorOption | null>(null);
+  createPairingError = signal<string | null>(null);
+
+
+  // ── Round display computed values ──────────────────────────
   pairingsByRound = computed(() => {
     const map = new Map<number, EvalAssignmentDisplayRow[]>();
     for (const row of this.evalAssignments()) {
@@ -91,8 +156,8 @@ export class EvalAssignmentListComponent implements OnInit {
     }));
   });
 
-  selectedRound = signal<number | null>(null);
   roundNumbers = computed(() => this.pairingsByRound().map(group => group.round));
+  
   selectedRoundGroup = computed(() => {
     const groups = this.pairingsByRound();
     if (groups.length === 0) { return null; }
@@ -100,6 +165,146 @@ export class EvalAssignmentListComponent implements OnInit {
     if (selected === null) { return groups[0]; }
     return groups.find(group => group.round === selected) ?? groups[0];
   });
+
+  // ── Edit existing pairing computed values ──────────────────
+  availableEvaluatorGroups = computed(() => {
+    const row = this.editingPairing();
+    if (!row) { return this.assignmentGroups(); }
+    return this.assignmentGroups().filter(group => group.id !== row.evalueeGroupId);
+  });
+
+  availableEvaluatorMembers = computed(() => {
+    const groupId = this.editEvaluatorGroupId();
+    if (!groupId) { return []; }
+    return this.assignmentGroups().find(group => group.id === groupId)?.members ?? [];
+  });
+
+  // ── Diagnostic computed values ─────────────────────────────
+  evaluatorWorkload = computed<EvaluatorWorkloadRow[]>(() => {
+    const countByUserId = new Map<number, number>();
+    for (const row of this.evalAssignments()) {
+      const current = countByUserId.get(row.evaluatorUserId) ?? 0;
+      countByUserId.set(row.evaluatorUserId, current + 1);
+    }
+    const studentsByUserId = new Map<number, EvaluatorWorkloadRow>();
+    for (const group of this.assignmentGroups()) {
+      for (const member of group.members) {
+        if (!studentsByUserId.has(member.userId)) {
+          studentsByUserId.set(member.userId, {
+            userId: member.userId,
+            username: member.user?.username ?? `user #${member.userId}`,
+            groupName: group.name,
+            count: countByUserId.get(member.userId) ?? 0, });
+        }
+      }
+    }
+    return Array.from(studentsByUserId.values()).sort((a, b) => {
+      if (a.count !== b.count) { return a.count - b.count; }
+      return a.username.localeCompare(b.username); });
+  });
+
+  // check: -) student is enrolled but in no assignment group
+  //        -) student is in an assignment group, but that group has too few evaluee pairings
+  unmatchedStudents = computed<UnmatchedStudentRow[]>(() => {
+    const requiredRounds = this.requiredRounds();
+    if (!requiredRounds || requiredRounds <= 0) { return []; }
+
+    const evalueeCountByGroupId = new Map<number, number>();
+    for (const row of this.evalAssignments()) {
+      const current = evalueeCountByGroupId.get(row.evalueeGroupId) ?? 0;
+      evalueeCountByGroupId.set(row.evalueeGroupId, current + 1);
+    }
+    const evalueeCountByUserId = new Map<number, number>();
+    const groupNamesByUserId = new Map<number, string[]>();
+    for (const group of this.assignmentGroups()) {
+      const groupEvalueeCount = evalueeCountByGroupId.get(group.id) ?? 0;
+      for (const member of group.members) {
+        const current = evalueeCountByUserId.get(member.userId) ?? 0;
+        evalueeCountByUserId.set(member.userId, current + groupEvalueeCount);
+        const existingGroups = groupNamesByUserId.get(member.userId) ?? [];
+        existingGroups.push(group.name);
+        groupNamesByUserId.set(member.userId, existingGroups);
+      }
+    }
+    return this.enrolledStudents()
+      .map(student => { 
+        const evalueeAssignments = evalueeCountByUserId.get(student.userId) ?? 0; 
+        return {
+          userId: student.userId,
+          username: student.username,
+          email: student.email,
+          evalueeAssignments,
+          requiredRounds,
+          missingRounds: requiredRounds - evalueeAssignments,
+          groupNames:
+            (groupNamesByUserId.get(student.userId) ?? []).join(', ') ||
+            'No assignment group',
+        }; })
+      .filter(row => row.missingRounds > 0)
+      .sort((a, b) => {
+        if (a.missingRounds !== b.missingRounds) {
+          return b.missingRounds - a.missingRounds; }
+        return a.username.localeCompare(b.username);
+      });
+  });
+
+  // ── Create single pairing computed values ──────────────────
+  manualPairingEvalueeGroupOptions = computed<ManualPairingEvalueeGroupOption[]>(() => {
+    const requiredRounds = this.requiredRounds();
+    if (!requiredRounds || requiredRounds <= 0) { return []; }
+    const evalueeRoundsByGroupId = new Map<number, Set<number>>();
+    for (const row of this.evalAssignments()) {
+      const rounds = evalueeRoundsByGroupId.get(row.evalueeGroupId) ?? new Set<number>();
+      rounds.add(row.round);
+      evalueeRoundsByGroupId.set(row.evalueeGroupId, rounds);
+    }
+    const options: ManualPairingEvalueeGroupOption[] = [];
+    for (const group of this.assignmentGroups()) {
+      const existingRounds = evalueeRoundsByGroupId.get(group.id) ?? new Set<number>();
+      for (let round = 1; round <= requiredRounds; round++) {
+        if (!existingRounds.has(round)) {
+          options.push({
+            groupId: group.id,
+            groupName: group.name,
+            members: this.memberNames(group),
+            round,
+            evalueeAssignments: existingRounds.size,
+            requiredRounds, }); 
+        }
+      }
+    }
+    return options.sort((a, b) => { 
+      if (a.round !== b.round) {return a.round - b.round;}
+      return a.groupName.localeCompare(b.groupName); });
+  });
+
+  manualPairingEvaluatorOptions = computed<ManualPairingEvaluatorOption[]>(() => {
+    const countByUserId = new Map<number, number>();
+    for (const row of this.evalAssignments()) {
+      const current = countByUserId.get(row.evaluatorUserId) ?? 0;
+      countByUserId.set(row.evaluatorUserId, current + 1);
+    }
+    const candidates: ManualPairingEvaluatorOption[] = [];
+    for (const group of this.assignmentGroups()) {
+      for (const member of group.members) {
+        candidates.push({
+          userId: member.userId,
+          username: member.user?.username ?? `user #${member.userId}`,
+          groupId: group.id,
+          groupName: group.name,
+          count: countByUserId.get(member.userId) ?? 0, });
+      }
+    }
+    return candidates.sort((a, b) => { if (a.count !== b.count) { return a.count - b.count; }
+      return a.username.localeCompare(b.username); });
+  });
+
+  availableManualPairingEvaluators = computed<ManualPairingEvaluatorOption[]>(() => {
+    const evalueeGroup = this.createPairingEvalueeGroup();
+    if (!evalueeGroup) { return this.manualPairingEvaluatorOptions(); }
+    return this.manualPairingEvaluatorOptions().filter(
+      evaluator => evaluator.groupId !== evalueeGroup.groupId );
+  });  
 
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
@@ -119,8 +324,6 @@ export class EvalAssignmentListComponent implements OnInit {
   readonly loadingStyle = { fontSize: '0.875rem', opacity: '0.75', };
   readonly overlayStyle = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)', backdropFilter: 'blur(8px)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100', };
-  readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px',
-    width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
   readonly modalTitleStyle = { fontSize: '1.125rem', fontWeight: '600', };
   readonly modalBodyStyle = { display: 'flex', flexDirection: 'column' as const, gap: '14px', };
   readonly fieldLabelStyle = { display: 'block', fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em',
@@ -141,6 +344,13 @@ export class EvalAssignmentListComponent implements OnInit {
   readonly cardTitleStyle = { fontWeight: '600', color: 'oklch(94% 0.005 272)', marginBottom: '4px', };
   readonly cardSubtitleStyle = { fontSize: '0.8125rem', color: 'oklch(48% 0.01 272)', };
   readonly cardActionsStyle = { display: 'flex', alignItems: 'center', gap: '8px', };
+  readonly workloadRowStyle = { display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    gap: '16px', padding: '10px 0', borderBottom: '1px solid #2a2f45', };  
+  //readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px',  
+  //  width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
+readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', borderRadius: '16px', padding: '28px', width: '440px',
+    maxHeight: '90vh', overflowY: 'auto' as const, boxSizing: 'border-box' as const, display: 'flex', flexDirection: 'column' as const,
+    gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)', };
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
@@ -270,20 +480,37 @@ export class EvalAssignmentListComponent implements OnInit {
   private loadEvalAssignmentHeader(assignmentId: number): void {
     this.evalService.getAssignment(assignmentId).subscribe({
       next: (assignment: any) => {
+        //console.log('assignment:', assignment);
         this.assignmentName.set(assignment.name ?? `Assignment #${assignmentId}`);
         const classId = assignment.classid ?? assignment.classId;
+        //console.log('classId:', classId);
+        const requiredRounds = parseInt(assignment.req_eval, 10);
+        //console.log('requiredRounds:', requiredRounds);
+        this.classId.set(classId ?? null);
+        this.requiredRounds.set(Number.isNaN(requiredRounds) ? null : requiredRounds);
         if (!classId) return;
+        this.loadEnrolledStudents(classId);
         this.courseService.getClass(classId).subscribe({
           next: (course: any) => {
-            this.courseName.set(course.name ?? `Class #${classId}`);
-          },
+            this.courseName.set(course.name ?? `Class #${classId}`); },
           error: () => {
-            this.courseName.set(`Class #${classId}`);
-          },
-        });
+            this.courseName.set(`Class #${classId}`); }, });
       },
       error: () => {
-        this.assignmentName.set(`Assignment #${assignmentId}`);
+        this.assignmentName.set(`Assignment #${assignmentId}`); },
+    });
+  }  
+
+  private loadEnrolledStudents(classId: number): void {
+    this.courseService.getClassStudents(classId).subscribe({
+      next: students => {
+        this.enrolledStudents.set(
+          students.map(student => ({
+            userId: student.id,
+            username: student.username,
+            email: student.email, })) ); },
+      error: () => {
+        this.enrolledStudents.set([]);
       },
     });
   }
@@ -356,18 +583,6 @@ export class EvalAssignmentListComponent implements OnInit {
       },
     });
   }
-
-  availableEvaluatorGroups = computed(() => {
-    const row = this.editingPairing();
-    if (!row) { return this.assignmentGroups(); }
-    return this.assignmentGroups().filter(group => group.id !== row.evalueeGroupId);
-  });
-
-  availableEvaluatorMembers = computed(() => {
-    const groupId = this.editEvaluatorGroupId();
-    if (!groupId) { return []; }
-    return this.assignmentGroups().find(group => group.id === groupId)?.members ?? [];
-  });
 
   private loadGroupsForAssignment(assignmentId: number): void {
     this.groupService.getGroupsForAssignment(assignmentId).subscribe({
@@ -456,6 +671,73 @@ export class EvalAssignmentListComponent implements OnInit {
         this.loadingService.hide();
       },
     });
-  }  
+  }
+
+  saveCreateSinglePairing(): void {
+    const assignmentId = this.assignmentId();
+    const evalueeGroup = this.createPairingEvalueeGroup();
+    const evaluator = this.createPairingEvaluator();
+    if (!assignmentId) { this.createPairingError.set('Cannot create pairing without an assignment id.'); return; }
+    if (!evalueeGroup) { this.createPairingError.set('Please select an unmatched evaluee group.'); return; }
+    if (!evaluator) { this.createPairingError.set('Please select an evaluator.'); return; }
+    if (evalueeGroup.groupId === evaluator.groupId) { this.createPairingError.set('A group cannot evaluate itself.'); return; }
+
+    this.createPairingError.set(null);
+    this.loading.set(true);
+    this.loadingService.show();
+
+    this.evalService.createEvalAssignment({
+      assignmentId,
+      evalueeGroupId: evalueeGroup.groupId,
+      evaluatorGroupId: evaluator.groupId,
+      evaluatorUserId: evaluator.userId,
+      round: evalueeGroup.round, }).subscribe({
+      next: () => {
+        this.closeCreateSinglePairingModal();
+        this.loadEvalAssignments(assignmentId);
+        this.loading.set(false);
+        this.loadingService.hide(); },
+      error: (err: any) => {
+        this.createPairingError.set(
+          this.errorMessage(err, 'Failed to create single pairing.'));
+        this.loading.set(false);
+        this.loadingService.hide(); }, });
+  }
+
+  openCreateSinglePairingModal(): void {
+    this.createPairingError.set(null);
+
+    const firstEvalueeGroup = this.manualPairingEvalueeGroupOptions()[0] ?? null;
+    this.createPairingEvalueeGroup.set(firstEvalueeGroup);
+
+    if (firstEvalueeGroup) {
+      const firstEvaluator =
+        this.manualPairingEvaluatorOptions().find(
+          evaluator => evaluator.groupId !== firstEvalueeGroup.groupId
+        ) ?? null;
+
+      this.createPairingEvaluator.set(firstEvaluator);
+    } else {
+      this.createPairingEvaluator.set(null);
+    }
+
+    this.showCreateSinglePairing.set(true);
+  }
+
+  closeCreateSinglePairingModal(): void {
+    this.showCreateSinglePairing.set(false);
+    this.createPairingEvalueeGroup.set(null);
+    this.createPairingEvaluator.set(null);
+    this.createPairingError.set(null);
+  }
+
+  onManualPairingEvalueeGroupChanged(option: ManualPairingEvalueeGroupOption): void {
+    this.createPairingEvalueeGroup.set(option);
+    const currentEvaluator = this.createPairingEvaluator();
+    if (currentEvaluator && currentEvaluator.groupId !== option.groupId) { return; }
+    const firstEvaluator =
+      this.manualPairingEvaluatorOptions().find(evaluator => evaluator.groupId !== option.groupId) ?? null;
+    this.createPairingEvaluator.set(firstEvaluator);
+  }
 
 }

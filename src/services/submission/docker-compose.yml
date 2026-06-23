@@ -11,7 +11,10 @@ services:
     ports:
       - "3007:3000"
     depends_on:
-      - database
+      database:
+        condition: service_started
+      minio:
+        condition: service_healthy
     networks:
       - database-network
       - backend-network

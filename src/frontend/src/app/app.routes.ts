@@ -1,9 +1,10 @@
-import { Routes } from '@angular/router';
+import { Routes, ActivatedRouteSnapshot } from '@angular/router';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { AuthService } from './services/auth.service';
+import { isSupportedLang } from './languages/language.service';
 
 const waitForInit = (auth: AuthService, fn: () => boolean | ReturnType<Router['parseUrl']>) => {
   if (auth.initialized()) return fn();
@@ -24,7 +25,6 @@ const bocalGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   return waitForInit(auth, () => {
-    return true;
     const role = auth.role();
     return (role === 'Bocal' || role === 'Admin') ? true : router.parseUrl('/dashboard');
   });
@@ -34,9 +34,14 @@ const adminGuard = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const role = auth.role();
-  return true;
   if (role === 'Admin') return true;
   return router.parseUrl('/dashboard');
+};
+
+// Restricts /:lang to supported language codes so it doesn't swallow unknown paths
+const langGuard = (route: ActivatedRouteSnapshot) => {
+  const router = inject(Router);
+  return isSupportedLang(route.paramMap.get('lang')) ? true : router.parseUrl('/');
 };
 
 // Redirect logged-in users away from public pages
@@ -60,6 +65,26 @@ export const routes: Routes = [
     path: 'login',
     canActivate: [guestGuard],
     loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./register/register.component').then(m => m.RegisterComponent),
+  },
+  {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+  },
+  {
+    // Not guestGuard-ed: a reset link must work even if the browser still has
+    // an active session (e.g. after the user logged back in while waiting on the email).
+    path: 'reset-password',
+    loadComponent: () => import('./reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./verify-email/verify-email.component').then(m => m.VerifyEmailComponent),
   },
   {
     path:'user-profile',
@@ -139,6 +164,21 @@ export const routes: Routes = [
   {
     path: 'oauth-callback',
     loadComponent: () => import('./oauth-callback/oauth-callback.component').then(m => m.OAuthCallbackComponent),
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () => import('./legal/privacy-policy.component').then(m => m.PrivacyPolicyComponent),
+  },
+  {
+    path: 'terms-of-service',
+    loadComponent: () => import('./legal/terms-of-service.component').then(m => m.TermsOfServiceComponent),
+  },
+  {
+    // /en, /de, /hu, /ar — landing page pinned to a specific language.
+    // Placed after every static path above so those always win the match first.
+    path: ':lang',
+    canActivate: [guestGuard, langGuard],
+    loadComponent: () => import('./landing/landing.component').then(m => m.LandingComponent),
   },
   { path: '**', redirectTo: '' },
 ];
