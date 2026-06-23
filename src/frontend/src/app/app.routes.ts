@@ -69,6 +69,26 @@ export const routes: Routes = [
     loadComponent: () => import('./login/login.component').then(m => m.LoginComponent),
   },
   {
+    path: 'register',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./register/register.component').then(m => m.RegisterComponent),
+  },
+  {
+    path: 'forgot-password',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+  },
+  {
+    // Not guestGuard-ed: a reset link must work even if the browser still has
+    // an active session (e.g. after the user logged back in while waiting on the email).
+    path: 'reset-password',
+    loadComponent: () => import('./reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./verify-email/verify-email.component').then(m => m.VerifyEmailComponent),
+  },
+  {
     path:'user-profile',
     canActivate: [authGuard],
     loadComponent:()=> import('./userProfile/user-profile').then(m=>m.UserProfileComponent)

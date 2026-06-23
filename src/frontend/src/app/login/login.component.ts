@@ -44,18 +44,29 @@ import { LogoComponent } from '../shared/logo.component';
                      placeholder="you@43.school"/>
             </div>
             <div style="display:flex;flex-direction:column;gap:5px">
-              <label [ngStyle]="labelStyle">{{ 'label_password' | translate }}</label>
+              <label [ngStyle]="labelStyle">
+                {{ 'label_password' | translate }}
+                <span (click)="router.navigate(['/forgot-password'])"
+                      [ngStyle]="forgotLinkStyle">{{ 'forgot_password' | translate }}</span>
+              </label>
               <input type="password" [value]="password()"
                      (input)="password.set($any($event.target).value)"
                      [ngStyle]="inputStyle('pw')"
                      (focus)="focused.set('pw')" (blur)="focused.set('')"
                      placeholder="••••••••"/>
             </div>
-            <button (click)="login()" [ngStyle]="authBtnStyle()"
-                    (mouseenter)="authHover.set(true)" (mouseleave)="authHover.set(false)"
-                    [disabled]="submitting()">
-              {{ (submitting() ? 'btn_signing_in' : 'btn_sign_in') | translate }}
-            </button>
+            <!-- Sign in / Sign up — same shape, side by side -->
+            <div style="display:flex;gap:8px">
+              <button (click)="login()" [ngStyle]="authBtnStyle('signin')"
+                      (mouseenter)="authHover.set('signin')" (mouseleave)="authHover.set('')"
+                      [disabled]="submitting()">
+                {{ (submitting() ? 'btn_signing_in' : 'btn_sign_in') | translate }}
+              </button>
+              <button (click)="router.navigate(['/register'])" [ngStyle]="authBtnStyle('signup')"
+                      (mouseenter)="authHover.set('signup')" (mouseleave)="authHover.set('')">
+                {{ 'btn_sign_up' | translate }}
+              </button>
+            </div>
 
             <div [ngStyle]="dividerStyle">
               <span [ngStyle]="dividerLineStyle"></span>
@@ -148,16 +159,29 @@ export class LoginComponent implements OnInit {
   loginWithGoogle()  { window.location.href = '/api/auth/google'; }
 
   oauthHover = signal('');
-  authHover  = signal(false);
+  authHover  = signal('');
 
-  authBtnStyle() {
-    return {
+  authBtnStyle(btn: 'signin' | 'signup') {
+    const h = this.authHover() === btn;
+    const base = {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      width: '100%', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer',
+      flex: '1', padding: '11px 16px', borderRadius: '8px', cursor: 'pointer',
       fontSize: '0.9375rem', fontFamily: DS.fonts.body, fontWeight: '500',
       transition: 'background 150ms, border-color 150ms', outline: 'none',
-      background: this.authHover() ? DS.colors.violetDim : DS.colors.violet,
-      color: '#fff', border: 'none',
+    };
+    if (btn === 'signin') {
+      return {
+        ...base,
+        background: h ? DS.colors.violetDim : DS.colors.violet,
+        color: '#fff',
+        border: 'none',
+      };
+    }
+    return {
+      ...base,
+      background: h ? DS.colors.surfaceRaised : DS.colors.surface,
+      color: DS.colors.fg1,
+      border: `1px solid ${DS.colors.border}`,
     };
   }
 
@@ -214,6 +238,7 @@ export class LoginComponent implements OnInit {
     fontSize: '0.8125rem', fontWeight: '500', color: DS.colors.fg2,
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
   };
+  readonly forgotLinkStyle = { color: DS.colors.violet, cursor: 'pointer', fontWeight: '400' };
   readonly legalLinksStyle = {
     display: 'flex', justifyContent: 'center', gap: '8px',
     marginTop: '20px', fontSize: '0.75rem',
