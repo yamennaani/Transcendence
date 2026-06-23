@@ -92,13 +92,13 @@ export const BADGE_STYLES: Record<BadgeVariant, BadgeStyle> = {
 
 
 export const BADGE_LABELS = {
-  validated: "badge_validated",
-  failed: "badge_failed",
-  under_review: "badge_under_review",
-  submitted: "badge_submitted",
-  pending: "badge_pending",
-  violet: "",
-  cyan: "",
+  validated:"validated",
+  failed: "failed",
+  under_review: "under_review",
+  submitted: "submitted",
+  pending: "pending",
+  violet: "violet",
+  cyan: "cyan",
 };
 
 // Enums from Prisma schema

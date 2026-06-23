@@ -145,7 +145,7 @@ export class LanguageSwitcherComponent {
 
   selectLanguage(languageCode: string): void {
     if (this.currentLanguage === languageCode) {
-      this.isOpen = false;  // close even if same language
+      this.isOpen = false; 
       return;
     }
     this.switchLanguage(languageCode);
