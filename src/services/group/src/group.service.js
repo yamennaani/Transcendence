@@ -142,6 +142,50 @@ const addMemberAdmin = async (groupId, { userId }) => {
     })
 }
 
+
+const removeMemberAdmin = async (groupId, { userId }) => {
+    if (!groupId || !userId)
+        throw new ValidationError('Invalid request')
+
+    const group = await utils.getGroupById(groupId, null, {
+        members: {
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        username: true,
+                        email: true } } } } })
+    if (!group)
+        throw new NotFoundError('Group not found')
+    const userIdInt = parseInt(userId)
+    const groupIdInt = parseInt(groupId)
+    const memberToRemove = group.members.find(member => member.userId === userIdInt)
+    if (!memberToRemove)
+        throw new ConflictError('User is not a member of this group')
+    if (group.members.length <= 1)
+        throw new ConflictError('Cannot remove the last member of a group. Remove the whole group instead.')
+    await prisma.groupMember.delete({ where: { userId_groupId: { userId: userIdInt, groupId: groupIdInt }}})
+
+    if (group.leaderId === userIdInt) {
+        const newLeader = group.members.find(member => member.userId !== userIdInt)
+        if (!newLeader)
+            throw new ConflictError('Could not assign a new group leader')
+        await prisma.group.update({ where: { id: groupIdInt }, data: { leaderId: newLeader.userId } })
+    }
+    const memberCount = await utils.getGroupCurrentCount(groupId)
+    await prisma.group.update({ where: { id: groupIdInt }, data: { size: memberCount } })
+    return await prisma.group.findUnique({
+        where: { id: groupIdInt },
+        include: {
+            members: {
+                include: {
+                    user: {
+                        select: {
+                            id: true,
+                            username: true,
+                            email: true } } } } } })
+}
+
 //get the group profile
 const getGroup = async(groupId)=>{
     if(!groupId)
@@ -272,5 +316,6 @@ const getMyGroupForAssignment = async ({ userId, assId }) => {
     return membership?.group ?? null
 }
 
-module.exports = {createGroup, inviteMember, addMemberAdmin, respondToInvite, getGroup, leaveGroup, deleteInvite, getInvites,
-    getMyGroupForAssignment, getGroupsForAssignment, deleteGroup}
+module.exports = {createGroup, inviteMember, addMemberAdmin, removeMemberAdmin, respondToInvite, getGroup, leaveGroup, 
+    deleteInvite, getInvites, getMyGroupForAssignment, getGroupsForAssignment, deleteGroup}
+  

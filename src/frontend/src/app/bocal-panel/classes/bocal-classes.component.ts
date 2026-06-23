@@ -434,14 +434,7 @@ export class BocalClassesComponent implements OnInit {
     const studentId = this.createGroupStudentId();
     if (!a) return;
     if (!name) { this.createGroupError.set('Please enter a group name.'); return; }
-
-    console.log(
-      'trying to create group name:',
-      name,
-      'existing groups:',
-      this.groupsFor(a).map(group => group.name)
-    );
-
+    //console.log('trying to create group name:', name, 'existing groups:', this.groupsFor(a).map(group => group.name));
     const nameExists = this.groupsFor(a).some(group => group.name.trim().toLowerCase() === name.toLowerCase());
     if (nameExists) {this.createGroupError.set('Group name exists already.'); return; }
     if (!studentId) { this.createGroupError.set('Please select a student.'); return; }
@@ -501,19 +494,22 @@ export class BocalClassesComponent implements OnInit {
     if (!ok) return;
     this.editGroupMembersError.set(null);
     this.loading.show();
-    this.groupService.leaveGroup(g.id, { userId }).subscribe({
-      next: () => {
-        const updatedGroup: AssignmentGroup = { ...g, members: g.members.filter(member => member.userId !== userId), };
+    this.groupService.removeMemberAdmin(g.id, { userId }).subscribe({
+      next: (updatedGroup: AssignmentGroup) => {
         this.editGroup.set(updatedGroup);
         this.assignmentGroups.update(map => {
           const m = new Map(map);
           m.set( a.id, (m.get(a.id) ?? []).map(group =>
-              group.id === g.id ? updatedGroup : group) );
-          return m; });
+              group.id === updatedGroup.id ? updatedGroup : group ) );
+          return m;
+        });
         this.loading.hide(); },
-      error: err => {
+      error: (err: any) => {
         this.editGroupMembersError.set(
-          err?.error?.message ?? 'Failed to remove group member.');
+          err?.error?.message ??
+          err?.error?.error ??
+          err?.message ??
+          'Failed to remove group member.' );
         this.loading.hide(); },
     });
   }  

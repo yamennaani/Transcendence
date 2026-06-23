@@ -51,6 +51,13 @@ route.post('/:id/admin/member', async (req, res, next) => {
     } catch (err) { next(err) }
 })
 
+// staff/admin: remove one member from a group
+route.delete('/:id/admin/member', async (req, res, next) => {
+    try {
+        res.json(await groupService.removeMemberAdmin(req.params.id, req.body))
+    } catch (err) { next(err) }
+})
+
 route.post('/:id/invite', async (req, res, next)=>{
     try{
         res.json(await groupService.inviteMember(req.params.id, req.body))

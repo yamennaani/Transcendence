@@ -143,7 +143,7 @@ export class DashboardComponent implements OnInit {
     const user = this.user()
     if(!user || !user.id)
     {
-        console.log('User not available yet');
+        //console.log('User not available yet');
         return;
     }
     const id = user.id;
@@ -177,7 +177,7 @@ export class DashboardComponent implements OnInit {
         this.buildRecent();
       },
       error: (err)=>{
-        console.log(err.error)
+        //console.log(err.error)
       }
     })
   }
