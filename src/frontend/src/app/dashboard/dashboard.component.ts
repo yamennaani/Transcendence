@@ -69,15 +69,13 @@ export class DashboardComponent implements OnInit {
     const avgCompletion = totalAssignments === 0 ? 0 : Math.round((completed / totalAssignments) * 100);
 
     let evaluationsGiven = 0;
-    let pendingReviews = 0;
     courses.forEach(c => {
       (c.assignments ?? []).forEach((a: any) => {
         evaluationsGiven += (a.req_eval ?? a.reqEval ?? 0);
-        if (a.requiresStaffReview) pendingReviews += 1;
       });
     });
-    
-    // update pending count signal for use in templates
+
+    const pendingReviews = (this.recent() ?? []).filter(r => r.status === 'submitted').length;
     this.pendingCount.set(pendingReviews);
 
     return [
@@ -93,8 +91,7 @@ export class DashboardComponent implements OnInit {
     const items: Array<{ id: number; title: string; status: BadgeVariant; score: number | null; max: number; req_eval?: number; created_at?: string }> = [];
     courses.forEach(c => {
       (c.assignments ?? []).forEach((a: any) => {
-        const status: BadgeVariant = a.requiresStaffReview ? 'under_review' : (a.submissionsCount && a.submissionsCount > 0 ? 'submitted' : 'pending');
-        items.push({ id: a.id, title: a.name, status, score: null, max: (a.max_score ?? a.maxScore ?? 0), req_eval: (a.req_eval ?? a.reqEval ?? 0), created_at: a.created_at });
+        items.push({ id: a.id, title: a.name, status: 'pending' as BadgeVariant, score: null, max: (a.max_score ?? a.maxScore ?? 0), req_eval: (a.req_eval ?? a.reqEval ?? 0), created_at: a.created_at });
       });
     });
 
@@ -120,23 +117,14 @@ export class DashboardComponent implements OnInit {
           }
 
           if (mine) {
-            // determine status similar to assignment-detail
             let st: BadgeVariant = 'pending';
-            if (mine.status === 'Close' && (mine.responses?.length ?? 0) >= (item.req_eval ?? 1)) {
+            if (mine.finalScore != null) {
               st = mine.passed ? 'validated' : 'failed';
             } else if (mine.status === 'Close') {
-              st = 'under_review';
-            } else {
               st = 'submitted';
             }
 
-            // update the item in the recent signal
             const updated = (this.recent() ?? []).map(r => r.id === item.id ? { ...r, status: st, score: (mine.finalScore ?? null) } : r);
-            this.recent.set(updated);
-          } else {
-            // no user's submission; optionally compute aggregated score or leave as pending
-            const hasClosed = subs.some(s => s.status === 'Close');
-            const updated = (this.recent() ?? []).map(r => r.id === item.id ? { ...r, status: hasClosed ? 'under_review' : r.status } : r);
             this.recent.set(updated);
           }
         },
@@ -195,10 +183,15 @@ export class DashboardComponent implements OnInit {
   }
 
   sublabel(c: Course) {
-  const pct = Math.round((c.done / c.assignments.length) * 100);
-  return pct >= c.pass_threshold
-    ? 'Passed — threshold met'
-    : `Threshold: ${c.pass_threshold}% · ${Math.ceil(c.assignments.length * c.pass_threshold / 100) - c.done} more to pass`;
+    const done = c.done ?? 0;
+    const total = c.assignments?.length ?? 0;
+    const threshold = c.pass_threshold ?? 0;
+    if (total === 0 || threshold === 0) return `${done} assignments completed`;
+    const pct = Math.round((done / total) * 100);
+    const needed = Math.ceil(total * threshold / 100) - done;
+    return pct >= threshold
+      ? 'Passed — threshold met'
+      : `Threshold: ${threshold}% · ${Math.max(0, needed)} more to pass`;
   }
 
   goToAssignment() { this.router.navigate(['/assignment']); }

@@ -178,7 +178,7 @@
             }
 
             <div class="sub-status-row">
-              <app-badge [variant]="subStatusVariant(submission.status)"/>
+              <app-badge [variant]="submission.status === 'Open' ? 'submitted' : statusBadge()"/>
               <span class="hint-text">{{ (submission.status === 'Open' ? 'submission_open_hint' : 'submission_closed_hint') | translate }}</span>
             </div>
 
