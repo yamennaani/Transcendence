@@ -25,7 +25,6 @@ const bocalGuard = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   return waitForInit(auth, () => {
-    return true;
     const role = auth.role();
     return (role === 'Bocal' || role === 'Admin') ? true : router.parseUrl('/dashboard');
   });
@@ -35,7 +34,6 @@ const adminGuard = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const role = auth.role();
-  return true;
   if (role === 'Admin') return true;
   return router.parseUrl('/dashboard');
 };
