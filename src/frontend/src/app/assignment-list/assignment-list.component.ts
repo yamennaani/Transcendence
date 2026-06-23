@@ -132,7 +132,7 @@ export class AssignmentListComponent implements OnInit {
   statusMeta(status: AssignmentStatus) {
     return {
       variant: STATUS_VARIANTS[status],
-      label: this.translate.instant(STATUS_LABEL_KEYS[status]),
+      label: STATUS_LABEL_KEYS[status],
     };
   }
 

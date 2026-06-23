@@ -1,15 +1,16 @@
 import { Component, input, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { BadgeVariant, BADGE_STYLES, BADGE_LABELS } from '../tokens';
 
 @Component({
   selector: 'app-badge',
   standalone: true,
-  imports: [NgStyle],
+  imports: [NgStyle, TranslateModule],
   template: `
     <span [ngStyle]="styles()">
       <span [ngStyle]="dotStyle()"></span>
-      {{ label() }}
+      {{ label() | translate }}
     </span>
   `,
   styles: [`

@@ -139,7 +139,7 @@
                     <app-avatar [name]="m.user.username" [size]="28"/>
                     <span class="member-name">{{ m.user.username }}</span>
                     @if (m.userId === myGroup()!.leaderId) {
-                      <app-badge variant="violet" [customLabel]="'badge_leader' | translate"/>
+                      <app-badge variant="violet" [customLabel]="'badge_leader'"/>
                     }
                   </div>
                 }

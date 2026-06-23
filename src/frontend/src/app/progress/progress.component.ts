@@ -110,7 +110,7 @@ interface EvalRow {
                                   <span [ngStyle]="scoreLabelStyle">Final score</span>
                                   <div style="display:flex;align-items:center;gap:10px">
                                     <app-score-pill [score]="assStatus(ass.id)!.finalScore!" [max]="100" />
-                                    <app-badge [variant]="assStatus(ass.id)!.passed ? 'validated' : 'failed'" [customLabel]="assStatus(ass.id)!.passed ? 'Passed' : 'Failed'" />
+                                    <app-badge [variant]="assStatus(ass.id)!.passed ? 'validated' : 'failed'" />
                                   </div>
                                 </div>
                               }
@@ -124,7 +124,7 @@ interface EvalRow {
                                       <span [ngStyle]="roundStyle">Round {{ row.round }}</span>
                                       <app-badge
                                         [variant]="row.status === 'Submitted' ? 'submitted' : row.status === 'Cancelled' ? 'failed' : 'pending'"
-                                        [customLabel]="row.status"
+                                        [customLabel]="row.status === 'Submitted' ? 'badge_submitted' : row.status === 'Cancelled' ? 'badge_failed' : 'badge_pending'"
                                       />
                                     </div>
                                   }
@@ -223,9 +223,9 @@ export class ProgressComponent implements OnInit {
 
   assBadgeLabel(assId: number): string {
     const s = this.assStatus(assId);
-    if (s?.finalScore != null) return s.passed ? 'Validated' : 'Failed';
-    if (s?.isSubmitted) return 'Submitted';
-    return 'Not submitted';
+    if (s?.finalScore != null) return s.passed ? 'badge_passed' : 'badge_failed';
+    if (s?.isSubmitted) return 'badge_submitted';
+    return 'badge_pending';
   }
 
   classProgress(cls: any): { submitted: number; total: number } {
