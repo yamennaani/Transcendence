@@ -1,278 +1,629 @@
-*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, Krabitsc* 
-
 # Transcendence
-A peer-to-peer learning platform inspired by 42 School — built with Angular, Express microservices, PostgreSQL, and nginx, fully containerized with Docker.
 
-## Description
+*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Karabitsc.*
 
-### Team Info 
+---
 
-#### PO - Katrin Rabitsch (Karabitsc)
-The Project Owner. Came up with idea. 
+# Table of Contents
 
-#### PM - Albert Ruckenbauer (Aruckenb)
-Project Manager, Key developer in the localization feature of the frontend. 
+* [Description](#description)
+* [Team Information](#team-information)
+* [Project Management](#project-management)
+* [Technology Stack](#technology-stack)
+* [Modules](#modules)
 
-#### Tech Lead - Yamen Alnaani (Yalnaani)
-Tech Lead and Architect, idea behind the backend and the microservices
+  * [Major Modules](#major-modules)
+  * [Minor Modules](#minor-modules)
+  * [Custom Modules](#custom-modules)
+* [Features](#features)
+* [Database Schema](#database-schema)
+* [Instructions](#instructions)
 
-#### Developer - Adam Ghanam (Aghanam)
-Key Developer in Authincation, helped in the development of the backend
+  * [Requirements](#requirements)
+  * [Getting Started](#getting-started)
+  * [Commands](#commands)
+  * [Project Structure](#project-structure)
+  * [Architecture](#architecture)
+  * [API Endpoints](#api-endpoints)
+  * [Adding a New Service](#adding-a-new-service)
+  * [Branch Strategy](#branch-strategy)
+  * [Contributing](#contributing)
+* [Journey](#journey)
+* [Resources](#resources)
 
-#### Developer - Peter Vass (Pvass)
-Key Developer in Frontend frame work and helped with database, Enitiy relationship diagram. Helped with strucutre the backend 
+---
 
-### Project Management 
-Github and Treelo, our main source of communication was discord in a Discord channel we created, their we managed and scheduled various meetings and discussed issues/bugs as well as shared various resources or updates. 
+# Description
+
+Transcendence is a peer-to-peer learning platform inspired by the educational model of **42 School**. The platform enables students, instructors (Bocal), and administrators to collaborate through assignments, organizations, groups, and evaluations in a modern web application.
+
+The project follows a **microservice architecture**, with an Angular frontend, Express.js backend services, PostgreSQL database managed through Prisma ORM, and nginx acting as the reverse proxy. Everything is fully containerized using Docker for a simple development and deployment experience.
+
+*The “Description” section should also contain a clear name for the project and its key features. we need this!
+
+---
+
+# Team Information
+
+Developing **Transcendence** was a collaborative effort involving five team members, each taking on a primary role while contributing across multiple areas of the project.
+
+*Need to include a few more things within the team information! Such as the individual contributions, detailed breakdown of what each team emmebr contributed, specific featues and models or compnents implemented by each person, and any challenged faced.
+
+## Product Owner — Katrin Rabitsch (Karabitsc)
+
+As the Product Owner, Katrin was responsible for defining the overall vision and direction of the project. She developed the original concept and continuously refined it by gathering feedback and feature suggestions from prospective users throughout development. One of her most significant contributions was designing and implementing the peer evaluation algorithm, which became a core feature of the platform. She also developed the evaluation system itself, contributed extensively to both the frontend and backend, and created the original `populateDB` script used to seed the database during development and testing. Her work ensured that the project remained focused on delivering a practical and engaging learning experience.
+
+Individual Contributions:
+
+---
+
+## Project Manager — Albert Ruckenbauer (Aruckenb)
+
+Albert served as the Project Manager, coordinating the team's development efforts from planning through delivery. He organized and chaired weekly meetings, documented discussions, assigned tasks, monitored project progress, and established milestones to keep development on schedule. Beyond managing the project, he contributed to frontend development by implementing the application's localization system, enabling multilingual support throughout the platform. He was also responsible for producing and maintaining the project's documentation, installation guides, and development resources, helping ensure that both users and developers could easily understand and work with the project.
+
+Individual Contributions:
+
+---
+
+## Technical Lead — Yamen Alnaani (Yalnaani)
+
+Yamen acted as the Technical Lead and was the principal architect behind the project's technical design. He designed the overall microservice architecture and established the structure that allowed the backend services to communicate efficiently while remaining modular and maintainable. Throughout development, he worked extensively across both the backend and frontend, implementing numerous core features including the file upload system, REST APIs, user profile management, assignment and class functionality, reusable page layouts, and much of the application's overall frontend structure. His architectural decisions provided a scalable foundation that allowed the team to continue adding features without compromising maintainability.
+
+Individual Contributions:
+
+---
+
+## Developer — Adam Ghanam (Aghanam)
+
+Adam specialized in the authentication and security components of the platform. He designed and implemented the complete authentication workflow across both the frontend and backend, including user registration, secure login, JWT-based authentication, password hashing, session management, and email verification. In addition, he integrated third-party authentication providers such as GitHub and Google through OAuth, allowing users to securely access the platform using existing accounts. His work established a secure authentication system that serves as one of the project's fundamental components.
+
+Individual Contributions:
+
+---
+
+## Developer — Peter Vass (Pvass)
+
+Peter contributed across nearly every area of the project, making him one of the team's most versatile developers. On the backend, he helped design the PostgreSQL database structure and created the Entity Relationship Diagram used to document the application's database schema. He also contributed to the development of the `populateDB` script used during testing and development. On the frontend, he implemented the organization management interface, developed the progress dashboard, translated the application into Hungarian as part of the localization effort, and created several reusable user interface components. His broad contributions across both the frontend and backend helped ensure the platform remained consistent, well-structured, and easy to extend.
+
+Individual Contributions:
+
+---
+
+# Project Management
+
+Throughout development we used several tools to coordinate the project:
+
+* GitHub
+* Trello
+* Discord
+
+Discord served as our primary communication platform where we:
+
+* Planned weekly meetings
+* Assigned tasks
+* Discussed bugs
+* Shared development progress
+* Planned milestones
+
+GitHub Projects and Trello were used to organize issues, tasks, and sprint planning.
+
+---
+
+# Technology Stack
+
+| Layer            | Technology               |
+| ---------------- | ------------------------ |
+| Frontend         | Angular 17               |
+| Backend          | Express.js Microservices |
+| Database         | PostgreSQL 16            |
+| ORM              | Prisma v5                |
+| Reverse Proxy    | nginx                    |
+| Containerization | Docker & Docker Compose  |
+| Authentication   | JWT + OAuth 2.0          |
+| Localization     | ngx-translate            |
+
+### Why these technologies?
+
+**Angular**
+
+Chosen because of its scalability, component architecture, built-in tooling, and popularity within enterprise applications.
+
+**Express.js Microservices**
+
+Separating the backend into multiple services improves maintainability, scalability, and allows each service to evolve independently. In the case that one would end up failing it does not disrupt the eco-system. 
+
+**PostgreSQL**
+
+Reliable relational database with excellent support for transactions and complex relationships.
+
+**Prisma ORM**
+
+Provides excellent type safety, automatic client generation, migrations, and significantly simplifies database development.
+
+**Docker**
+
+Ensures every developer has an identical development environment while simplifying deployment.
+
+---
+
+# Modules
+
+The project fulfills several **Major** and **Minor** modules from the **42 ft_transcendence** curriculum. Each selected module was chosen to strengthen the platform's architecture, improve the user experience, and expose the team to modern full-stack development practices. Rather than implementing the minimum required functionality, the team focused on designing reusable, maintainable, and scalable solutions that integrate seamlessly with one another throughout the application.
+
+---
+
+# Major Modules (Total Points = 12)
+
+## ✔ Framework for Frontend and Backend (2 Points)
+
+The project makes use of modern frameworks for both the frontend and backend to provide a scalable and maintainable application architecture. The frontend was developed using **Angular**, allowing the team to build a responsive single-page application using reusable components, dependency injection, routing, and reactive programming principles. Angular's modular architecture enabled different sections of the application, such as user management, organizations, assignments, and evaluations, to be developed independently while maintaining a consistent user experience.
+
+The backend was built using **Express.js** and follows a microservice architecture. Rather than creating a single monolithic application, the backend is divided into multiple independent services, each responsible for a specific domain such as authentication, users, organizations, classes, enrollments, and groups. This separation of concerns improves maintainability, simplifies testing, and allows new services to be added without affecting the rest of the platform.
+
+Who Implented this Feature?
+Everyone, both the backend and frontend was actively worked on by the group as a whole. The Desicion to use these features were decided together in our very first meeting on Transcendence. 
+
+---
+
+## ✔ Public API Interacting with the Database (2 Points)
+
+Communication between the frontend and backend is performed through a RESTful API that exposes secure endpoints for every major resource within the application. Each service provides its own collection of CRUD endpoints for managing users, organizations, classes, assignments, groups, enrollments, evaluations, and other application data. Requests are authenticated using JWT tokens before protected resources can be accessed, ensuring that only authorized users may perform sensitive operations.
+
+The API was designed following REST principles, making it predictable and easy to extend. Validation is performed on incoming requests before they reach the database, while standardized responses allow the frontend to handle both successful requests and errors consistently across every service. This modular API structure also makes it possible for future services or third-party integrations to interact with the platform without requiring major architectural changes.
+
+Who Implented this Feature?
+Everyone, though the largest contributors were Yamen, Adam and Katrin working on a large potion of the API.  
+
+---
+
+## ✔ Standard User Management & Authentication (2 Points)
+
+A complete user management system was implemented to securely authenticate users while providing personalized profiles and role-based access throughout the platform. New users may register accounts, authenticate using secure credentials, and maintain active sessions through JSON Web Tokens (JWT). Passwords are never stored in plain text and are securely hashed before being persisted in the database.
+
+Each user has a customizable profile containing personal information, profile images, and account settings. The authentication system also manages session validation, protected routes, user identity verification, and secure communication between the frontend and backend. Together these features provide a reliable security foundation for every other component of the platform.
+
+Who Implented this Feature?
+This feature was mainly worked on by both Adam and Yamen, Yamen design the overall profile system where Adam worked on the authencation, registion process, Peter did add in this with the Admin user registering a bulk amount of users. 
+
+---
+
+## ✔ Advanced Permission System (2 Points)
+
+To support the educational workflow, the platform implements a comprehensive role-based permission system consisting of three primary user roles: **Student**, **Bocal**, and **Administrator**. Rather than simply restricting page access, permissions are enforced throughout both the frontend and backend to ensure that every operation is validated before execution.
+
+Students are able to participate in organizations, classes, assignments, and peer evaluations while only accessing information relevant to their own learning. Bocals are granted additional privileges allowing them to manage classes, create assignments, oversee evaluations, and monitor student progress. Administrators possess complete control over the platform, including user management, organization administration, and system-wide configuration. By enforcing permissions on both the client and server, the application maintains security while providing each user with an interface tailored to their responsibilities.
+
+Who Implented this Feature?
+this feature was a collabritive feature worked on by everyone as alot of the core concept is tied to waht permissions the various users have. 
+
+---
+
+## ✔ Organization System (2 Points)
+
+Organizations serve as one of the central components of the platform by grouping users into independent educational communities. Administrators can create organizations, manage membership, assign administrative staff, and configure permissions that determine how users interact within each organization. Every organization may contain multiple classes, assignments, and members while maintaining its own administrative structure.
+
+This hierarchical design allows the platform to support multiple educational institutions simultaneously without data conflicts. The organization system also integrates closely with the permission system, ensuring that administrative actions remain isolated within their respective organizations while preserving the integrity of the overall application.
+
+Who Implented this Feature?
+This has strong ties with the modual mentioned before however the frontend implemention was heavily worked on by Peter. 
+
+---
+
+## ✔ Backend as Microservices (2 Points)
+
+Rather than implementing a single backend application, the project follows a microservice architecture in which every major domain is developed as an independent Express service. Dedicated services manage authentication, users, organizations, classes, enrollments, groups, and additional business logic while sharing common packages for logging, error handling, utilities, and database access.
+
+This architecture improves maintainability by reducing coupling between different parts of the application and allows individual services to evolve independently. It also simplifies debugging, testing, and future expansion, as new services can be introduced without requiring significant changes to the existing codebase. The use of Docker further isolates each service, providing consistent deployment across all development environments.
+
+Who Implented this Feature?
+The overall Microservices and backend was a collactive feature the idea behind and the main developer behind this was none other then our Lead Archicture and Technical Lead Yamen. 
+
+---
+
+# Minor Modules
+
+## ✔ ORM Database (1 Point)
+
+Database communication is handled using **Prisma ORM**, providing a type-safe and maintainable interface between the application and PostgreSQL. Rather than writing raw SQL queries throughout the codebase, Prisma generates a strongly typed client that simplifies database operations while significantly reducing the likelihood of runtime errors.
+
+Prisma also manages database migrations, schema evolution, and client generation, allowing the database structure to remain synchronized across every developer's environment. This streamlined workflow made collaborative development considerably easier while improving long-term maintainability.
+
+Who Implented this Feature?
+The ORM and the use of Prisma was primarily lead by three developers, Peter, Yamen and Katrin each strongly contributing to the database, its overall structure and its use.  
+
+---
+
+## ✔ Real-Time Collaborative Features (1 Point)
+
+The platform encourages collaboration by allowing students to work together within shared assignment groups and participate in peer evaluations. Group members can collaborate on assignments, receive invitations, and complete shared evaluation workflows that are synchronized across the application. These collaborative features reflect the educational philosophy of 42 School by encouraging teamwork, peer learning, and shared responsibility throughout the learning process.
+
+Who Implented this Feature?
+No oen person implement this feature as this Moduel represents our core idea and goal behind this project which was making an application for peer to peer learning. 
+
+---
+
+## ✔ Custom Design System (1 Point)
+
+To ensure a consistent user experience across the application, the frontend was built around a custom design system composed of reusable Angular components. Rather than recreating interface elements for each page, the team developed standardized buttons, forms, tables, dialogs, cards, navigation components, and layout containers that are reused throughout the project.
+
+This component-driven approach improves maintainability while providing a consistent visual identity across every section of the application. Updates to shared components automatically propagate throughout the platform, reducing duplicated code and simplifying future design improvements.
+
+Who Implented this Feature?
+This feature was primarily developed by Yamen with the goal of creating a simpler workflow and code strucutre allowing other members of the project to easily implement and use the resuable tokens. 
+
+---
+
+## ✔ Advanced Search (1 Point)
+
+A comprehensive search system allows users to efficiently locate organizations, classes, users, and other resources throughout the platform. Search functionality integrates directly with the backend API to retrieve relevant information while supporting filtering and dynamic updates as users refine their queries. This significantly improves navigation within larger datasets and helps users quickly locate the information required for their daily workflow.
+
+Who Implented this Feature?
+This feature can primarily be seen with the bocal and admin user, allowing them to search for only students/bocal or admins, the search feature can also be used to search for students who are specifc classes, the lead developer behind this feature was both Peter and Yamen. 
+
+---
+
+## ✔ File Upload & Management (1 Point)
+
+The platform includes a secure file management system that allows users to upload, store, retrieve, and delete assignment submissions and supporting documents. Uploaded files undergo server-side validation before being stored to ensure only supported file types and acceptable file sizes are accepted. Access permissions are enforced so that only authorized users may view or manage uploaded content.
+
+This functionality integrates directly with assignments and evaluations, enabling students to submit work electronically while allowing instructors to access and assess submissions through the platform.
+
+Who Implented this Feature?
+The core developer behind this feature was none other then Yamen, implemnting it for both file submissions and profile picture and more. 
 
 
-## Stack
-| Layer | Technology |
-|---|---|
-| Frontend | Angular 17 |
-| Services | Express.js (microservices) |
-| Database | PostgreSQL 16 + Prisma v5 |
-| Reverse proxy | nginx |
-| Containerization | Docker + Docker Compose |
+---
 
-The reason behind these frame works:
+## ✔ Multi-language Support (1 Point)
 
-## Modules 
+Internationalization was implemented using Angular's localization framework, allowing every user-facing element of the application to be translated into multiple languages. The platform currently supports English, German, Hungarian, and Arabic, with all interface text stored separately from the application's source code to simplify future translations. Users may switch languages dynamically without requiring the application to be restarted, ensuring an accessible experience for a diverse user base.
 
-#### Major Modules - Points 12
+Who Implented this Feature?
+The Core developer behind this feature was Albert, localizing a majority of the frontend. Peter did aid in the translation between English to Hungarian, Both Yamen and Adam aided in the Translation to Arabic. 
 
-Use of framework for both frontend and backend!
-- Here we use Angular for the frontend and for the backend we used Express.js with microservices. We as a group decided to use Angular for the frontend due to it being widely used and popular believing developing this programming skill will be useful for the future. The backend was decided by our Tech Lead early on during the development.
+---
 
-A Public API that Interacts with the database 
-- 
+## ✔ Right-to-Left (RTL) Support (1 Point)
 
-Standard Usermanangement and Authentication
-- Yes
+To complement the multilingual functionality, the application fully supports right-to-left layouts for Arabic users. This required more than simply changing text direction; interface layouts, navigation elements, spacing, alignment, and component positioning were mirrored where necessary to create a natural experience for RTL languages. Users can seamlessly switch between left-to-right and right-to-left languages while maintaining a consistent and intuitive interface.
 
-Advanced Permissions system
-- Admin bocal student 
+Who Implented this Feature?
+The right to left feature was an additonal implemention from Yamen to the overall Language system.
 
-An Organization system
-- Yes
+---
 
-Microservices Backend
-- 
+## ✔ Cross-Browser Support (1 Point)
 
-#### Minor Modules - Points 10
+Throughout development, the application was tested across multiple modern web browsers to ensure a consistent user experience regardless of platform. Browser-specific rendering differences were identified and resolved so that layouts, interactive components, authentication workflows, and application functionality behaved consistently across supported browsers. This testing process improved both reliability and accessibility for users operating in different environments.
 
-Use of an ORM for the Database
-- The ORM that we used was none other then Prisma. *provide a reason why  
+Who Implented this Feature?
+This feature was a collabitive effort, implemented by default while working on the project. 
 
-Real Time Collaborative Feature
-- A shared network for students and bocal 
+---
 
-Custom Made design suystem with ressuable components
-- In the frontend 
+## ✔ OAuth 2.0 Authentication (1 Point)
 
-Advacne search funcitonality 
-- Frontend 
+In addition to traditional email and password authentication, the platform supports remote authentication using OAuth 2.0 providers including GitHub and Google. This feature allows users to securely sign in using existing accounts while reducing the need to manage additional credentials. OAuth authentication is fully integrated into the existing user management system, allowing externally authenticated users to access the same features and permissions as locally registered accounts.
 
-File Upload and Management Sytem
-- users can upload and delete files 
+Who Implented this Feature?
+The Core developer behind this was Adam, implementing this both within the frontend and backend. 
 
-Support for multiple Languages
-- English german arabic hungarian 
+---
 
-Right to left
-- Arabic 
+## ✔ User Activity Dashboard (1 Point)
 
-Support for addtional Broweser
-- should just work
+A personalized dashboard provides users with a centralized overview of their activity within the platform. Students can monitor assignment completion, evaluation progress, submission history, and overall learning progress, while instructors and administrators gain insight into participation and platform usage. By presenting this information through a clean and intuitive interface, the dashboard helps users quickly understand their current status and identify outstanding tasks without navigating through multiple sections of the application.
 
-Implement remote Authenication With OAtuh 2.0
-- adam
-
-User Activity Insight 
-- Peter dashboard 
-
-### Custom Modules 
-
-Minor Module - Evaluation Pairing Alogorthim 
-- 
-
-## Features 
+Who Implented this Feature?
+This was a collabritive part worked on by everyone however a honorbale mention to both Peter and Yamen, peter working on the progress feat and Yamen working on the overall structure. 
 
 
-### Database Schema 
-*Use prisma is display the Database and the Visualisation of it! 
+## Custom Modules
 
-## Instructions
+### Evaluation Pairing Algorithm (1 Point)
+
+Custom pairing algorithm that automatically assigns peer evaluations while balancing fairness and workload across students.
+
+Who Implented this Feature?
+Katrin is the mastermind behind the Evaluation system. 
+
+---
+
+# Features
+
+## Three User Types
+
+### Student
+
+* Join organizations
+* Enroll in classes
+* Submit assignments
+* Form groups
+* Evaluate peers
+* View progress
+
+---
+
+### Bocal
+
+* Manage classes
+* Create assignments
+* Manage evaluations
+* Review student progress
+* Moderate organizations
+
+---
+
+### Administrator
+
+* Full system management
+* User management
+* Organization management
+* Permission management
+* Administrative dashboard
+
+---
+
+# Database Schema
+
+The project uses **Prisma** for schema management.
+
+Database visualization can be generated directly from the Prisma schema using Prisma Studio or ER diagram generation tools.
+
+*(Insert your Prisma schema visualization here.)*
+
+---
+
+# Instructions
+
+The “Instructions” section should mention all the needed prerequisites (software, tools, versions, configuration like .env setup, etc.), and step-by-step instructions to
+run the project.!
 
 ## Requirements
-- Docker
-- Docker Compose
-- Make
+
+* Docker
+* Docker Compose
+* Make
+
+---
 
 ## Getting Started
 
-### 1. Clone the repo
+### Clone the repository
+
 ```bash
 git clone git@github.com:yamennaani/Transcendence.git
 cd Transcendence
 ```
 
-### 2. Run
+### Run
+
 ```bash
 make
 ```
 
-That's it. On first run, `make` will:
-- Generate `src/.env` with all default values
-- Link `src/packages/database/.env` → `src/.env` automatically
-- Build and start all containers
-- Apply all pending database migrations
+On first startup the project will automatically:
 
-Open your browser at **http://localhost**
+* Generate `src/.env`
+* Link the Prisma environment
+* Build all Docker containers
+* Apply database migrations
+* Start every microservice
+
+Open:
+
+```
+http://localhost
+```
 
 ---
 
 ## Commands
-| Command | Description |
-|---|---|
-| `make` | Start in dev mode (default) |
-| `make dev` | Start in dev mode — hot reload, instant startup |
-| `make prod` | Start in production mode — full healthchecks |
-| `make down` | Stop all containers |
-| `make re` | Stop, rebuild, and start |
-| `make logs` | Follow all container logs |
-| `make status` | Show running containers |
-| `make migrate` | Apply pending database migrations |
-| `make studio` | Open Prisma Studio at http://localhost:5555 |
-| `make clean` | Remove all Docker resources |
-| `make fclean` | Full reset — removes Docker resources and `.env` |
+
+| Command        | Description                      |
+| -------------- | -------------------------------- |
+| `make`         | Start development                |
+| `make dev`     | Development mode with hot reload |
+| `make prod`    | Production mode                  |
+| `make down`    | Stop containers                  |
+| `make re`      | Rebuild project                  |
+| `make logs`    | View logs                        |
+| `make status`  | Show running containers          |
+| `make migrate` | Apply migrations                 |
+| `make studio`  | Open Prisma Studio               |
+| `make clean`   | Remove Docker resources          |
+| `make fclean`  | Complete reset                   |
 
 ---
 
 ## Project Structure
-```
+
+```text
 Transcendence/
 ├── Makefile
 ├── README.md
 ├── DEV_DOC.md
 └── src/
-    ├── docker-compose.yml       ← root compose
-    ├── docker-compose.dev.yml   ← dev overrides (hot reload)
-    ├── .env                     ← auto-generated, never committed
-    ├── nginx/                   ← routing rules
-    ├── frontend/                ← Angular 17
-    ├── database/                ← PostgreSQL + init.sql
+    ├── docker-compose.yml
+    ├── docker-compose.dev.yml
+    ├── .env
+    ├── nginx/
+    ├── frontend/
+    ├── database/
     ├── packages/
-    │   ├── database/            ← shared Prisma client (all models)
-    │   ├── logger/              ← shared JSON logger
-    │   ├── errors/              ← shared error classes
-    │   └── utils/               ← shared query helpers (userUtils, classUtils, orgUtils...)
+    │   ├── database/
+    │   ├── logger/
+    │   ├── errors/
+    │   └── utils/
     └── services/
-        ├── user/                ← User microservice
-        ├── auth/                ← Auth microservice
-        ├── org/                 ← Organization microservice
-        ├── class/               ← Class + Assignment microservice
-        ├── enroll/              ← Enrollment microservice
-        └── group/               ← Group + Invite microservice
+        ├── user/
+        ├── auth/
+        ├── org/
+        ├── class/
+        ├── enroll/
+        └── group/
 ```
 
+---
+
 ## Architecture
-```
-internet
+
+```text
+Internet
     │
-  nginx :80
-    ├── /                  → frontend
-    ├── /api/user/         → user-service     :3001
-    ├── /api/auth/         → auth-service     :3002
-    ├── /api/org/          → org-service      :3003
-    ├── /api/class/        → class-service    :3004
-    ├── /api/enroll/       → enroll-service   :3005
-    └── /api/group/        → group-service    :3006
-                │
-             database      (internal network)
+ nginx
+    │
+ ├── Frontend
+ ├── User Service
+ ├── Auth Service
+ ├── Organization Service
+ ├── Class Service
+ ├── Enrollment Service
+ └── Group Service
+          │
+     PostgreSQL
 ```
 
 ---
 
 ## API Endpoints
 
-### User Service `/api/user`
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/user/` | List all users |
-| GET | `/api/user/:id` | Get user by ID |
-| POST | `/api/user/register` | Register a new user |
-| GET | `/api/user/:id/profile` | Get user profile |
-| PATCH | `/api/user/:id/profile` | Update user profile |
-| DELETE | `/api/user/:id` | Delete user |
+### User Service
 
-### Org Service `/api/org`
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/org/` | List all organizations |
-| GET | `/api/org/:id` | Get org by ID |
-| POST | `/api/org/` | Create organization |
-| POST | `/api/org/:id/members` | Add or move a member to org |
-| DELETE | `/api/org/:id/members` | Remove member from org |
+| Method | Endpoint                |
+| ------ | ----------------------- |
+| GET    | `/api/user`             |
+| POST   | `/api/user/register`    |
+| GET    | `/api/user/:id`         |
+| PATCH  | `/api/user/:id/profile` |
+| DELETE | `/api/user/:id`         |
 
-### Class Service `/api/class`
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/class/` | List all classes |
-| GET | `/api/class/:id` | Get class by ID |
-| POST | `/api/class/` | Create class |
-| GET | `/api/class/:id/assignments` | List assignments for a class |
-| POST | `/api/class/:id/assignments` | Create assignment |
+### Organization Service
 
-### Enrollment Service `/api/enroll`
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/enroll/` | Enroll a student in a class |
-| PATCH | `/api/enroll/` | Drop a student from a class |
+| Method | Endpoint               |
+| ------ | ---------------------- |
+| GET    | `/api/org`             |
+| POST   | `/api/org`             |
+| GET    | `/api/org/:id`         |
+| POST   | `/api/org/:id/members` |
+| DELETE | `/api/org/:id/members` |
 
-### Group Service `/api/group`
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/group/` | Create a group for an assignment |
-| POST | `/api/group/:id/invite` | Invite a member to a group |
-| PATCH | `/api/group/invite/:id` | Respond to a group invite |
+### Class Service
+
+| Method | Endpoint                     |
+| ------ | ---------------------------- |
+| GET    | `/api/class`                 |
+| POST   | `/api/class`                 |
+| GET    | `/api/class/:id`             |
+| GET    | `/api/class/:id/assignments` |
+| POST   | `/api/class/:id/assignments` |
+
+### Enrollment Service
+
+| Method | Endpoint      |
+| ------ | ------------- |
+| POST   | `/api/enroll` |
+| PATCH  | `/api/enroll` |
+
+### Group Service
+
+| Method | Endpoint                |
+| ------ | ----------------------- |
+| POST   | `/api/group`            |
+| POST   | `/api/group/:id/invite` |
+| PATCH  | `/api/group/invite/:id` |
 
 ---
 
 ## Adding a New Service
-1. Create `src/services/your-service/`
-2. Copy structure from `services/user/`
-3. Add to `src/docker-compose.yml` includes
-4. Add nginx route in `src/nginx/conf.d/default.conf`
-5. Add models to `src/packages/database/prisma/schema.prisma`
-6. Run `make migrate && make re`
+
+1. Create a new service directory.
+2. Copy the User service as a template.
+3. Register the service in Docker Compose.
+4. Configure nginx routing.
+5. Add Prisma models.
+6. Run:
+
+```bash
+make migrate
+make re
+```
 
 ---
 
 ## Branch Strategy
-```
-main        → production only, 2 approvals required
-develop     → integration, 1 approval required
-feature/*   → your daily work, branch from develop
-fix/*       → bug fixes
-chore/*     → config and infra changes
+
+```text
+main
+│
+├── develop
+│
+├── feature/*
+├── fix/*
+└── chore/*
 ```
 
-See [DEV_DOC.md](./DEV_DOC.md) for the full Git workflow.
-
-## Contributing
-1. Branch from `develop`
-2. Follow the commit convention: `feat(scope): description`
-3. Open a PR targeting `develop`
-4. Never push directly to `main` or `develop`
+* `main` — Production
+* `develop` — Integration
+* `feature/*` — New features
+* `fix/*` — Bug fixes
+* `chore/*` — Maintenance
 
 ---
 
-## Resources 
-System was inspired by 42
+## Contributing
 
+1. Create a branch from `develop`.
+2. Follow the commit convention:
 
-### Usage of AI 
-Ai was used to aid and understand the framework, and assit in our vision of the project 
+```text
+feat(scope): description
+```
 
-> Maintained by [@yamennaani](https://github.com/yamennaani)
+3. Open a Pull Request.
+4. Request review.
+5. Merge into `develop`.
+
+---
+
+# Journey
+
+The Beginning of the Journey is the same for all users, when openning the appilication for the first time, the user sees our wonderful landing page, their the user can login in. In the Login page the user can simply enter their email and password or choose to login with github or google. From their depending on the user they will three different pages and have privileges to differetn things. 
+
+All users have accesss to 4 standard things, the settings, their own profile the language changer and the sign out!
+
+## Students Journey
+
+*rough notes: Students have access to the classic dashboard, what classes they are apart of, what assignments they have, what evauluations they most complete and lastly their overall progress! (Note Porgress is bugged)
+
+## Bocal Journey
+
+*rought notes: Bocal/teachers can create classes and assignments, activate the evaulation pairing process, add new users 
+
+## Admin Journey 
+
+*rought notes: Admins have access to create new organizations, adding bocal and student users. 
+
+---
+
+# Resources
+
+### Inspiration
+
+The project was inspired by the educational platform used at **42 School**.
+
+### AI Usage
+
+Artificial Intelligence tools were used to:
+
+* Understand unfamiliar frameworks
+* Research implementation approaches
+* Assist with debugging
+* Improve documentation
+* Accelerate development
+
+All architecture, implementation decisions, and final code were designed, reviewed, and validated by the development team.
+
+---
+
+**Maintained by:** @yamennaani
