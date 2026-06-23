@@ -1,9 +1,10 @@
-import { Routes } from '@angular/router';
+import { Routes, ActivatedRouteSnapshot } from '@angular/router';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { filter, map, take } from 'rxjs';
 import { AuthService } from './services/auth.service';
+import { isSupportedLang } from './languages/language.service';
 
 const waitForInit = (auth: AuthService, fn: () => boolean | ReturnType<Router['parseUrl']>) => {
   if (auth.initialized()) return fn();
@@ -37,6 +38,12 @@ const adminGuard = () => {
   return true;
   if (role === 'Admin') return true;
   return router.parseUrl('/dashboard');
+};
+
+// Restricts /:lang to supported language codes so it doesn't swallow unknown paths
+const langGuard = (route: ActivatedRouteSnapshot) => {
+  const router = inject(Router);
+  return isSupportedLang(route.paramMap.get('lang')) ? true : router.parseUrl('/');
 };
 
 // Redirect logged-in users away from public pages
@@ -139,6 +146,21 @@ export const routes: Routes = [
   {
     path: 'oauth-callback',
     loadComponent: () => import('./oauth-callback/oauth-callback.component').then(m => m.OAuthCallbackComponent),
+  },
+  {
+    path: 'privacy-policy',
+    loadComponent: () => import('./legal/privacy-policy.component').then(m => m.PrivacyPolicyComponent),
+  },
+  {
+    path: 'terms-of-service',
+    loadComponent: () => import('./legal/terms-of-service.component').then(m => m.TermsOfServiceComponent),
+  },
+  {
+    // /en, /de, /hu, /ar — landing page pinned to a specific language.
+    // Placed after every static path above so those always win the match first.
+    path: ':lang',
+    canActivate: [guestGuard, langGuard],
+    loadComponent: () => import('./landing/landing.component').then(m => m.LandingComponent),
   },
   { path: '**', redirectTo: '' },
 ];

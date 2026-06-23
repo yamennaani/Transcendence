@@ -1,5 +1,7 @@
 import { Component, computed, inject, signal, OnInit } from "@angular/core";
+import { Router } from "@angular/router";
 import { forkJoin } from "rxjs";
+import { TranslateModule } from "@ngx-translate/core";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../core/services/user-service/user-service";
 import { LoadingService } from "../core/services/loading-service/loading.service";
@@ -12,7 +14,7 @@ import { DS } from "../tokens";
 @Component({
     selector: 'user-profile',
     standalone: true,
-    imports: [FieldComponent, ContainerComponent, BtnComponent],
+    imports: [FieldComponent, ContainerComponent, BtnComponent, TranslateModule],
     template: `
         <div class="profile-page">
             <app-container [config]="containerConfig">
@@ -42,6 +44,11 @@ import { DS } from "../tokens";
                 }
             </div>
 
+            <div class="legal-actions">
+                <app-btn variant="ghost" size="sm" (clicked)="goToPrivacyPolicy()">{{ 'privacy_title' | translate }}</app-btn>
+                <app-btn variant="ghost" size="sm" (clicked)="goToTermsOfService()">{{ 'terms_title' | translate }}</app-btn>
+            </div>
+
         </div>
     `,
     styles: [`
@@ -64,6 +71,13 @@ import { DS } from "../tokens";
             justify-content: flex-end;
             gap: ${DS.space[2]};
         }
+        .legal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: ${DS.space[2]};
+            border-top: 1px solid ${DS.colors.borderSubtle};
+            padding-top: ${DS.space[3]};
+        }
         .error-banner {
             background: ${DS.colors.redSubtle};
             border: 1px solid ${DS.colors.redBorder};
@@ -78,6 +92,7 @@ export class UserProfileComponent implements OnInit {
     private userAuth    = inject(AuthService);
     private userService = inject(UserService);
     private loading     = inject(LoadingService);
+    private router      = inject(Router);
     private user        = this.userAuth.user;
 
     isEditing = signal(false);
@@ -187,6 +202,9 @@ export class UserProfileComponent implements OnInit {
 
         const bioChange     = this.changes.get('Bio');
         const avatarFile    = this.files.get('Avatar');
+        // Local base64 preview (set by FieldComponent via FileReader) — render
+        // this immediately instead of the freshly-uploaded remote URL, which
+        // would otherwise need a fresh network fetch before it appears.
         const avatarPreview = this.changes.get('Avatar')?.value as string | undefined;
 
         const calls: Record<string, any> = {};
@@ -205,10 +223,16 @@ export class UserProfileComponent implements OnInit {
         this.errorMsg.set('');
         this.loading.show();
         forkJoin(calls).subscribe({
-            next: () => {
-                const profilePatch: Record<string, string> = {};
-                if (bioChange !== undefined) profilePatch['bio'] = bioChange.value as string ?? '';
-                if (avatarPreview)           profilePatch['avatar'] = avatarPreview;
+            next: (results: Record<string, any>) => {
+                // Both endpoints return the upserted userProfile row (bio, avatar,
+                // last_update) — merge whichever ones ran into the cached user.
+                const profilePatch: Record<string, unknown> = {
+                    ...results['bio'],
+                    ...results['avatar'],
+                };
+                // Swap in the local preview so the new avatar renders instantly;
+                // the real persisted URL will load next time /me is fetched.
+                if (avatarPreview) profilePatch['avatar'] = avatarPreview;
                 this.userAuth.updateUser({ profile: profilePatch as any });
                 this.loading.hide();
                 this.changes.clear();
@@ -227,5 +251,13 @@ export class UserProfileComponent implements OnInit {
         this.files.clear();
         this.errorMsg.set('');
         this.isEditing.set(false);
+    }
+
+    goToPrivacyPolicy() {
+        this.router.navigate(['/privacy-policy']);
+    }
+
+    goToTermsOfService() {
+        this.router.navigate(['/terms-of-service']);
     }
 }

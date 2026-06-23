@@ -71,7 +71,6 @@ const NAV_ITEMS: NavItem[] = [
         <div [ngStyle]="itemStyle('')" style="text-decoration:none">
           <app-language-switcher/>
         </div>
-        <a [ngStyle]="itemStyle('/settings')" style="text-decoration:none" href="#">{{ 'btn_settings' | translate }}</a>
         <a [ngStyle]="itemStyle('/logout')" (click)="logout()" style="text-decoration:none;cursor:pointer">{{ 'btn_sign_out' | translate }}</a>
       </div>
     </nav>
