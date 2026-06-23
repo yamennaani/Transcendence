@@ -35,7 +35,7 @@ import { hasPassedCourse, getProgressLabel, getAssignmentCount } from '../utilit
               <div class="course-row__head">
                 <span class="course-name">{{ course.name }}</span>
                 @if (hasPassed(course)) {
-                  <app-badge variant="validated" [customLabel]="'badge_passed' | translate"/>
+                  <app-badge variant="validated" [customLabel]="'badge_passed'"/>
                 }
               </div>
               <span class="course-meta">

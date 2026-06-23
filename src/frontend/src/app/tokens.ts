@@ -92,7 +92,7 @@ export const BADGE_STYLES: Record<BadgeVariant, BadgeStyle> = {
 
 
 export const BADGE_LABELS = {
-  validated: "badge_validated",
+  validated: "badge_passed",
   failed: "badge_failed",
   under_review: "badge_under_review",
   submitted: "badge_submitted",

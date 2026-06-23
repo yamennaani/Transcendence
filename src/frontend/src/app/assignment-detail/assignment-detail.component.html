@@ -139,7 +139,7 @@
                     <app-avatar [name]="m.user.username" [size]="28"/>
                     <span class="member-name">{{ m.user.username }}</span>
                     @if (m.userId === myGroup()!.leaderId) {
-                      <app-badge variant="violet" [customLabel]="'badge_leader' | translate"/>
+                      <app-badge variant="violet" [customLabel]="'badge_leader'"/>
                     }
                   </div>
                 }
@@ -178,7 +178,7 @@
             }
 
             <div class="sub-status-row">
-              <app-badge [variant]="subStatusVariant(submission.status)"/>
+              <app-badge [variant]="submission.status === 'Open' ? 'submitted' : statusBadge()"/>
               <span class="hint-text">{{ (submission.status === 'Open' ? 'submission_open_hint' : 'submission_closed_hint') | translate }}</span>
             </div>
 
