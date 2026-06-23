@@ -19,7 +19,17 @@ const createGroup = async ({assId, userId, name, size})=>{
         throw new ConflictError("User is not enrolled in this assignment")
     const isAlreadyMemeber = await utils.existingMembership(userId, assId)
     if(isAlreadyMemeber)
-        throw new ConflictError("User is already a memeber in another group")
+        throw new ConflictError("User is already a member in another group")
+
+    const existingGroupWithName = await prisma.group.findFirst({
+        where: {
+            assId: parseInt(assId),
+            name: name
+        }
+    })
+
+    if (existingGroupWithName)
+        throw new ConflictError("Group name exists already")
 
     const group = await prisma.group.create({
         data: {

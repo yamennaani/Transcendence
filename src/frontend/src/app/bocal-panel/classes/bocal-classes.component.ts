@@ -1,7 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { NgStyle, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+//import { forkJoin } from 'rxjs';
+import { forkJoin, of, from } from 'rxjs';
+import { catchError, concatMap, map, switchMap, toArray } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS } from '../../tokens';
 import { BtnComponent } from '../../shared/btn.component';
@@ -80,6 +82,7 @@ export class BocalClassesComponent implements OnInit {
   assignmentError  = signal<string | null>(null);
   editClassError   = signal<string | null>(null);
   createGroupError = signal<string | null>(null);
+  groupActionError = signal<string | null>(null);
 
   // ── Edit class form state ──────────────────────────────────
   editClassName         = signal('');
@@ -94,6 +97,11 @@ export class BocalClassesComponent implements OnInit {
   editGroup             = signal<AssignmentGroup | null>(null);
   editGroupAddStudentId = signal<number | null>(null);
   editGroupMembersError = signal<string | null>(null);
+  // ── Generate groups form state ───────────────────────────────
+  showGenerateGroups       = signal(false);
+  generateGroupsAssignment = signal<AssignmentResponse | null>(null);
+  generateGroupSize        = signal(2);
+  generateGroupsError      = signal<string | null>(null);
 
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
@@ -361,6 +369,33 @@ export class BocalClassesComponent implements OnInit {
     });
   }
 
+  deleteAllGroups(a: AssignmentResponse): void {
+    const groups = this.groupsFor(a);
+    if (groups.length === 0) { return; }
+    const ok = confirm(
+      `Are you sure you want to delete all groups for "${a.name}"?\n\n` +
+      `This will delete ${groups.length} group(s) and may also remove related evaluation pairings.` );
+    if (!ok) { return; }
+    this.groupActionError.set(null);
+    this.loading.show();
+    forkJoin(groups.map(group => this.groupService.deleteGroup(group.id))).subscribe({
+      next: () => {
+        this.assignmentGroups.update(map => {
+          const m = new Map(map);
+          m.set(a.id, []);
+          return m; });
+        this.loading.hide(); },
+      error: (err: any) => {
+        this.groupActionError.set(
+          err?.error?.message ??
+          err?.error?.error ??
+          err?.message ??
+          'Failed to delete groups.'
+        );
+        this.loading.hide(); },
+    });
+  }
+
   ungroupedStudentsFor(a: AssignmentResponse): EnrolledStudent[] {
   const groups = this.groupsFor(a);
   const groupedUserIds = new Set<number>();
@@ -393,11 +428,22 @@ export class BocalClassesComponent implements OnInit {
     this.createGroupError.set(null);
   }
   onCreateGroup(): void {
+    this.groupActionError.set(null);
     const a = this.createGroupAssignment();
     const name = this.createGroupName().trim();
     const studentId = this.createGroupStudentId();
     if (!a) return;
     if (!name) { this.createGroupError.set('Please enter a group name.'); return; }
+
+    console.log(
+      'trying to create group name:',
+      name,
+      'existing groups:',
+      this.groupsFor(a).map(group => group.name)
+    );
+
+    const nameExists = this.groupsFor(a).some(group => group.name.trim().toLowerCase() === name.toLowerCase());
+    if (nameExists) {this.createGroupError.set('Group name exists already.'); return; }
     if (!studentId) { this.createGroupError.set('Please select a student.'); return; }
     this.createGroupError.set(null);
     this.loading.show();
@@ -414,9 +460,12 @@ export class BocalClassesComponent implements OnInit {
           return m; });
         this.closeCreateGroupModal();
         this.loading.hide(); },
-      error: err => {
+      error: (err: any) => {
         this.createGroupError.set(
-          err?.error?.message ?? 'Failed to create group.'
+          err?.error?.message ??
+          err?.error?.error ??
+          err?.message ??
+          'Failed to create group.'
         );
         this.loading.hide(); },
     });
@@ -496,6 +545,97 @@ export class BocalClassesComponent implements OnInit {
         this.loading.hide(); },
     });
   }  
+
+private generatedGroupName(index: number): string { return `group${index + 1}`; }
+
+  openGenerateGroups(a: AssignmentResponse): void {
+    this.generateGroupsAssignment.set(a);
+    this.generateGroupSize.set(a.groupSize ?? 1);
+    this.generateGroupsError.set(null);
+    this.showGenerateGroups.set(true);
+  }
+
+  closeGenerateGroupsModal(): void {
+    this.showGenerateGroups.set(false);
+    this.generateGroupsAssignment.set(null);
+    this.generateGroupSize.set(2);
+    this.generateGroupsError.set(null);
+  }
+
+  generateAllGroups(): void {
+    this.groupActionError.set(null);
+    const a = this.generateGroupsAssignment();
+    const groupSize = this.generateGroupSize();
+    if (!a) return;
+    if (!groupSize || groupSize <= 0) {this.generateGroupsError.set('Please enter a valid group size.'); return; }
+
+    const students = this.ungroupedStudentsFor(a);
+    if (students.length === 0) {this.generateGroupsError.set('There are no ungrouped students for this assignment.'); return; }
+
+    const chunks: typeof students[] = [];
+    for (let i = 0; i < students.length; i += groupSize) {
+      chunks.push(students.slice(i, i + groupSize));
+    }
+
+    const existingGroupCount = this.groupsFor(a).length;
+    this.generateGroupsError.set(null);
+    this.loading.show();
+
+    from(chunks).pipe(
+      concatMap((chunk, chunkIndex) => {
+        const leader = chunk[0];
+        const groupName = this.generatedGroupName(existingGroupCount + chunkIndex);
+
+        return this.groupService.createGroup({
+          assId: a.id,
+          userId: leader.id,
+          name: groupName,
+          size: groupSize,
+        }).pipe(
+          switchMap((createdGroup: AssignmentGroup) => {
+            const remainingMembers = chunk.slice(1);
+
+            if (remainingMembers.length === 0) {
+              return of(createdGroup);
+            }
+
+            return from(remainingMembers).pipe(
+              concatMap(student =>
+                this.groupService.addMemberAdmin(createdGroup.id, {
+                  userId: student.id,
+                })
+              ),
+              toArray(),
+              map((updatedGroups: any[]) =>
+                updatedGroups[updatedGroups.length - 1] ?? createdGroup
+              )
+            );
+          })
+        );
+      }),
+      toArray()
+    ).subscribe({
+      next: (createdGroups: AssignmentGroup[]) => {
+        this.assignmentGroups.update(map => {
+          const m = new Map(map);
+          m.set(a.id, [...(m.get(a.id) ?? []), ...createdGroups]);
+          return m;
+        });
+
+        this.closeGenerateGroupsModal();
+        this.loading.hide();
+      },
+      error: (err: any) => {
+        this.generateGroupsError.set(
+          err?.error?.message ??
+          err?.error?.error ??
+          err?.message ??
+          'Failed to generate groups.'
+        );
+        this.loading.hide();
+      },
+    });
+}
 
   // ── Styles ─────────────────────────────────────────────────
   readonly pageStyle     = { display: 'flex', flexDirection: 'column' as const, gap: '0' };

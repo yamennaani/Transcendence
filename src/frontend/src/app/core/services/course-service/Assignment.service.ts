@@ -16,7 +16,7 @@ export interface UpdateAssignmentPayload {
   classId: number;
   name: string;
   description: string;
-  groupSize: number;
+  groupSize?: number;
   reqEval: number;
   maxScore: number;
   passThreshold: number;
