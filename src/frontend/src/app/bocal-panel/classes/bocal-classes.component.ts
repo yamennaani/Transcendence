@@ -64,7 +64,6 @@ export class BocalClassesComponent implements OnInit {
   showNew         = signal(false);
   showEditClass   = signal(false);
   showCreateGroup = signal(false);
-  editingAssignment = signal<AssignmentResponse | null>(null);
   showEditGroupMembers = signal(false);
 
   // ── Data signals ───────────────────────────────────────────
@@ -80,7 +79,6 @@ export class BocalClassesComponent implements OnInit {
   // ── Form error signals ─────────────────────────────────────
   assignmentError  = signal<string | null>(null);
   editClassError   = signal<string | null>(null);
-  editAssignError  = signal<string | null>(null);
   createGroupError = signal<string | null>(null);
 
   // ── Edit class form state ──────────────────────────────────
