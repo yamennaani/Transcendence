@@ -94,7 +94,7 @@ export class HomeDataService {
     return of(this.mockQuickActions).pipe(
       delay(500),
       map(actions => {
-        console.log('Loaded quick actions from HomeDataService')
+        //console.log('Loaded quick actions from HomeDataService')
         return actions
       })
     )

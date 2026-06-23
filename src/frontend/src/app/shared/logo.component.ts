@@ -7,7 +7,7 @@ import { NgStyle } from '@angular/common';
   imports: [NgStyle],
   template: `
     <div style="display:flex;align-items:center;gap:10px">
-      <span [ngStyle]="wordmarkStyle()">My Awesome Project</span>
+      <span [ngStyle]="wordmarkStyle()">PeerPilot</span>
     </div>
   `,
 })

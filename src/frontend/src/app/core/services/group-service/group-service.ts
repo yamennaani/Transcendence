@@ -28,6 +28,10 @@ export class GroupService {
 
     addMemberAdmin(groupId: number, data: { userId: number }) {
         return this.http.post<any>(`${this.base}/${groupId}/admin/member`, data);
+    }
+
+    removeMemberAdmin(groupId: number, data: { userId: number }) {
+        return this.http.delete<any>(`${this.base}/${groupId}/admin/member`, { body: data })
     }    
 
     inviteMember(groupId: number, data: { leaderId: number, inviteeId: number }) {

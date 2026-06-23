@@ -596,7 +596,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
   }
 
   openEditPairing(row: EvalAssignmentDisplayRow): void {
-    console.log('openEditPairing clicked', row);
+    //console.log('openEditPairing clicked', row);
     this.editingPairing.set(row);
     this.editEvaluatorGroupId.set(row.evaluatorGroupId);
     this.editPairingError.set(null);

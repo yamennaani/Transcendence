@@ -125,7 +125,7 @@ export class ProfileComponent{
     }
 
     onAvatarChanged(url: string) {
-    console.log('avatar changed:', url);
+    //console.log('avatar changed:', url);
   }
     
 }

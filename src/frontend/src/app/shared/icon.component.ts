@@ -152,7 +152,7 @@ export class IconComponent {
         // Emit the file for parent to handle upload
         this.fileSelected.emit(file);
         
-        console.log('Temporary preview created for:', file.name, previewUrl);
+        //console.log('Temporary preview created for:', file.name, previewUrl);
     }
     
     // Method to confirm upload (called by parent after successful save)
