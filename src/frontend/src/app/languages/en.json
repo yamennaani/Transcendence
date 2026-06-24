@@ -149,6 +149,7 @@
     "error_close_submission_failed": "Failed to close submission.",
     "error_unsupported_file_type": "Unsupported file type. Please upload a PDF, ZIP, image, text file, or Word document.",
     "error_file_too_large": "File is too large. Maximum allowed size is 50 MB.",
+    "error_loading_classes": "Failed to load your classes.",
 
     "eval_done_title": "Evaluation submitted",
     "eval_done_score_prefix": "Your score of",
@@ -173,6 +174,11 @@
     "eval_review_title": "Review your evaluation",
     "eval_final_score": "final score",
     "eval_progress_summary": "of {{total}} evaluations received",
+    "eval_failed" : "Failed to submit the evaluation. Please try again.",
+    "eval_cannot_start": "Could not start this evaluation. Check the email and passkey.",
+    "eval_cannot_identify_user": "Could not identify your account. Please refresh and try again.",
+    "eval_leader_email_required": "The evaluee's leader email is required.",
+    "eval_passkey_required": "The passkey is required.",
 
     "field_email": "Email",
     "field_username": "Username",
@@ -183,6 +189,7 @@
     "field_required_evals": "Required Evals",
 
     "forgot_password": "Forgot password?",
+
 
     "group_solo_hint": "This is a solo assignment. Click below to get started.",
     "group_no_group_hint": "You're not part of a group yet.",

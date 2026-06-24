@@ -56,6 +56,7 @@ import { AssignmentService } from '../../core/services/assignment.service'
 export class AssignmentDetailsPageComponent {
   private route = inject(ActivatedRoute)
   private service = inject(AssignmentService)
+
   assignment = signal<any | null>(null)
   loading = signal(true)
 

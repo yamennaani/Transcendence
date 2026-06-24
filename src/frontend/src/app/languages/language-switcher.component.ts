@@ -9,6 +9,7 @@ import { isSupportedLang, setLanguage } from './language.service';
   template: `
     <div class="language-switcher">
       <span class="lang-label">{{ 'label_language' | translate }}</span>
+
       <button
         class="current-lang"
         (click)="toggleDropdown()"
@@ -26,18 +27,21 @@ import { isSupportedLang, setLanguage } from './language.service';
             role="option"
             [attr.aria-selected]="lang.code === currentLanguage"
             [class.active]="lang.code === currentLanguage"
-            (click)="selectLanguage(lang.code)">
+            (click)="selectLanguage(lang.code)"
+          >
             {{ lang.flag }}&nbsp;{{ lang.name }}
           </button>
         }
       </div>
-    </div>`,
+    </div>
+  `,
   styles: `
     .language-switcher {
       position: relative;
       display: block;
       width: 100%;
     }
+
     .lang-label {
       display: block;
       font-size: 0.625rem;
@@ -47,6 +51,7 @@ import { isSupportedLang, setLanguage } from './language.service';
       letter-spacing: 0.08em;
       font-weight: 600;
     }
+
     .current-lang {
       display: flex;
       align-items: center;
@@ -61,61 +66,93 @@ import { isSupportedLang, setLanguage } from './language.service';
       padding: 0;
       font-family: inherit;
     }
+
     .chevron {
       margin-left: auto;
       font-size: 0.5rem;
       color: oklch(48% 0.01 272);
-      transition: transform 200ms;
+      transition: transform 200ms ease;
     }
+
     /* rotate chevron when open */
     .language-switcher:has(.lang-options.show) .chevron {
       transform: rotate(180deg);
     }
+
     .lang-options {
-      /* hidden by default, no display:none so we can transition */
       position: absolute;
       bottom: calc(100% + 10px);
       left: 0;
       right: 0;
+
       background: oklch(16% 0.02 272);
       border: 1px solid oklch(26% 0.02 272);
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
       z-index: 200;
-      box-shadow: 0 -8px 24px oklch(0% 0 0 / 40%);
-      
+
+      box-shadow: 0 -10px 30px oklch(0% 0 0 / 45%);
+
       opacity: 0;
-      visibility: hidden;
+      transform: translateY(8px) scale(0.98);
+      transform-origin: bottom center;
+
       pointer-events: none;
-      transform: translateY(4px);
-      transition: opacity 150ms, visibility 0s 150ms, transform 150ms;
+
+      transition:
+        opacity 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
     }
+
     .lang-options.show {
       opacity: 1;
-      visibility: visible;
+      transform: translateY(0) scale(1);
       pointer-events: auto;
-      transform: translateY(0);
-      transition: opacity 150ms, visibility 0s 0s, transform 150ms;
     }
+
     .lang-option {
       display: flex;
       align-items: center;
       gap: 8px;
       width: 100%;
       padding: 9px 12px;
+
       background: none;
       border: none;
+
       color: oklch(72% 0.01 272);
       font-size: 0.875rem;
       font-family: inherit;
       text-align: left;
+
       cursor: pointer;
-      transition: background 120ms, color 120ms;
+
+      opacity: 0;
+      transform: translateY(4px);
+
+      transition:
+        background 120ms,
+        color 120ms,
+        opacity 160ms ease,
+        transform 160ms ease;
     }
+
+    .lang-options.show .lang-option {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* stagger animation */
+    .lang-options.show .lang-option:nth-child(1) { transition-delay: 20ms; }
+    .lang-options.show .lang-option:nth-child(2) { transition-delay: 40ms; }
+    .lang-options.show .lang-option:nth-child(3) { transition-delay: 60ms; }
+    .lang-options.show .lang-option:nth-child(4) { transition-delay: 80ms; }
+
     .lang-option:hover {
       background: oklch(22% 0.02 272);
       color: oklch(94% 0.005 272);
     }
+
     .lang-option.active {
       color: oklch(72% 0.28 296);
       background: oklch(20% 0.04 296);
@@ -146,15 +183,17 @@ export class LanguageSwitcherComponent {
 
   selectLanguage(languageCode: string): void {
     if (this.currentLanguage === languageCode) {
-      this.isOpen = false; 
+      this.isOpen = false;
       return;
     }
+
     this.switchLanguage(languageCode);
     this.isOpen = false;
   }
 
   switchLanguage(languageCode: string): void {
     if (!isSupportedLang(languageCode)) return;
+
     this.currentLanguage = languageCode;
     setLanguage(this.translate, languageCode);
   }
@@ -167,7 +206,6 @@ export class LanguageSwitcherComponent {
     return this.languages.find(l => l.code === this.currentLanguage)?.name ?? this.currentLanguage;
   }
 
-  // Close when clicking outside
   @HostListener('document:click', ['$event.target'])
   onClickOutside(target: EventTarget | null): void {
     const clickedInside = (target as HTMLElement)?.closest('.language-switcher');

@@ -2,6 +2,7 @@ import { Component, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
 import { DS } from '../tokens';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AvatarComponent } from '../shared/avatar.component';
 import { BtnComponent } from '../shared/btn.component';
 import { AuthService } from '../services/auth.service';
@@ -111,6 +112,7 @@ export class EvaluationFlowComponent {
   private auth         = inject(AuthService);
   private evalService  = inject(EvalService);
   private loading      = inject(LoadingService);
+  private translate    = inject(TranslateService);
 
   // ── Phase 1: passkey "login" ────────────────────────────────
   phase       = signal<'login' | 'flow'>('login');
@@ -144,9 +146,9 @@ export class EvaluationFlowComponent {
     const leaderEmail = this.leaderEmail().trim();
     const passkey = this.passkeyInput().trim();
 
-    if (!evaluatorUserId) { this.loginError.set('Could not identify your account. Please refresh and try again.'); return; }
-    if (!leaderEmail)     { this.loginError.set("Enter the evaluee's leader email."); return; }
-    if (!passkey)         { this.loginError.set('Enter the passkey.'); return; }
+    if (!evaluatorUserId) { this.loginError.set(this.translate.instant('eval_cannot_identify_user')); return; }
+    if (!leaderEmail)     { this.loginError.set(this.translate.instant("eval_leader_email_required")); return; }
+    if (!passkey)         { this.loginError.set(this.translate.instant('eval_passkey_required')); return; }
 
     this.loginError.set(null);
     this.loading.show();
@@ -163,7 +165,7 @@ export class EvaluationFlowComponent {
         this.loading.hide();
       },
       error: (err) => {
-        this.loginError.set(err?.error?.error ?? 'Could not start this evaluation. Check the email and passkey.');
+        this.loginError.set(err?.error?.error ?? this.translate.instant('eval_cannot_start'));
         this.loading.hide();
       },
     });
@@ -209,7 +211,7 @@ export class EvaluationFlowComponent {
         this.submitted.set(true);
       },
       error: (err) => {
-        this.submitError.set(err?.error?.error ?? 'Failed to submit the evaluation.');
+        this.submitError.set(err?.error?.error ?? this.translate.instant('eval_failed'));
         this.loading.hide();
       },
     });

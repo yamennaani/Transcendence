@@ -148,6 +148,7 @@
     "error_close_submission_failed": "فشل إغلاق عملية التسليم.",
     "error_unsupported_file_type": "نوع الملف غير مدعوم. يرجى رفع ملف PDF أو ZIP أو صورة أو ملف نصي أو مستند Word.",
     "error_file_too_large": "حجم الملف كبير جدًا. الحد الأقصى المسموح به هو 50 ميجابايت.",
+    "error_loading_classes": "فشل في تحميل صفوفك. يرجى المحاولة مرة أخرى.",
 
     "eval_done_title": "تم إرسال التقييم",
     "eval_done_score_prefix": "تم تسجيل نتيجتك البالغة",
@@ -172,6 +173,12 @@
     "eval_review_title": "راجع تقييمك",
     "eval_final_score": "النتيجة النهائية",
     "eval_progress_summary": "من أصل {{total}} تقييمًا تم استلامه",
+    "eval_failed" : "فشل إرسال التقييم. يرجى المحاولة مرة أخرى.",
+    "eval_cannot_start": "تعذر بدء هذا التقييم. تحقق من البريد الإلكتروني وكلمة المرور.",
+    "eval_cannot_identify_user": "تعذر التعرف على حسابك. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
+    "eval_leader_email_required": "البريد الإلكتروني لقائد المقيّم مطلوب.",
+    "eval_passkey_required": "كلمة المرور مطلوبة.",
+    "eval_passkey_invalid": "كلمة المرور غير صالحة. يرجى التحقق من البريد الإلكتروني وكلمة المرور.",
 
     "field_email": "البريد الإلكتروني",
     "field_username": "اسم المستخدم",

@@ -9,6 +9,7 @@ import { GroupService } from '../core/services/group-service/group-service';
 import { SubmissionService } from '../core/services/submission-service/submission-service';
 import { EvalService } from '../core/services/eval-service/eval-service';
 import { DS } from '../tokens';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { BadgeComponent } from '../shared/badge.component';
 import { ScorePillComponent } from '../shared/score-pill.component';
@@ -157,6 +158,7 @@ export class ProgressComponent implements OnInit {
   private groupService    = inject(GroupService);
   private submissionService = inject(SubmissionService);
   private evalService     = inject(EvalService);
+  private translateService = inject(TranslateService);
 
   classes            = signal<any[] | null>(null);
   assignmentStatuses = signal<Record<number, AssStatus>>({});
@@ -181,7 +183,7 @@ export class ProgressComponent implements OnInit {
         this.loadAllStatuses(classes, userId);
       },
       error: () => {
-        this.error.set('Failed to load your classes.');
+        this.error.set(this.translateService.instant('error_loading_classes'));
         this.loading.set(false);
       },
     });
