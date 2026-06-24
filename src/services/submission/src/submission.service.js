@@ -7,6 +7,7 @@ const storage = createStorage('submissions')
 
 const storageReady = (async () => {
     await storage.ensureBucket()
+    await storage.makePublic()
 })().catch(err => {
     logger.error('submission-service', 'Failed to initialize storage bucket', err)
     throw err

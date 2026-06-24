@@ -17,12 +17,12 @@ const generateUsername = async (email) => {
 };
 
 // ========== USERS ==========
-const createUser = async (email, plainPassword) => {
+const createUser = async (email, plainPassword, orgId = null) => {
   const hashed = await bcrypt.hash(plainPassword, SALT_ROUNDS);
   const username = await generateUsername(email);
   const userRows = await prisma.$queryRaw`
-    INSERT INTO "user" (email, username, role, created_at)
-    VALUES (${email}, ${username}, 'Student', NOW())
+    INSERT INTO "user" (email, username, role, "orgId", created_at)
+    VALUES (${email}, ${username}, 'Student', ${orgId}, NOW())
     RETURNING id, email, username, created_at
   `;
   const user = userRows[0];
@@ -114,8 +114,8 @@ const findOrCreateOAuthUser = async (provider, providerUserId, email, name) => {
 
     const username = await generateUsername(email);
     const userRows = await prisma.$queryRaw`
-      INSERT INTO "user" (email, username, role, created_at)
-      VALUES (${email}, ${username}, 'Student', NOW())
+      INSERT INTO "user" (email, username, role, "orgId", created_at)
+      VALUES (${email}, ${username}, 'Student', ${allowed.orgId}, NOW())
       RETURNING id, email, username
     `;
     user = userRows[0];
@@ -198,10 +198,10 @@ const verifyEmail = async (userId) => {
 // ========== ALLOWED EMAILS ==========
 const isEmailAllowed = async (email) => {
   const rows = await prisma.$queryRaw`
-    SELECT 1 FROM auth_allowed_emails
+    SELECT "orgId" FROM auth_allowed_emails
     WHERE email = ${email} AND (used = false OR used IS NULL)
   `;
-  return rows.length > 0;
+  return rows[0] ?? null;
 };
 
 const markEmailAsUsed = async (email) => {
@@ -221,7 +221,15 @@ const deleteUserById = async (userId) => {
 };
 
 // ========== INVITATIONS ==========
-const addAllowedEmail = async (email, invitedBy) => {
+const addAllowedEmail = async (email, invitedBy, orgId = null) => {
+  if (orgId != null) {
+    const org = await prisma.$queryRaw`SELECT id FROM org WHERE id = ${orgId}`;
+    if (org.length === 0) {
+      const err = new Error('Organization not found.');
+      err.code = 'ORG_NOT_FOUND';
+      throw err;
+    }
+  }
   const existing = await prisma.$queryRaw`
     SELECT id, used FROM auth_allowed_emails WHERE email = ${email}
   `;
@@ -233,16 +241,26 @@ const addAllowedEmail = async (email, invitedBy) => {
     throw err;
   }
   const rows = await prisma.$queryRaw`
-    INSERT INTO auth_allowed_emails (email, invited_by, created_at)
-    VALUES (${email}, ${invitedBy ?? null}, NOW())
-    RETURNING id, email, used, invited_by, created_at
+    INSERT INTO auth_allowed_emails (email, invited_by, "orgId", created_at)
+    VALUES (${email}, ${invitedBy ?? null}, ${orgId}, NOW())
+    RETURNING id, email, used, invited_by, "orgId", created_at
   `;
   return rows[0];
 };
 
-const getAllowedEmails = async () => {
+const getAllowedEmails = async (orgId = null) => {
+  if (orgId != null) {
+    return await prisma.$queryRaw`
+      SELECT ae.id, ae.email, ae.used, ae.created_at, ae."orgId",
+             u.username AS invited_by_username
+      FROM auth_allowed_emails ae
+      LEFT JOIN "user" u ON ae.invited_by = u.id
+      WHERE ae."orgId" = ${orgId}
+      ORDER BY ae.created_at DESC
+    `;
+  }
   return await prisma.$queryRaw`
-    SELECT ae.id, ae.email, ae.used, ae.created_at,
+    SELECT ae.id, ae.email, ae.used, ae.created_at, ae."orgId",
            u.username AS invited_by_username
     FROM auth_allowed_emails ae
     LEFT JOIN "user" u ON ae.invited_by = u.id

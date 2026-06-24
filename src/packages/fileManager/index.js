@@ -44,7 +44,7 @@ const createStorage = (bucket) => {
       const url = await client.presignedGetObject(bucket, fileName, expirySeconds, {
         'response-content-disposition': `attachment; filename="${originalName}"`
       })
-      return url.replace('http://minio:9000', 'http://localhost/files')
+      return url.replace('http://minio:9000', 'https://localhost/files')
     },
 
     delete: (fileName) =>
@@ -69,7 +69,7 @@ const createStorage = (bucket) => {
     },
 
     getPublicUrl: (fileName) =>
-      `http://localhost/files/${bucket}/${fileName}`
+      `https://localhost/files/${bucket}/${fileName}`
   }
 }
 

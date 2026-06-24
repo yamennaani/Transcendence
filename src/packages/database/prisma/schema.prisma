@@ -103,6 +103,7 @@ model Organization{
   created_at DateTime    @default(now())
   users      User[]
   classes    Class[]
+  invitedEmails AuthAllowedEmail[]
 
   @@map("org")
 }
@@ -397,7 +398,9 @@ model AuthAllowedEmail {
   email      String    @unique @db.VarChar(255)
   created_at DateTime  @default(now())
   used       Boolean   @default(false)
-  invited_by Int? 
+  orgId     Int?
+  org        Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  invited_by Int?
   invitedBy  User? @relation("InvitedBy", fields: [invited_by], references: [id], onDelete: Cascade)
 
   @@map("auth_allowed_emails")

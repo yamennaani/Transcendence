@@ -1,6 +1,8 @@
 const { prisma } = require('../packages/database')
 const {NotFoundError, ValidationError, ConflictError, UnauthorizedError} = require('../packages/errors')
 const utils = require('../packages/utils')
+const { createStorage } = require('../packages/fileManager')
+const storage = createStorage('submissions')
 
 // TODO Move to Class Service cuz its not place here XD
 const getAssignment = async(assId)=>{
@@ -437,11 +439,15 @@ const startEvaluation = async ({evaluatorUserId, leaderEmail, passkey})=>{
     if(!assignment?.evalSheet)
         throw new NotFoundError('This assignment has no eval sheet yet')
 
+    const file = submission.file
+        ? { ...submission.file, url: storage.getPublicUrl(submission.file.url) }
+        : null
+
     return {
         evalAssignmentId: evalAssignment.id,
         assignment: { id: assignment.id, name: assignment.name, description: assignment.description, max_score: assignment.max_score },
         group: { id: submission.group.id, name: submission.group.name },
-        submission: { id: submission.id, file: submission.file },
+        submission: { id: submission.id, file },
         evalSheet: assignment.evalSheet
     }
 }

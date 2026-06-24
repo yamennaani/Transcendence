@@ -8,7 +8,9 @@
     "migrate": "npx prisma migrate deploy",
     "migrate:dev": "npx prisma migrate dev",
     "studio": "npx prisma studio",
-    "seed": "npx prisma db seed"
+    "seed": "npx prisma db seed",
+    "seed:admin": "node prisma/seedAdmin.js",
+    "generate:users": "node prisma/generateUsers.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

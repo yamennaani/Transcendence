@@ -32,7 +32,19 @@ const NAV_ITEMS: NavItem[] = [
   standalone: true,
   imports: [NgStyle, LogoComponent, IconComponent, RouterLink, LanguageSwitcherComponent, TranslateModule],
   template: `
-    <nav [ngStyle]="navStyle">
+    <button class="sidebar-toggle" (click)="toggleMobile()" aria-label="Toggle menu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+      </svg>
+    </button>
+
+    @if (mobileOpen()) {
+      <div class="sidebar-backdrop" (click)="closeMobile()"></div>
+    }
+
+    <nav [ngStyle]="navStyle" class="sidebar-nav" [class.open]="mobileOpen()">
       <!-- Logo -->
       <div [ngStyle]="logoPadStyle">
         <app-logo [size]="20"/>
@@ -43,7 +55,7 @@ const NAV_ITEMS: NavItem[] = [
       (click)="goToProfile()"
       style="cursor: pointer;">
         <!-- Replace app-avatar with app-icon -->
-        <app-icon [settings]="avatarSettings()" 
+        <app-icon [settings]="avatarSettings()"
         [allowEdit]="false"/>
         <div style="flex:1;min-width:0">
           <div [ngStyle]="userNameStyle">{{ user()?.username }}</div>
@@ -55,6 +67,7 @@ const NAV_ITEMS: NavItem[] = [
       <div style="flex:1;padding:12px 8px;display:flex;flex-direction:column;gap:2px;overflow-y:auto">
         @for (item of visibleItems(); track item.route) {
           <a [routerLink]="item.route" [ngStyle]="itemStyle(item.route)"
+             (click)="closeMobile()"
              (mouseenter)="hovered.set(item.route)"
              (mouseleave)="hovered.set('')">
             <span [innerHTML]="icons[item.icon]" style="display:flex;align-items:center;width:16px;height:16px;flex-shrink:0"></span>
@@ -75,15 +88,70 @@ const NAV_ITEMS: NavItem[] = [
       </div>
     </nav>
   `,
-  styles: [`a { text-decoration: none; }`],
+  styles: [`
+    a { text-decoration: none; }
+
+    .sidebar-nav {
+      width: 240px;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 60;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: oklch(15% 0.025 272);
+      border: 1px solid oklch(27% 0.03 272);
+      color: oklch(94% 0.005 272);
+      cursor: pointer;
+    }
+
+    .sidebar-backdrop { display: none; }
+
+    @media (max-width: 768px) {
+      .sidebar-toggle { display: flex; }
+
+      .sidebar-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translateX(-100%);
+        transition: transform 200ms ease;
+        z-index: 55;
+        box-shadow: 2px 0 12px rgba(0, 0, 0, 0.5);
+      }
+      .sidebar-nav.open { transform: translateX(0); }
+
+      .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 50;
+      }
+    }
+  `],
 })
 export class SidebarComponent {
   private auth      = inject(AuthService);
   private router    = inject(Router);
   private sanitizer = inject(DomSanitizer);
 
-  user    = this.auth.user;
-  hovered = signal('');
+  user       = this.auth.user;
+  hovered    = signal('');
+  mobileOpen = signal(false);
+
+  toggleMobile() { this.mobileOpen.update(v => !v); }
+  closeMobile()  { this.mobileOpen.set(false); }
 
   visibleItems = computed(() => {
     const role = this.user()?.role ?? 'Student';
@@ -120,9 +188,9 @@ export class SidebarComponent {
 
   // Styles
   readonly navStyle = {
-    width: '240px', height: '100vh', background: DS.colors.surface,
+    background: DS.colors.surface,
     borderRight: `1px solid ${DS.colors.border}`,
-    display: 'flex', flexDirection: 'column', flexShrink: '0', position: 'sticky', top: '0',
+    display: 'flex', flexDirection: 'column', flexShrink: '0',
   };
   readonly logoPadStyle = {
     padding: '20px 16px 16px', borderBottom: `1px solid ${DS.colors.borderSubtle}`,

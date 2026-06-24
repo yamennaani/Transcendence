@@ -9,7 +9,7 @@ YELLOW = \033[0;33m
 BLUE   = \033[0;34m
 RESET  = \033[0m
 
-.PHONY: setup build up down clean restart run re dev prod check_env studio populateDB genPrismaClient
+.PHONY: setup build up down clean restart run re dev prod check_env studio populateDB resetDB genPrismaClient seedAdmin generateUsers
 
 setup: check_env
 	@echo "$(GREEN)Setup complete.$(RESET)"
@@ -18,7 +18,7 @@ check_env:
 	@echo "$(BLUE)Checking .env...$(RESET)"
 	@if [ ! -f $(ENV_FILE) ]; then \
 		echo "$(YELLOW).env not found — generating...$(RESET)"; \
-		bash scripts/gen-env.sh && \
+		bash scripts/gen-env.sh --defaults && \
 		echo "$(GREEN).env created at $(ENV_FILE)$(RESET)"; \
 	else \
 		echo "$(GREEN).env found.$(RESET)"; \
@@ -46,19 +46,21 @@ build: setup genPrismaClient
 prod: setup genPrismaClient
 	@echo "$(GREEN)Starting production...$(RESET)"
 	@docker compose -f $(COMPOSE_FILE) up -d
+	@$(MAKE) seedAdmin
 	@$(MAKE) print_url
 
 dev: setup genPrismaClient
 	@echo "$(YELLOW)Starting dev mode...$(RESET)"
 	@docker compose -f $(COMPOSE_FILE) -f $(COMPOSE_DEV_FILE) up -d
 	@$(MAKE) migrate
+	@$(MAKE) seedAdmin
 	@$(MAKE) print_url
 
 studio:
 	@echo "$(BLUE)Opening Prisma Studio...$(RESET)"
 	@cd src/packages/database && npx prisma studio
 
-run: build prod
+run: build prod 
 re:  down run
 restart: down prod
 
@@ -80,7 +82,7 @@ fclean: clean
 	@rm -f $(ENV_FILE)
 
 print_url:
-	@echo "$(GREEN)http://localhost$(RESET)"
+	@echo "$(GREEN)https://localhost$(RESET)"
 
 status:
 	@docker compose -f $(COMPOSE_FILE) ps
@@ -96,6 +98,27 @@ populateDB:
 		echo "$(BLUE)Running seed script...$(RESET)"; \
 		bash scripts/populate-db.sh && \
 		echo "$(GREEN)Database populated.$(RESET)"; \
+	else \
+		echo "$(RED)Cancelled.$(RESET)"; \
+	fi
+
+seedAdmin:
+	@echo "$(BLUE)Ensuring admin user exists...$(RESET)"
+	@bash scripts/seed-admin.sh
+	@echo "$(GREEN)Admin user ready.$(RESET)"
+
+generateUsers:
+	@bash scripts/generate-users.sh $(ARGS)
+
+resetDB:
+	@echo "$(YELLOW)WARNING: This will wipe the current database (all data will be lost).$(RESET)"
+	@printf "Type 'yes' to continue: "; \
+	read answer; \
+	if [ "$$answer" = "yes" ]; then \
+		echo "$(BLUE)Resetting database...$(RESET)"; \
+		(cd src/packages/database && npx prisma migrate reset --force --skip-seed) && \
+		echo "$(GREEN)Database reset.$(RESET)"; \
+		$(MAKE) migrate; \
 	else \
 		echo "$(RED)Cancelled.$(RESET)"; \
 	fi
