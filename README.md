@@ -1,6 +1,6 @@
 *This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Karabitsc.*
 
-# Transcendence: 43
+# Transcendence: PeerPilot
 ---
 
 # Table of Contents
@@ -34,17 +34,15 @@
 
 # Description
 
-Transcendence is a peer-to-peer learning platform inspired by the educational model of **42 School**. The platform enables students, instructors (Bocal), and administrators to collaborate through assignments, organizations, groups, and evaluations in a modern web application.
+Peerpilot is a peer-to-peer learning platform inspired by the educational model of **42 School**. The platform enables students, instructors (Bocal), and administrators to collaborate through assignments, organizations, groups, and evaluations in a modern web application.
 
 The project follows a **microservice architecture**, with an Angular frontend, Express.js backend services, PostgreSQL database managed through Prisma ORM, and nginx acting as the reverse proxy. Everything is fully containerized using Docker for a simple development and deployment experience.
-
-*The “Description” section should also contain a clear name for the project and its key features. we need this!
 
 ---
 
 # Team Information
 
-Developing **Transcendence** was a collaborative effort involving five team members, each taking on a primary role while contributing across multiple areas of the project.
+Developing **PeerPilot** was a collaborative effort involving five team members, each taking on a primary role while contributing across multiple areas of the project.
 
 *Need to include a few more things within the team information! Such as the individual contributions, detailed breakdown of what each team emmebr contributed, specific featues and models or compnents implemented by each person, and any challenged faced.
 
@@ -63,11 +61,12 @@ As the Product Owner, Katrin was responsible for defining the overall vision and
 * Helped develop REST API endpoints used by the evaluation service
 * Participated in architectural planning and feature discussions
 
-**Modules Primarily Worked On**
-✔ Evaluation Pairing Algorithm (Custom Module)
+**Modules Primarily Worked On** 
+<br> ✔ Evaluation Pairing Algorithm (Custom Module) <br>
 ✔ Public API interacting with the Database
-✔ ORM Database
+<br> ✔ ORM Database <br>
 ✔ Framework for Frontend & Backend
+
 
 **Challenges they faced:**
 ***"The biggest challenge was learning everything from scratch while simultaneously designing the overall workflow. Building the evaluation process required balancing user experience, database design, and backend logic, all while continuing to learn new things throughout the project."***
@@ -91,9 +90,9 @@ Albert served as the Project Manager, coordinating the team's development effort
 * Supported integration between frontend components
 
 **Modules Primarily Worked On**
-✔ Multi-language Support
+<br> ✔ Multi-language Support <br>
 ✔ Framework for Frontend & Backend
-✔ Cross Browser Support
+<br> ✔ Cross Browser Support <br>
 ✔ Documentation and Project Management
 
 **Challenges they faced:**
@@ -123,13 +122,13 @@ Yamen acted as the Technical Lead and was the principal architect behind the pro
 * Integrated Docker-based service architecture
 
 **Modules Primarily Worked On**
-✔ Backend as Microservices
+<br> ✔ Backend as Microservices <br>
 ✔ Framework for Frontend & Backend
-✔ Organization System
+<br> ✔ Organization System <br>
 ✔ File Upload & Management
-✔ Custom Design System
+<br> ✔ Custom Design System <br>
 ✔ Right-to-Left Support
-✔ Public API interacting with the Database
+<br> ✔ Public API interacting with the Database <br>
 
 **Challenges they faced:**
 The flow of creating the classes and the assignments for the bocal, actually making the content for the student user and the students overall evaluating process, the overall jounery of this process was very complicated to create. 
@@ -156,9 +155,9 @@ Adam specialized in the authentication and security components of the platform. 
 * Assisted with Arabic localization
 
 **Modules Primarily Worked On**
-✔ Standard User Management & Authentication
+<br> ✔ Standard User Management & Authentication <br>
 ✔ OAuth 2.0 Authentication
-✔ Public API interacting with the Database
+<br> ✔ Public API interacting with the Database <br>
 ✔ Framework for Frontend & Backend
 
 **Challenges they faced:**
@@ -183,11 +182,11 @@ Peter contributed across nearly every area of the project, making him one of the
 * Contributed to frontend integration and testing
 
 **Modules Primarily Worked On**
-✔ Organization System
+<br> ✔ Organization System <br>
 ✔ ORM Database
-✔ Advanced Search
+<br> ✔ Advanced Search <br>
 ✔ User Activity Dashboard
-✔ Multi-language Support
+<br> ✔ Multi-language Support <br>
 
 **Challenges they faced:**
 whole project was a challenge 
@@ -257,7 +256,7 @@ The project fulfills several **Major** and **Minor** modules from the **42 ft_tr
 | Module                               | Type   | Points | Primary Contributors       |
 | ------------------------------------ | ------ | :----: | -------------------------- |
 | Framework for Frontend & Backend     | Major  |    2   | Everyone                   |
-| Public API Interacting with Database | Major  |    2   | Yamen, Adam, Katrin        |
+| Public API Interacting with Database | Major  |    2   | Yamen, Adam, Katrin, Albert|
 | Standard User Management             | Major  |    2   | Adam, Yamen                |
 | Advanced Permission System           | Major  |    2   | Everyone                   |
 | Organization System                  | Major  |    2   | Peter, Yamen               |
@@ -284,7 +283,7 @@ The project fulfills several **Major** and **Minor** modules from the **42 ft_tr
 The frontend is a single-page Angular 17 application using standalone components, the new signals API, and `@ngx-translate/core` for internationalization. It communicates with the backend exclusively through the nginx reverse proxy, which routes `/api/*` paths to the appropriate microservice. The backend is a set of Express.js services, each built from a shared template: an Express app, a `/health` endpoint, a central error handler using the shared `errors` package, and structured JSON logging via the shared `logger` package.
 
 **Primary Contributors**
-*Entire Team*
+<br> *Entire Team* <br>
 
 Every member contributed to both frontend and backend development throughout the project.
 
@@ -295,7 +294,7 @@ Every member contributed to both frontend and backend development throughout the
 Every service exposes a REST API for CRUD operations on its domain. The user service manages user accounts and profiles. The organization service handles organizations, membership, and org profiles. The class service owns classes, assignments, and their associated evaluation sheets. The enrollment service manages the student–class relationship. The group service handles assignment groups and peer invitations. The submission service manages file uploads to MinIO and submission lifecycle. The evaluation service drives the eval sheet, pairing algorithm, and scoring flow. All services share a single Prisma client generated from one central schema.
 
 **Primary Contributors**
-*Yamen, Adam, Katrin*  
+<br> *Yamen, Adam, Katrin, Albert* <br> 
 
 ---
 
@@ -304,7 +303,7 @@ Every service exposes a REST API for CRUD operations on its domain. The user ser
 Authentication is handled by a dedicated auth service. Registration requires an invited email address (stored in `auth_allowed_emails`), a strong password validated by `zxcvbn`, and email verification before the account can be used. Login issues a short-lived JWT access token (default 15 minutes) and a long-lived refresh token stored as a hashed value in the database and delivered via an httpOnly cookie. The Angular `AuthInterceptor` attaches the Bearer token to every outgoing request and transparently refreshes it on 401 responses using a queued retry mechanism.
 
 **Primary Contributors**
-*Entire Team*
+<br> *Entire Team* <br>
 
 ---
 
@@ -313,7 +312,7 @@ Authentication is handled by a dedicated auth service. Registration requires an 
 Three roles — Student, Bocal, and Admin — gate access throughout both the backend and frontend. On the backend, the auth middleware's `requireRole` helper fetches the user's current role from the database and enforces it per route. On the frontend, Angular route guards (`authGuard`, `bocalGuard`, `adminGuard`) protect sections of the application, and the sidebar dynamically filters navigation items by role. Bocal users see the class management and evaluation pairing panels; Admin users additionally see the organization and whitelist management screens.
 
 **Primary Contributors**
-*Peter, Yamen*
+<br> *Peter, Yamen* <br>
 
 ---
 
@@ -322,7 +321,7 @@ Three roles — Student, Bocal, and Admin — gate access throughout both the ba
 Organizations are the top-level grouping entity. An organization has an email, name, tag, and an optional profile (bio, phone number, avatar). Users belong to at most one organization and carry a role scoped to that organization. Bocal users manage classes and students within their organization. Admins can create and delete organizations, manage the allowed-email whitelist, and invite or revoke users across the platform. The org service exposes endpoints for member management, profile management, and fetching the org's classes.
 
 **Primary Contributors**
-*Peter, Katrin, Yamen*
+<br> *Peter, Katrin, Yamen* <br>
 
 ---
 
@@ -331,7 +330,7 @@ Organizations are the top-level grouping entity. An organization has an email, n
 The backend is split into eight independent services: `user` (port 3001), `auth` (port 3002), `org` (port 3003), `class` (port 3004), `enroll` (port 3005), `group` (port 3006), `submission` (port 3007), and `eval` (port 3008). Each service is built and run as its own Docker container. They share three internal Docker networks: `database-network` (services to PostgreSQL), `backend-network` (nginx to services), and `frontend-network` (nginx to the Angular container). Services never talk directly to each other; all cross-service data needs are resolved by the frontend or by the shared `packages/utils` read-only query helpers.
 
 **Primary Contributors**
-*Yamen* 
+<br> *Yamen* <br>
 
 ---
 
@@ -343,7 +342,7 @@ Total 11 Points
 All database access goes through Prisma v5. A single `schema.prisma` in `packages/database` defines every model — User, Organization, Class, Assignment, Enrollment, Group, Submission, EvalSheet, EvalSection, EvalResponse, EvalAssignment, GroupInvite, RefreshToken, AuthAllowedEmail, and more. Migrations are generated locally with `prisma migrate dev` and applied in Docker with `prisma migrate deploy`. The `packages/database/index.js` exports a singleton `PrismaClient` instance required by every service via relative path.
 
 **Primary Contributors**
-*Peter, Yamen, Katrin*
+<br> *Peter, Yamen, Katrin* <br>
 
 ---
 
@@ -352,7 +351,7 @@ All database access goes through Prisma v5. A single `schema.prisma` in `package
 Students collaborate on assignments through a group system. A student creates or joins a group for an assignment, and the group leader can invite other enrolled students by sending a `groupInvite` record. Invitees see pending invitations on their assignment detail page and can accept or decline. All group members share a single submission, and the group leader is the one who closes it and receives evaluator feedback, to which they can reply. The reply triggers a `finalScore` recomputation averaged over all replied-to evaluations.
 
 **Primary Contributors**
-*Entire Team*
+<br> *Entire Team* <br>
 
 ---
 
@@ -361,7 +360,7 @@ Students collaborate on assignments through a group system. A student creates or
 The frontend uses a bespoke design system defined in `src/tokens.ts` and `src/colors_and_type.css`. It provides typed TypeScript constants for all colors (using OKLCH color space), typography scales (Space Grotesk for display, DM Sans for body, JetBrains Mono for code), spacing, border radius, and shadow tokens. Reusable Angular components — `BtnComponent`, `BadgeComponent`, `ContainerComponent`, `ListComponent`, `ProgressBarComponent`, `ScorePillComponent`, `FieldComponent`, `AvatarComponent`, and `SidebarComponent` — are all built from these tokens, ensuring visual consistency across every screen.
 
 **Primary Contributors**
-*Yamen*
+<br> *Yamen* <br>
 
 
 ---
@@ -371,7 +370,7 @@ The frontend uses a bespoke design system defined in `src/tokens.ts` and `src/co
 The `packages/utils` shared query helpers provide flexible search across entities. `searchUser` accepts email and/or username and constructs an OR filter. `searchOrg` accepts email and/or name. These are used throughout the org service (duplicate detection on member add, user lookup on removal) and the auth service (email lookup on login and registration).
 
 **Primary Contributors**
-*Peter, Yamen*
+<br> *Peter, Yamen* <br>
 
 ---
 
@@ -380,7 +379,7 @@ The `packages/utils` shared query helpers provide flexible search across entitie
 File handling is centralized in `packages/fileManager`, which wraps `multer` (memory storage, 50 MB limit, MIME type allowlist) and the MinIO client. It exposes `uploader` for route middleware and `createStorage(bucket)` for per-bucket upload, presigned URL generation, public URL generation, and deletion. Three separate MinIO buckets are used in production: `user-profile` for avatars, `assignment-subjects` for Bocal-uploaded subject PDFs, and `submissions` for student submission files.
 
 **Primary Contributors**
-*Yamen*
+<br> *Yamen* <br>
 
 
 ---
@@ -391,7 +390,7 @@ The application supports four locales: English (`en`), German (`de`), Hungarian 
 
 
 **Primary Contributors**
-*Peter, Yamen, Albert, Adam*
+<br> *Peter, Yamen, Albert, Adam* <br>
 
 ---
 
@@ -400,7 +399,7 @@ The application supports four locales: English (`en`), German (`de`), Hungarian 
 When Arabic is selected, `document.documentElement.dir` is set to `rtl` and `document.documentElement.lang` to `ar`. This is done both in the `APP_INITIALIZER` on startup and immediately in the language switcher component on language change. The CSS custom properties and flex-based layout respond correctly to the RTL direction without additional overrides.
 
 **Primary Contributors**
-*Yamen*
+<br> *Yamen* <br>
 
 ---
 
@@ -409,7 +408,7 @@ When Arabic is selected, `document.documentElement.dir` is set to `rtl` and `doc
 The Angular application targets ES2022 and uses standard Web APIs. The landing page animation system is carefully guarded against Angular Material's zone.js interference, using `!important` on transition durations, double `requestAnimationFrame` delays before starting scroll-triggered animations, and `NgZone.runOutsideAngular` to prevent change-detection cycles from interrupting CSS transitions.
 
 **Primary Contributors**
-*Entire Team*
+<br> *Entire Team* <br>
 
 ---
 
@@ -418,7 +417,7 @@ The Angular application targets ES2022 and uses standard Web APIs. The landing p
 GitHub and Google OAuth flows are implemented in the auth service. Both use a `state` cookie for CSRF protection. On successful OAuth callback the service finds or creates a user (checking the allowed-email list for new accounts), issues access and refresh tokens, sets the refresh cookie, and redirects to the Angular `OAuthCallbackComponent` with the access token in the URL fragment. The Angular `AuthService.handleOAuthCallback()` extracts the token and calls `getMe()` to complete the session.
 
 **Primary Contributors**
-*Adam*
+<br> *Adam* <br>
 
 ---
 
@@ -427,7 +426,7 @@ GitHub and Google OAuth flows are implemented in the auth service. Both use a `s
 The dashboard aggregates data from multiple backend APIs. It fetches the user's enrolled classes and their assignments via the enroll service, then enriches each assignment with submission data from the submission service to derive live status badges and scores. Four stat tiles display average completion score, assignment progress, evaluations given, and pending reviews. The "Recent assignments" panel links directly to assignment detail pages. All labels and stat subtitles are translated through ngx-translate.
 
 **Primary Contributors**
-*Peter, Yamen*
+<br> *Peter, Yamen* <br>
 
 
 ## Custom Modules
@@ -437,7 +436,7 @@ The dashboard aggregates data from multiple backend APIs. It fetches the user's 
 The evaluation pairing system (`eval.service.js → generateSimpleEvalAssignmentPairings`) automatically assigns peer evaluators to every group for a given assignment. Groups are first sorted by ID for determinism, then shuffled using a seeded LCG random function keyed to the assignment ID, ensuring the same assignment always produces the same schedule regardless of database return order. The algorithm generates circular offset pairings across rounds: in round `r`, group `i` is evaluated by the group at position `(i + r) % n`. This guarantees no group evaluates itself and every group receives exactly `req_eval` evaluations. The evaluator user within each group is rotated across rounds. The algorithm validates that enough groups exist for the required number of rounds and surfaces a clear error message if not. Bocal users can also manually edit, delete, or regenerate pairings from the eval assignment list page.
 
 **Primary Contributors**
-*Katrin*
+<br> *Katrin* <br>
 
 ---
 
