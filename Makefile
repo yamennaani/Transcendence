@@ -2,6 +2,7 @@
 COMPOSE_FILE     = src/docker-compose.yml
 COMPOSE_DEV_FILE = src/docker-compose.dev.yml
 ENV_FILE         = src/.env
+ENV_DBFILE         = src/packages/database/.env
 
 GREEN  = \033[0;32m
 RED    = \033[0;31m
@@ -80,6 +81,7 @@ clean: down
 fclean: clean
 	@echo "$(RED)Removing .env...$(RESET)"
 	@rm -f $(ENV_FILE)
+	@rm -f $(ENV_DBFILE)
 
 print_url:
 	@echo "$(GREEN)https://localhost$(RESET)"
