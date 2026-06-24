@@ -24,6 +24,7 @@ export class AdminOrgDetailComponent {
   private authBase = '/api/auth'
 
   org = signal<any | null>(null)
+  orgId = signal<number | null>(null)
   members = signal<any[]>([])
   allowedEmails = signal<any[]>([])
   busy = signal(false)
@@ -47,6 +48,7 @@ export class AdminOrgDetailComponent {
   load(){
     const id = Number(this.route.snapshot.paramMap.get('id'))
     if(!id) return
+    this.orgId.set(id)
     this.orgService.getOrg(id).subscribe({ next: (o:any)=> this.org.set(o) })
     this.orgService.listOrgMembers(id).subscribe({ next: (m:any[])=> {
       this.members.set(m || [])
@@ -56,7 +58,9 @@ export class AdminOrgDetailComponent {
   }
 
   loadAllowedEmails(){
-    this.http.get<any[]>(`${this.authBase}/invites`).subscribe({
+    const id = this.orgId()
+    if(!id) return
+    this.http.get<any[]>(`${this.authBase}/invites`, { params: { orgId: id } }).subscribe({
       next: (invites:any[]) => this.allowedEmails.set(invites || []),
     })
   }
@@ -75,7 +79,7 @@ export class AdminOrgDetailComponent {
       return
     }
     this.busy.set(true)
-    this.http.post(`${this.authBase}/invite`, { email }).subscribe({
+    this.http.post(`${this.authBase}/invite`, { email, orgId: this.orgId() }).subscribe({
       next: ()=>{
         this.busy.set(false)
         this.email = ''
@@ -173,8 +177,8 @@ export class AdminOrgDetailComponent {
     const existingEmails = new Set(this.allowedEmails().map(i => i.email?.toLowerCase()))
     const toInvite = unique.filter(e => !existingEmails.has(e))
     const alreadyCount = unique.length - toInvite.length
-    const promises = toInvite.map((email) => new Promise<{ email: string; ok: boolean }>((resolve)=>{
-      this.http.post(`${this.authBase}/invite`, { email }).subscribe({ next: ()=>resolve({ email, ok:true }), error: ()=>resolve({ email, ok:false }) })
+    const promises = valid.map((email) => new Promise<{ email: string; ok: boolean }>((resolve)=>{
+      this.http.post(`${this.authBase}/invite`, { email, orgId: this.orgId() }).subscribe({ next: ()=>resolve({ email, ok:true }), error: ()=>resolve({ email, ok:false }) })
     }))
     Promise.all(promises).then((results)=>{
       const added = results.filter((result) => result.ok).length

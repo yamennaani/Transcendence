@@ -155,6 +155,18 @@ PORT=$(ask "Application Port" "3000")
 echo
 
 # -----------------------------------------------------------------------------
+# Default admin account (seeded on first `make migrate`)
+# -----------------------------------------------------------------------------
+
+echo -e "${BLUE}Default Admin Account${RESET}"
+
+ADMIN_EMAIL=$(ask "Admin Email" "admin@example.com")
+ADMIN_USERNAME=$(ask "Admin Username" "admin")
+ADMIN_PASSWORD=$(ask "Admin Password" "Test1234!" "yes")
+
+echo
+
+# -----------------------------------------------------------------------------
 # OAuth
 # -----------------------------------------------------------------------------
 
@@ -169,6 +181,10 @@ GOOGLE_CLIENT_SECRET=$(ask \
     "your-google-secret" \
     "yes")
 
+GOOGLE_REDIRECT_URI=$(ask \
+    "Google Redirect URI" \
+    "https://localhost/api/auth/google/callback")
+
 GITHUB_CLIENT_ID=$(ask \
     "GitHub Client ID" \
     "your-github-client-id")
@@ -177,10 +193,10 @@ GITHUB_CLIENT_SECRET=$(ask \
     "GitHub Client Secret" \
     "your-github-secret" \
     "yes")
-    
+
 GITHUB_REDIRECT_URI=$(ask \
     "GitHub Redirect URI" \
-    "http://localhost/api/auth/github/callback")
+    "https://localhost/api/auth/github/callback")
 
 echo
 
@@ -190,8 +206,8 @@ echo
 
 echo -e "${BLUE}Frontend${RESET}"
 
-FRONTEND_URL=$(ask "Frontend URL" "http://localhost:4200/")
-BASE_URL=$(ask "Base URL" "http://localhost/")
+FRONTEND_URL=$(ask "Frontend URL" "https://localhost:4200/")
+BASE_URL=$(ask "Base URL" "https://localhost/")
 
 echo
 
@@ -253,9 +269,15 @@ PASSWORD_MIN_LENGTH=${PASSWORD_MIN_LENGTH}
 NODE_ENV=${NODE_ENV}
 PORT=${PORT}
 
+# Default admin account (seeded on first \`make migrate\`)
+ADMIN_EMAIL=${ADMIN_EMAIL}
+ADMIN_USERNAME=${ADMIN_USERNAME}
+ADMIN_PASSWORD=${ADMIN_PASSWORD}
+
 # OAuth
 GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
 GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
 
 GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
 GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}

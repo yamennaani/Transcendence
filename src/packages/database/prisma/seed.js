@@ -161,7 +161,7 @@ async function createSubmissionForGroup({ group, uploader, fileName, mimeType, u
 }
 
 async function main() {
-  console.log('Seeding database...')
+  //console.log('Seeding database...')
 
   const SEED_PASSWORD = 'Test1234!'
   const passwordHash = await bcrypt.hash(SEED_PASSWORD, 12)
@@ -619,9 +619,10 @@ async function main() {
     skipDuplicates: true,
   });
 
-  console.log('AuthAllowedEmail seeded.');
+  //console.log('AuthAllowedEmail seeded.');
 
-  console.log('Seed complete.')
+  //console.log('Seed complete.')
+  /*
   console.log({
     organizations: 2,
     users: 44,
@@ -636,6 +637,7 @@ async function main() {
     sampleEvalAssignments: 4
   })
  console.log(`\nSeed password for all users: \x1b[31m${SEED_PASSWORD}\x1b[0m\n`)
+ */
 }
 
 main()

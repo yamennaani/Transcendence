@@ -48,8 +48,8 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
-    const allowed = await isEmailAllowed(email);
-    if (!allowed) {
+    const allowedEmail = await isEmailAllowed(email);
+    if (!allowedEmail) {
       return res.status(403).json({ error: 'Registration not permitted for this email address.' });
     }
 
@@ -73,7 +73,7 @@ exports.register = async (req, res) => {
     const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}`;
 
     // Create user (new version returns user object with id, email, username)
-    const user = await createUser(email, password);
+    const user = await createUser(email, password, allowedEmail.orgId);
     await storeVerificationToken(user.id, tokenHash, expiresAt);
     await markEmailAsUsed(email);   // mark the allowed email as used
 
@@ -475,13 +475,21 @@ exports.verifyEmail = async (req, res) => {
 // ---------- Invitations ----------
 exports.createInvite = async (req, res) => {
     try {
-        const { email } = req.body;
+        const { email, orgId } = req.body;
         if (!email) return res.status(400).json({ error: 'Email required' });
-        const invite = await addAllowedEmail(email, req.user.userId);
+        let parsedOrgId = null;
+        if (orgId != null) {
+            parsedOrgId = parseInt(orgId, 10);
+            if (Number.isNaN(parsedOrgId)) return res.status(400).json({ error: 'Invalid orgId' });
+        }
+        const invite = await addAllowedEmail(email, req.user.userId, parsedOrgId);
         res.status(201).json(invite);
     } catch (err) {
         if (err.code === 'ALREADY_EXISTS') {
             return res.status(409).json({ error: err.message });
+        }
+        if (err.code === 'ORG_NOT_FOUND') {
+            return res.status(404).json({ error: err.message });
         }
         console.error(err);
         res.status(500).json({ error: 'Failed to create invite', message: err.message });
@@ -490,7 +498,9 @@ exports.createInvite = async (req, res) => {
 
 exports.getInvites = async (req, res) => {
     try {
-        const invites = await getAllowedEmails();
+        const { orgId } = req.query;
+        const parsedOrgId = orgId != null ? parseInt(orgId, 10) : null;
+        const invites = await getAllowedEmails(Number.isNaN(parsedOrgId) ? null : parsedOrgId);
         res.json(invites);
     } catch (err) {
         console.error(err);
