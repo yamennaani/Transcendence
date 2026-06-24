@@ -133,6 +133,12 @@ export class LoginComponent implements OnInit {
 
   login() {
     this.errorMsg.set('');
+
+    if (!this.email() || !this.password()) {
+      this.errorMsg.set('Email and password are required.');
+      return;
+    }
+
     this.submitting.set(true);
     this.auth.login(this.email(), this.password()).subscribe({
       next: () => {

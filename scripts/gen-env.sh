@@ -206,7 +206,7 @@ echo
 
 echo -e "${BLUE}Frontend${RESET}"
 
-FRONTEND_URL=$(ask "Frontend URL" "https://localhost:4200/")
+FRONTEND_URL=$(ask "Frontend URL" "https://localhost/")
 BASE_URL=$(ask "Base URL" "https://localhost/")
 
 echo

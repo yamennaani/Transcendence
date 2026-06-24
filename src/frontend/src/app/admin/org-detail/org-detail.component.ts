@@ -27,6 +27,7 @@ export class AdminOrgDetailComponent {
   orgId = signal<number | null>(null)
   members = signal<any[]>([])
   allowedEmails = signal<any[]>([])
+  allInvitedEmails = signal<Set<string>>(new Set())
   busy = signal(false)
   removingId = signal<number | null>(null)
   removingInviteId = signal<number | null>(null)
@@ -55,6 +56,7 @@ export class AdminOrgDetailComponent {
       this.pendingRoles = Object.fromEntries((m || []).map((mem: any) => [mem.id, mem.role]))
     }})
     this.loadAllowedEmails()
+    this.loadAllInvitedEmails()
   }
 
   loadAllowedEmails(){
@@ -62,6 +64,16 @@ export class AdminOrgDetailComponent {
     if(!id) return
     this.http.get<any[]>(`${this.authBase}/invites`, { params: { orgId: id } }).subscribe({
       next: (invites:any[]) => this.allowedEmails.set(invites || []),
+      error: () => { this.inviteNotice = 'Failed to load whitelist — refresh to retry' },
+    })
+  }
+
+  loadAllInvitedEmails(){
+    this.http.get<any[]>(`${this.authBase}/invites`).subscribe({
+      next: (invites:any[]) => {
+        this.allInvitedEmails.set(new Set((invites || []).map(i => i.email?.toLowerCase())))
+      },
+      error: () => {},
     })
   }
 
@@ -70,19 +82,28 @@ export class AdminOrgDetailComponent {
   }
 
   addOne(){
-    const email = this.email.trim()
+    const email = this.email.trim().toLowerCase()
     this.singleNotice = ''
     if(!email) { this.singleNotice = 'Email required'; return }
     if(!this.validateEmail(email)) { this.singleNotice = 'Invalid email format'; return }
+    if(this.allowedEmails().some(i => i.email?.toLowerCase() === email)) {
+      this.singleNotice = `${email} is already whitelisted`
+      return
+    }
+    if(this.allInvitedEmails().has(email)) {
+      this.singleNotice = `${email} is already invited in another organisation`
+      return
+    }
     this.busy.set(true)
     this.http.post(`${this.authBase}/invite`, { email, orgId: this.orgId() }).subscribe({
-      next: ()=>{
+      next: () => {
         this.busy.set(false)
         this.email = ''
         this.singleNotice = `Whitelisted ${email}`
         this.load()
+        this.loadAllInvitedEmails()
       },
-      error: (err)=>{
+      error: (err) => {
         this.busy.set(false)
         this.singleNotice = err?.error?.error ?? 'Failed to whitelist email'
       }
@@ -168,14 +189,40 @@ export class AdminOrgDetailComponent {
     this.busy.set(true)
     const valid = lines.filter(l=>this.validateEmail(l))
     const invalidCount = lines.length - valid.length
-    const promises = valid.map((email) => new Promise<{ email: string; ok: boolean }>((resolve)=>{
-      this.http.post(`${this.authBase}/invite`, { email, orgId: this.orgId() }).subscribe({ next: ()=>resolve({ email, ok:true }), error: ()=>resolve({ email, ok:false }) })
+    const unique = [...new Set(valid.map(e => e.toLowerCase()))]
+    const duplicateCount = valid.length - unique.length
+    this.http.get<any[]>(`${this.authBase}/invites`, { params: { orgId: this.orgId()! } }).subscribe({
+      next: (invites) => {
+        this.allowedEmails.set(invites || [])
+        this.runImport(unique, duplicateCount, invalidCount)
+      },
+      error: () => this.runImport(unique, duplicateCount, invalidCount),
+    })
+  }
+
+  private runImport(unique: string[], duplicateCount: number, invalidCount: number){
+    const existingEmails = this.allInvitedEmails().size > 0
+      ? this.allInvitedEmails()
+      : new Set(this.allowedEmails().map(i => i.email?.toLowerCase()))
+    const toInvite = unique.filter(e => !existingEmails.has(e))
+    const alreadyCount = unique.length - toInvite.length
+    const promises = toInvite.map((email) => new Promise<{ email: string; status: 'ok' | 'exists' | 'failed' }>((resolve)=>{
+      this.http.post(`${this.authBase}/invite`, { email, orgId: this.orgId() }).subscribe({
+        next: () => resolve({ email, status: 'ok' }),
+        error: (err) => resolve({ email, status: err?.status === 409 ? 'exists' : 'failed' }),
+      })
     }))
     Promise.all(promises).then((results)=>{
-      const added = results.filter((result) => result.ok).length
-      const failed = results.filter((result) => !result.ok).length
+      const added   = results.filter(r => r.status === 'ok').length
+      const failed  = results.filter(r => r.status === 'failed').length
+      const existed = results.filter(r => r.status === 'exists').length
       this.busy.set(false)
-      this.bulkNotice = `${added} whitelisted, ${failed} failed${invalidCount?`, ${invalidCount} invalid format` : ''}`
+      const parts = [`${added} whitelisted`]
+      if (failed)  parts.push(`${failed} failed`)
+      if (alreadyCount + existed) parts.push(`${alreadyCount + existed} already whitelisted`)
+      if (duplicateCount) parts.push(`${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''} skipped`)
+      if (invalidCount) parts.push(`${invalidCount} invalid format`)
+      this.bulkNotice = parts.join(', ')
       this.csvText = ''
       this.loadAllowedEmails()
     })

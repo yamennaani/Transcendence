@@ -196,10 +196,10 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       min-height: 0;
     }
     .card-inner {
-      padding: 18px 20px;
+      padding: 16px 18px;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       height: 100%;
       box-sizing: border-box;
     }
@@ -253,40 +253,34 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       color: ${DS.colors.fg3};
     }
     .invite-btns { display: flex; gap: 6px; }
-    .submission-card { gap: 16px; }
+    .submission-card { gap: 10px; }
     .sub-status-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
     }
     .upload-panel {
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      padding: 14px 16px;
+      gap: 8px;
+      padding: 10px 14px;
       border: 1px solid ${DS.colors.border};
       border-radius: ${DS.radius.lg};
       background: ${DS.colors.surface};
       margin-top: auto;
     }
-    .upload-label {
-      font-size: 0.6875rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: ${DS.colors.fg3};
-    }
-    .upload-help {
-      margin: 0;
-      font-size: 0.8125rem;
-      color: ${DS.colors.fg3};
-      line-height: 1.5;
-    }
     .upload-row {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
+    }
+    .upload-meta {
+      font-size: 0.75rem;
+      color: ${DS.colors.fg3};
+      margin-left: auto;
+      white-space: nowrap;
     }
     .upload-picker {
       position: relative;
@@ -471,8 +465,8 @@ import { ScorePillComponent } from '../shared/score-pill.component';
     .file-preview {
       display: flex;
       align-items: center;
-      gap: 12px;
-      padding: 12px 14px;
+      gap: 10px;
+      padding: 8px 12px;
       border-radius: ${DS.radius.md};
       border: 1px solid ${DS.colors.cyanBorder};
       background: ${DS.colors.cyanSubtle};
@@ -533,7 +527,7 @@ import { ScorePillComponent } from '../shared/score-pill.component';
       border-color: ${DS.colors.redBorder};
       color: ${DS.colors.red};
     }
-        .passkey-box {
+    .passkey-box {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -690,7 +684,6 @@ export class AssignmentDetailComponent implements OnInit {
   selectedFile = signal<File | null>(null);
   uploadingFile = signal(false);
   uploadedFileMeta = signal<{ name: string; size: string; ext: string; type: string } | null>(null);
-  groupName    = signal<string>('');
   myEvaluators = signal<EvalAssignment[]>([]);
   myResponses  = signal<EvalResponse[]>([]);
   replyDrafts  = signal<Map<number, string>>(new Map());
@@ -714,6 +707,8 @@ export class AssignmentDetailComponent implements OnInit {
     const sub = this.mySubmission();
     if (!sub) return 'pending' as const;
     if (sub.status === 'Close' && this.myResponses().length >= (this.assignment()?.req_eval ?? 1)) {
+      const hasUnreplied = this.myResponses().some(r => !r.reply);
+      if (hasUnreplied) return 'reply_needed' as const;
       return sub.passed ? 'validated' as const : 'failed' as const;
     }
     if (sub.status === 'Close') return 'under_review' as const;
@@ -782,7 +777,6 @@ export class AssignmentDetailComponent implements OnInit {
     this.replyDrafts.set(new Map());
     this.replyError.set(null);
     this.actionError.set(null);
-    this.groupName.set('');
     this.isEnrolled.set(false);
 
     this.assService.getAssignmentById(id).subscribe({
@@ -907,59 +901,10 @@ export class AssignmentDetailComponent implements OnInit {
     });
   }
 
-  joinSoloAssignment() {
-    const a = this.assignment();
-    const userId = this.currentUserId();
-    if (!a || !userId) return;
-    this.actionError.set(null);
-    this.submissionError.set(null);
-    this.loading.show();
-    this.groupService.createGroup({
-      assId: a.id, userId,
-      name: `${this.user()?.username ?? 'My'}'s work`,
-      size: 1,
-    }).subscribe({
-      next: (group: any) => {
-        this.groupService.getGroup(group.id).subscribe({
-          next: (full: any) => { this.myGroup.set(full); this.loading.hide(); },
-          error: ()         => { this.myGroup.set(group); this.loading.hide(); },
-        });
-      },
-      error: (err) => {
-        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_join_assignment_failed'));
-        this.loading.hide();
-      },
-    });
-  }
-
   goToEvalAssignments(): void {
     const a = this.assignment();
     if (!a) return;
     this.router.navigate(['/eval-assignments'], { queryParams: { assignmentId: a.id } });
-  }
-
-  createGroup() {
-    const a = this.assignment();
-    const userId = this.currentUserId();
-    const name = this.groupName().trim();
-    if (!a || !userId) return;
-    if (!name) { this.actionError.set(this.translate.instant('error_group_name_required')); return; }
-    this.actionError.set(null);
-    this.submissionError.set(null);
-    this.loading.show();
-    this.groupService.createGroup({ assId: a.id, userId, name, size: a.groupSize ?? 1 }).subscribe({
-      next: (group: any) => {
-        this.groupName.set('');
-        this.groupService.getGroup(group.id).subscribe({
-          next: (full: any) => { this.myGroup.set(full); this.loading.hide(); },
-          error: ()         => { this.myGroup.set(group); this.loading.hide(); },
-        });
-      },
-      error: (err) => {
-        this.actionError.set(err?.error?.error ?? err?.error?.message ?? this.translate.instant('error_create_group_failed'));
-        this.loading.hide();
-      },
-    });
   }
 
   acceptInvite(inviteId: number) {

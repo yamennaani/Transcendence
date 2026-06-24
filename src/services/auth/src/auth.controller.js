@@ -1,6 +1,8 @@
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const { OAuth2Client } = require('google-auth-library');
+const logger = require('../packages/logger');
+const { AppError, NotFoundError, ValidationError, UnauthorizedError, ForbiddenError, ConflictError } = require('../packages/errors');
 require('dotenv').config();
 
 const {
@@ -40,30 +42,28 @@ const { generateAccessToken, generateRefreshToken, verifyRefreshToken,
 
 
 
-// register function – only the part after creating user changes slightly
-exports.register = async (req, res) => {
+exports.register = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password required' });
+      throw new ValidationError('Email and password required');
     }
 
     const allowedEmail = await isEmailAllowed(email);
     if (!allowedEmail) {
-      return res.status(403).json({ error: 'Registration not permitted for this email address.' });
+      throw new ForbiddenError('Registration not permitted for this email address.');
     }
 
     const existing = await findUserByEmail(email);
     if (existing) {
-      return res.status(409).json({ error: 'Email already exists' });
+      throw new ConflictError('Email already exists');
     }
 
     const passwordStrength = validatePasswordStrength(password);
     if (!passwordStrength.isValid) {
-      return res.status(400).json({
-        error: 'Password too weak',
-        suggestions: passwordStrength.suggestions
-      });
+      const err = new ValidationError('Password too weak');
+      err.suggestions = passwordStrength.suggestions;
+      throw err;
     }
 
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -80,10 +80,10 @@ exports.register = async (req, res) => {
     try {
       await sendVerificationEmail(email, verificationUrl);
     } catch (emailErr) {
-      console.error('Verification email failed, rolling back registration:', emailErr);
+      logger.error('auth-service', 'Verification email failed, rolling back registration', { message: emailErr.message, stack: emailErr.stack });
       await deleteUserById(user.id);
       await unmarkEmailAsUsed(email);
-      return res.status(500).json({ error: 'Registration failed: could not send verification email. Please try again.' });
+      throw new AppError('Registration failed: could not send verification email. Please try again.', 500);
     }
 
     return res.status(201).json({
@@ -92,25 +92,26 @@ exports.register = async (req, res) => {
       message: 'Registration successful. Please verify your email before logging in.'
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).json({ error: 'Registration failed', message: err.message });
+    return next(err);
   }
 };
 
-// login – ensure it works with the joined user object (user.email_verified is now on user, not user.userAuth)
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      throw new ValidationError('Email and password required');
+    }
     const user = await findUserByEmail(email);
     if (!user) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      throw new UnauthorizedError('Invalid credentials');
     }
     const valid = await bcrypt.compare(password, user.pass_hash);
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      throw new UnauthorizedError('Invalid credentials');
     }
     if (!user.email_verified) {
-      return res.status(403).json({ error: 'Please verify your email before logging in.' });
+      throw new ForbiddenError('Please verify your email before logging in.');
     }
 
     const accessToken = generateAccessToken(user.id, user.email);
@@ -128,25 +129,21 @@ exports.login = async (req, res) => {
     });
     res.json({ accessToken });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Login failed', message: err.message });
+    next(err);
   }
 };
 
-// The rest of your controller (refresh, logout, getMe, forgotPassword, resetPassword, OAuth, verifyEmail) should work unchanged,
-// because they use the model functions that we have rewritten. No changes needed.
-
-exports.refresh = async (req, res) => {
+exports.refresh = async (req, res, next) => {
     try {
         const oldRefreshToken = req.cookies.refreshToken;
         if (!oldRefreshToken) {
-            return res.status(401).json({ error: 'No refresh token' });
+            throw new UnauthorizedError('No refresh token');
         }
 
         // 1. Check DB for old token (exists? not expired?)
         const storedToken = await findRefreshToken(oldRefreshToken); // uses hash lookup
         if (!storedToken || storedToken.expiresAt < new Date()) {
-            return res.status(403).json({ error: 'Invalid or expired refresh token' });
+            throw new ForbiddenError('Invalid or expired refresh token');
         }
 
         // 2. Verify JWT signature
@@ -176,13 +173,11 @@ exports.refresh = async (req, res) => {
         // 7. Return new access token
         res.json({ accessToken: newAccessToken });
     } catch (err) {
-        console.error(err);
-        // If any step fails, ensure the cookie is cleared? Not necessary.
-        res.status(403).json({ error: 'Invalid refresh token' });
+        next(err instanceof AppError ? err : new ForbiddenError('Invalid refresh token'));
     }
 };
 
-exports.logout = async (req, res) => {
+exports.logout = async (req, res, next) => {
     try {
         const refreshToken = req.cookies.refreshToken;
         if (refreshToken) {
@@ -191,24 +186,22 @@ exports.logout = async (req, res) => {
         }
         res.status(204).send();
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Logout failed' });
+        next(err);
     }
 };
 
-exports.getMe = async (req, res) => {
+exports.getMe = async (req, res, next) => {
     try {
         if (!req.user) {
-            return res.status(401).json({ error: 'Not authenticated' });
+            throw new UnauthorizedError('Not authenticated');
         }
         const user = await findUserById(req.user.userId);
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            throw new NotFoundError('User not found');
         }
         res.json(user);
     } catch (err) {
-        console.error('getMe error:', err.stack);
-        res.status(500).json({ error: 'Internal error', details: err.message });
+        next(err);
     }
 };
 
@@ -216,10 +209,10 @@ exports.getMe = async (req, res) => {
 
 
 // ---------- Forgot Password ----------
-exports.forgotPassword = async (req, res) => {
+exports.forgotPassword = async (req, res, next) => {
     try {
         const { email } = req.body;
-        if (!email) return res.status(400).json({ error: 'Email required' });
+        if (!email) throw new ValidationError('Email required');
 
         const user = await findUserByEmail(email);
         // Always respond with generic success (avoid user enumeration)
@@ -238,8 +231,8 @@ exports.forgotPassword = async (req, res) => {
         // Build reset URL (frontend route)
         const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-        // In development, log to console. In production, send email.
-        console.log(`Reset link: ${resetUrl}`);
+        // In development, log to the service logs. In production, send email.
+        logger.info('auth-service', 'Password reset link generated', { resetUrl });
 
         await sendResetEmail(email, resetUrl);
         // TODO: Send email via nodemailer (example below)
@@ -247,26 +240,27 @@ exports.forgotPassword = async (req, res) => {
 
         res.status(200).json({ message: 'If an account with that email exists, a reset link has been sent.' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to process request', message: err.message });
+        next(err);
     }
 };
 
 // ---------- Reset Password ----------
-exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res, next) => {
     try {
         const { token, newPassword } = req.body;
         if (!token || !newPassword) {
-            return res.status(400).json({ error: 'Token and new password required' });
+            throw new ValidationError('Token and new password required');
         }
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const user = await findUserByResetToken(tokenHash);
         if (!user) {
-            return res.status(400).json({ error: 'Invalid or expired reset token' });
+            throw new ValidationError('Invalid or expired reset token');
         }
         const passwordStrength = validatePasswordStrength(newPassword);
         if (!passwordStrength.isValid) {
-            return res.status(400).json({ error: 'Password too weak', suggestions: passwordStrength.suggestions });
+            const err = new ValidationError('Password too weak');
+            err.suggestions = passwordStrength.suggestions;
+            throw err;
         }
 
         // Hash new password
@@ -279,8 +273,7 @@ exports.resetPassword = async (req, res) => {
 
         res.status(200).json({ message: 'Password reset successfully. Please log in.' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to reset password', message: err.message });
+        next(err);
     }
 };
 
@@ -357,7 +350,7 @@ exports.googleCallback = async (req, res) => {
         if (err.code === 'INVITE_REQUIRED') {
             return res.redirect(`${process.env.FRONTEND_URL}/login?error=not_invited`);
         }
-        console.error(err);
+        logger.error('auth-service', 'Google OAuth callback failed', { message: err.message, stack: err.stack });
         res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
     }
 };
@@ -449,73 +442,61 @@ exports.githubCallback = async (req, res) => {
         if (err.code === 'INVITE_REQUIRED') {
             return res.redirect(`${process.env.FRONTEND_URL}/login?error=not_invited`);
         }
-        console.error(err);
+        logger.error('auth-service', 'GitHub OAuth callback failed', { message: err.message, stack: err.stack });
         res.redirect(`${process.env.FRONTEND_URL}/login?error=auth_failed`);
     }
 };
 
 
-exports.verifyEmail = async (req, res) => {
+exports.verifyEmail = async (req, res, next) => {
     try {
         const { token } = req.query;
-        if (!token) return res.status(400).json({ error: 'Token required' });
+        if (!token) throw new ValidationError('Token required');
 
         const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const user = await findUserByVerificationToken(tokenHash);
-        if (!user) return res.status(400).json({ error: 'Invalid or expired token' });
+        if (!user) throw new ValidationError('Invalid or expired token');
 
         await verifyEmail(user.id);
         res.status(200).json({ message: 'Email verified successfully.' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Verification failed', message: err.message });
+        next(err);
     }
 };
 
 // ---------- Invitations ----------
-exports.createInvite = async (req, res) => {
+exports.createInvite = async (req, res, next) => {
     try {
         const { email, orgId } = req.body;
-        if (!email) return res.status(400).json({ error: 'Email required' });
+        if (!email) throw new ValidationError('Email required');
         let parsedOrgId = null;
         if (orgId != null) {
             parsedOrgId = parseInt(orgId, 10);
-            if (Number.isNaN(parsedOrgId)) return res.status(400).json({ error: 'Invalid orgId' });
+            if (Number.isNaN(parsedOrgId)) throw new ValidationError('Invalid orgId');
         }
         const invite = await addAllowedEmail(email, req.user.userId, parsedOrgId);
         res.status(201).json(invite);
     } catch (err) {
-        if (err.code === 'ALREADY_EXISTS') {
-            return res.status(409).json({ error: err.message });
-        }
-        if (err.code === 'ORG_NOT_FOUND') {
-            return res.status(404).json({ error: err.message });
-        }
-        console.error(err);
-        res.status(500).json({ error: 'Failed to create invite', message: err.message });
+        next(err);
     }
 };
 
-exports.getInvites = async (req, res) => {
+exports.getInvites = async (req, res, next) => {
     try {
         const { orgId } = req.query;
         const parsedOrgId = orgId != null ? parseInt(orgId, 10) : null;
         const invites = await getAllowedEmails(Number.isNaN(parsedOrgId) ? null : parsedOrgId);
         res.json(invites);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to fetch invites', message: err.message });
+        next(err);
     }
 };
 
-exports.revokeInvite = async (req, res) => {
+exports.revokeInvite = async (req, res, next) => {
     try {
         await revokeAllowedEmail(req.params.id);
         res.status(204).send();
     } catch (err) {
-        if (err.code === 'NOT_FOUND') return res.status(404).json({ error: err.message });
-        if (err.code === 'ALREADY_USED') return res.status(409).json({ error: err.message });
-        console.error(err);
-        res.status(500).json({ error: 'Failed to revoke invite', message: err.message });
+        next(err);
     }
 };

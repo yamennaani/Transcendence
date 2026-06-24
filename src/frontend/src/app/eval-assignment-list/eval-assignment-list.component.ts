@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { EvalAssignment, EvalService} from '../core/services/eval-service/eval-service';
 //import { ListComponent, ListColumn } from '../shared/list.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ContainerComponent, ContainerConfig } from '../shared/container.component';
 import { BtnComponent } from '../shared/btn.component';
 import { LoadingService } from '../core/services/loading-service/loading.service';
@@ -103,6 +104,7 @@ export class EvalAssignmentListComponent implements OnInit {
   private courseService = inject(CourseService);
   private groupService = inject(GroupService);
   private loadingService = inject(LoadingService);
+  private translate = inject(TranslateService);
 
   // ── Assignment context ─────────────────────────────────────
   assignmentId = signal<number | null>(null);
@@ -356,10 +358,10 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
     this.route.queryParams.subscribe(params => {
       const raw = params['assignmentId'] ?? params['assId'];
 
-      if (!raw) { this.error.set('Missing assignmentId in the URL.'); return; }
+      if (!raw) { this.error.set(this.translate.instant('error_missing_assignment_id')); return; }
 
       const id = parseInt(raw, 10);
-      if (Number.isNaN(id)) { this.error.set('Invalid assignmentId in the URL.'); return; }
+      if (Number.isNaN(id)) { this.error.set(this.translate.instant('error_invalid_assignment_id')); return; }
 
       this.assignmentId.set(id);
       this.loadEvalAssignmentHeader(id);
@@ -370,7 +372,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
 
   generateSimplePairings(): void {
     const id = this.assignmentId();
-    if (!id) { this.error.set('Cannot generate pairings without an assignment id.'); return; }
+    if (!id) { this.error.set(this.translate.instant('error_missing_assignment_id')); return; }
 
     this.loading.set(true);
     this.error.set(null);
@@ -383,7 +385,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
         this.loadEvalAssignments(id);
       },
       error: err => {
-        this.error.set(this.errorMessage(err, 'Failed to generate pairings.'));
+        this.error.set(this.errorMessage(err, this.translate.instant('error_generating_pairings')));
         this.loading.set(false);
         this.loadingService.hide();
       },
@@ -417,7 +419,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
         this.loadingService.hide(); 
       },
       error: err => {
-        this.error.set(err?.error?.message ?? 'Failed to delete evaluation pairing.' );
+        this.error.set(this.errorMessage(err, this.translate.instant('error_deleting_pairing')));
         this.loading.set(false);
         this.loadingService.hide();         
       }, });
@@ -427,10 +429,10 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
   deleteAllEvalAssignments(): void {
     const id = this.assignmentId();
     
-    if (!id) { this.error.set('Cannot delete pairings without an assignment id.'); return; }
+    if (!id) { this.error.set(this.translate.instant('error_missing_assignment_id')); return; }
     if (this.evalAssignments().length === 0) { return; }
 
-    const ok = window.confirm('Are you sure you want to delete all evaluation pairings for this assignment?' );
+    const ok = window.confirm(this.translate.instant('confirm_delete_all_pairings'));
     if (!ok) return;
 
     this.loading.set(true);
@@ -577,7 +579,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
       },
       error: err => {
         this.error.set(
-          err?.error?.message ?? 'Failed to load evaluation pairings.'
+          this.errorMessage(err, this.translate.instant('error_loading_pairings'))
         );
         this.loading.set(false);
       },
@@ -636,8 +638,8 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
     const evaluatorUserId = this.editEvaluatorUserId();
 
     if (!row || !assignmentId) { return; }
-    if (!evaluatorGroupId || !evaluatorUserId) { this.editPairingError.set('Please select an evaluator group and evaluator.'); return; }
-    if (evaluatorGroupId === row.evalueeGroupId) { this.editPairingError.set('A group cannot evaluate itself.'); return; }
+    if (!evaluatorGroupId || !evaluatorUserId) { this.editPairingError.set(this.translate.instant('error_select_evaluator')); return; }
+    if (evaluatorGroupId === row.evalueeGroupId) { this.editPairingError.set(this.translate.instant('error_group_evaluate_itself')); return; }
 
     this.editPairingError.set(null);
     this.loading.set(true);
@@ -664,7 +666,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
         console.error('Backend error body:', err?.error);
 
         this.editPairingError.set(
-          err?.error?.message ?? 'Failed to update evaluation pairing.'
+          this.errorMessage(err, this.translate.instant('error_updating_pairing'))
         );
 
         this.loading.set(false);
@@ -677,10 +679,10 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
     const assignmentId = this.assignmentId();
     const evalueeGroup = this.createPairingEvalueeGroup();
     const evaluator = this.createPairingEvaluator();
-    if (!assignmentId) { this.createPairingError.set('Cannot create pairing without an assignment id.'); return; }
-    if (!evalueeGroup) { this.createPairingError.set('Please select an unmatched evaluee group.'); return; }
-    if (!evaluator) { this.createPairingError.set('Please select an evaluator.'); return; }
-    if (evalueeGroup.groupId === evaluator.groupId) { this.createPairingError.set('A group cannot evaluate itself.'); return; }
+    if (!assignmentId) { this.createPairingError.set(this.translate.instant('error_missing_assignment_id')); return; }
+    if (!evalueeGroup) { this.createPairingError.set(this.translate.instant('error_select_evaluee_group')); return; }
+    if (!evaluator) { this.createPairingError.set(this.translate.instant('error_select_evaluator')); return; }
+    if (evalueeGroup.groupId === evaluator.groupId) { this.createPairingError.set(this.translate.instant('error_group_evaluate_itself')); return; }
 
     this.createPairingError.set(null);
     this.loading.set(true);
@@ -699,7 +701,8 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
         this.loadingService.hide(); },
       error: (err: any) => {
         this.createPairingError.set(
-          this.errorMessage(err, 'Failed to create single pairing.'));
+          this.errorMessage(err, this.translate.instant('error_creating_pairing'))
+        );
         this.loading.set(false);
         this.loadingService.hide(); }, });
   }

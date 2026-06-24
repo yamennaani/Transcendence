@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AuthService } from '../services/auth.service';
 import { EnrollService } from '../core/services/enroll-service/enroll-service';
@@ -31,20 +32,20 @@ interface EvalRow {
 @Component({
   selector: 'app-progress',
   standalone: true,
-  imports: [NgStyle, BadgeComponent, ScorePillComponent, ProgressBarComponent],
+  imports: [NgStyle, BadgeComponent, ScorePillComponent, ProgressBarComponent, TranslateModule],
   template: `
     <div [ngStyle]="pageStyle">
       <div>
-        <div [ngStyle]="overlineStyle">Overview</div>
-        <h1 [ngStyle]="h1Style">Your progress</h1>
+        <div [ngStyle]="overlineStyle">{{ 'progress_overline' | translate }}</div>
+        <h1 [ngStyle]="h1Style">{{ 'progress_title' | translate }}</h1>
       </div>
 
       @if (loading()) {
-        <div [ngStyle]="dimStyle">Loading classes…</div>
+        <div [ngStyle]="dimStyle">{{ 'progress_loading_classes' | translate }}</div>
       } @else if (error()) {
         <div [ngStyle]="errorStyle">{{ error() }}</div>
       } @else if (!classes() || classes()!.length === 0) {
-        <div [ngStyle]="dimStyle">You are not enrolled in any classes.</div>
+        <div [ngStyle]="dimStyle">{{ 'progress_no_classes' | translate }}</div>
       } @else {
         <div [ngStyle]="accordionWrapStyle">
           @for (cls of classes()!; track cls.id) {
@@ -58,7 +59,10 @@ interface EvalRow {
                     <span [ngStyle]="rowTitleStyle">{{ cls.name }}</span>
                     @if (!statusLoading()) {
                       <span [ngStyle]="progressTextStyle">
-                        {{ classProgress(cls).submitted }} / {{ classProgress(cls).total }} submitted
+                        {{ 'progress_submitted_count' | translate:{
+                            submitted: classProgress(cls).submitted,
+                            total: classProgress(cls).total
+                          } }}
                       </span>
                     }
                   </div>
@@ -75,9 +79,9 @@ interface EvalRow {
               @if (expandedClassIds().has(cls.id)) {
                 <div [ngStyle]="assAreaStyle">
                   @if (statusLoading()) {
-                    <div [ngStyle]="paddedDimStyle">Loading assignments…</div>
+                    <div [ngStyle]="paddedDimStyle">{{ 'progress_loading_assignments' | translate }}</div>
                   } @else if (!cls.assignments || cls.assignments.length === 0) {
-                    <div [ngStyle]="paddedDimStyle">No assignments in this class.</div>
+                    <div [ngStyle]="paddedDimStyle">{{ 'progress_no_assignments_in_class' | translate }}</div>
                   } @else {
                     @for (ass of cls.assignments; track ass.id; let last = $last) {
                       <div [ngStyle]="assItemWrapStyle(last)">
@@ -101,13 +105,13 @@ interface EvalRow {
                         @if (expandedAssIds().has(ass.id)) {
                           <div [ngStyle]="evalAreaStyle">
                             @if (!assStatus(ass.id)?.isSubmitted) {
-                              <div [ngStyle]="dimStyle">You haven't submitted this assignment yet.</div>
+                              <div [ngStyle]="dimStyle">{{ 'progress_not_submitted' | translate }}</div>
                             } @else if (evalLoadingIds().has(ass.id)) {
-                              <div [ngStyle]="dimStyle">Loading evaluations…</div>
+                              <div [ngStyle]="dimStyle">{{ 'progress_loading_evaluations' | translate }}</div>
                             } @else {
                               @if (assStatus(ass.id)?.finalScore != null) {
                                 <div [ngStyle]="scoreRowStyle">
-                                  <span [ngStyle]="scoreLabelStyle">Final score</span>
+                                  <span [ngStyle]="scoreLabelStyle">{{ 'progress_final_score' | translate }}</span>
                                   <div style="display:flex;align-items:center;gap:10px">
                                     <app-score-pill [score]="assStatus(ass.id)!.finalScore!" [max]="100" />
                                     <app-badge [variant]="assStatus(ass.id)!.passed ? 'validated' : 'failed'" />
@@ -115,13 +119,15 @@ interface EvalRow {
                                 </div>
                               }
                               @if (!evalRowsMap()[ass.id] || evalRowsMap()[ass.id].length === 0) {
-                                <div [ngStyle]="dimStyle">No evaluations yet.</div>
+                                <div [ngStyle]="dimStyle">{{ 'progress_no_evaluations' | translate }}</div>
                               } @else {
                                 <div [ngStyle]="evalPanelStyle">
-                                  <div [ngStyle]="panelTitleStyle">Evaluations received</div>
+                                  <div [ngStyle]="panelTitleStyle">{{ 'progress_evaluations_received' | translate }}</div>
                                   @for (row of evalRowsMap()[ass.id]; track row.id; let last = $last) {
                                     <div [ngStyle]="evalRowItemStyle(last)">
-                                      <span [ngStyle]="roundStyle">Round {{ row.round }}</span>
+                                      <span [ngStyle]="roundStyle">
+                                        {{ 'progress_round' | translate:{ round: row.round } }}
+                                      </span>
                                       <app-badge
                                         [variant]="row.status === 'Submitted' ? 'submitted' : row.status === 'Cancelled' ? 'failed' : 'pending'"
                                         [customLabel]="row.status === 'Submitted' ? 'badge_submitted' : row.status === 'Cancelled' ? 'badge_failed' : 'badge_pending'"
@@ -152,11 +158,12 @@ interface EvalRow {
   `],
 })
 export class ProgressComponent implements OnInit {
-  private auth            = inject(AuthService);
-  private enrollService   = inject(EnrollService);
-  private groupService    = inject(GroupService);
+  private auth              = inject(AuthService);
+  private enrollService     = inject(EnrollService);
+  private groupService      = inject(GroupService);
   private submissionService = inject(SubmissionService);
-  private evalService     = inject(EvalService);
+  private evalService       = inject(EvalService);
+  private translate         = inject(TranslateService);
 
   classes            = signal<any[] | null>(null);
   assignmentStatuses = signal<Record<number, AssStatus>>({});
@@ -181,7 +188,7 @@ export class ProgressComponent implements OnInit {
         this.loadAllStatuses(classes, userId);
       },
       error: () => {
-        this.error.set('Failed to load your classes.');
+        this.error.set(this.translate.instant('progress_error_loading_classes'));
         this.loading.set(false);
       },
     });

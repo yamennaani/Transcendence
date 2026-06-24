@@ -49,6 +49,7 @@ export function getRemainingToPass(course: Course | undefined | null): number {
  * inside component/service constructors. Callers (components or services)
  * pass their own injected translate instance.
  */
+
 export function getProgressLabel(
   course: Course | undefined | null,
   translate: TranslateService

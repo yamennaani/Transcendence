@@ -6,7 +6,7 @@
       <span>/</span><span style="color:oklch(94% 0.005 272)">evaluate a submission</span>
     </div>
 
-    <h1 [ngStyle]="h1Style">Start an evaluation</h1>
+    <h1 [ngStyle]="h1Style">Start an evaluation " </h1>
     <p [ngStyle]="subStyle">Ask the team you're evaluating for their leader's email and the passkey they were given when they closed their submission.</p>
 
     <div [ngStyle]="panelStyle">
@@ -113,7 +113,7 @@
                   (input)="comment.set($any($event.target).value)"
                   placeholder="Describe what was done well and what could be improved..."></textarea>
         @if (comment().length > 0 && !commentOk()) {
-          <span style="font-size:0.75rem;color:oklch(75% 0.18 80)">Feedback must be at least 20 characters.</span>
+          <span style="font-size:0.75rem;color:oklch(75% 0.18 80)"> Feedback must be at least 20 character.</span>
         }
       </div>
 
