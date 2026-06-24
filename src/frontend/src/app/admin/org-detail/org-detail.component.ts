@@ -66,10 +66,14 @@ export class AdminOrgDetailComponent {
   }
 
   addOne(){
-    const email = this.email.trim()
+    const email = this.email.trim().toLowerCase()
     this.singleNotice = ''
     if(!email) { this.singleNotice = 'Email required'; return }
     if(!this.validateEmail(email)) { this.singleNotice = 'Invalid email format'; return }
+    if(this.allowedEmails().some(i => i.email?.toLowerCase() === email)) {
+      this.singleNotice = `${email} is already whitelisted`
+      return
+    }
     this.busy.set(true)
     this.http.post(`${this.authBase}/invite`, { email }).subscribe({
       next: ()=>{
@@ -164,14 +168,24 @@ export class AdminOrgDetailComponent {
     this.busy.set(true)
     const valid = lines.filter(l=>this.validateEmail(l))
     const invalidCount = lines.length - valid.length
-    const promises = valid.map((email) => new Promise<{ email: string; ok: boolean }>((resolve)=>{
+    const unique = [...new Set(valid.map(e => e.toLowerCase()))]
+    const duplicateCount = valid.length - unique.length
+    const existingEmails = new Set(this.allowedEmails().map(i => i.email?.toLowerCase()))
+    const toInvite = unique.filter(e => !existingEmails.has(e))
+    const alreadyCount = unique.length - toInvite.length
+    const promises = toInvite.map((email) => new Promise<{ email: string; ok: boolean }>((resolve)=>{
       this.http.post(`${this.authBase}/invite`, { email }).subscribe({ next: ()=>resolve({ email, ok:true }), error: ()=>resolve({ email, ok:false }) })
     }))
     Promise.all(promises).then((results)=>{
       const added = results.filter((result) => result.ok).length
       const failed = results.filter((result) => !result.ok).length
       this.busy.set(false)
-      this.bulkNotice = `${added} whitelisted, ${failed} failed${invalidCount?`, ${invalidCount} invalid format` : ''}`
+      const parts = [`${added} whitelisted`]
+      if (failed) parts.push(`${failed} failed`)
+      if (alreadyCount) parts.push(`${alreadyCount} already whitelisted`)
+      if (duplicateCount) parts.push(`${duplicateCount} duplicate${duplicateCount > 1 ? 's' : ''} skipped`)
+      if (invalidCount) parts.push(`${invalidCount} invalid format`)
+      this.bulkNotice = parts.join(', ')
       this.csvText = ''
       this.loadAllowedEmails()
     })

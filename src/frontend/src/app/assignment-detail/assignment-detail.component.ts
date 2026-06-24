@@ -714,6 +714,8 @@ export class AssignmentDetailComponent implements OnInit {
     const sub = this.mySubmission();
     if (!sub) return 'pending' as const;
     if (sub.status === 'Close' && this.myResponses().length >= (this.assignment()?.req_eval ?? 1)) {
+      const hasUnreplied = this.myResponses().some(r => !r.reply);
+      if (hasUnreplied) return 'reply_needed' as const;
       return sub.passed ? 'validated' as const : 'failed' as const;
     }
     if (sub.status === 'Close') return 'under_review' as const;

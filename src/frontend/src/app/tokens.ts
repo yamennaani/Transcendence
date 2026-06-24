@@ -43,6 +43,7 @@ export type BadgeVariant =
   | "under_review"
   | "submitted"
   | "pending"
+  | "reply_needed"
   | "violet"
   | "cyan";
 
@@ -83,6 +84,11 @@ export const BADGE_STYLES: Record<BadgeVariant, BadgeStyle> = {
     color: DS.colors.violet,
     border: DS.colors.violetBorder,
   },
+  reply_needed: {
+    bg: DS.colors.amberSubtle,
+    color: DS.colors.amber,
+    border: DS.colors.amberBorder,
+  },
   cyan: {
     bg: DS.colors.cyanSubtle,
     color: DS.colors.cyan,
@@ -92,13 +98,14 @@ export const BADGE_STYLES: Record<BadgeVariant, BadgeStyle> = {
 
 
 export const BADGE_LABELS = {
-  validated:"validated",
+  validated:"passed",
   failed: "failed",
-  under_review: "under_review",
+  under_review: "under review",
   submitted: "submitted",
   pending: "pending",
   violet: "violet",
   cyan: "cyan",
+  reply_needed: "reply needed",
 };
 
 // Enums from Prisma schema
