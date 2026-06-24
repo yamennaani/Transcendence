@@ -5,8 +5,6 @@ import { DS } from '../../tokens';
 import { AvatarComponent } from '../../shared/avatar.component';
 import { BtnComponent } from '../../shared/btn.component';
 import { ListComponent } from '../../shared/list.component';
-import { FieldComponent } from '../../shared/field.component';
-import { FieldType, SelectField } from '../../shared/field.types';
 import { AuthService } from '../../services/auth.service';
 import { OrgService } from '../../core/services/org-service/org-service';
 import { CourseService } from '../../core/services/course-service/course-service';
@@ -31,7 +29,7 @@ const ROLE_OPTIONS = ['All', 'Student', 'Bocal', 'Admin'];
   standalone: true,
   imports: [
     NgStyle, DatePipe,
-    AvatarComponent, BtnComponent, FieldComponent, ListComponent,
+    AvatarComponent, BtnComponent, ListComponent,
     TranslateModule,
   ],
   templateUrl: './bocal-students.component.html',
@@ -44,9 +42,6 @@ export class BocalStudentsComponent implements OnInit {
   private enrollService = inject(EnrollService);
   private loading       = inject(LoadingService);
   private translate     = inject(TranslateService);
-
-  // ── Modal visibility ───────────────────────────────────────
-  showAddMember = signal(false);
 
   // ── Data signals ───────────────────────────────────────────
   members = signal<OrgMember[]>([]);
@@ -82,51 +77,11 @@ export class BocalStudentsComponent implements OnInit {
 
   readonly memberTrackFn = (m: OrgMember) => m.id;
 
-  // ── Form error signals ─────────────────────────────────────
-  memberError = signal<string | null>(null);
-
-  // ── Form field changes ─────────────────────────────────────
-  private memberChanges = new Map<string, FieldType>();
-
-  // ── Add member fields (translatable, rebuilt on lang change) ──
-  memberFields: FieldType[] = [];
-
-  // ── Role filter options (translatable) ─────────────────────
-  roleFilterOptions: string[] = [];
-  roleSelectOptions: string[] = [];
-
-  // ── Container configs ──────────────────────────────────────
-
   private get orgId() { return this.auth.user()?.orgId; }
 
   ngOnInit() {
     this.loadMembers();
     this.loadClasses();
-
-    this.buildTranslatedData();
-    this.translate.onLangChange.subscribe(() => {
-      this.buildTranslatedData();
-    });
-  }
-
-  private buildTranslatedData() {
-    this.roleFilterOptions = [
-      this.translate.instant('role_all'),
-      this.translate.instant('role_student'),
-      this.translate.instant('role_bocal'),
-      this.translate.instant('role_admin'),
-    ];
-    this.roleSelectOptions = [
-      this.translate.instant('role_student'),
-      this.translate.instant('role_bocal'),
-      this.translate.instant('role_admin'),
-    ];
-
-    this.memberFields = [
-      { type: 'text',   label: this.translate.instant('label_email'),    icon: 'email',  required: true, allowEdit: true, value: undefined },
-      { type: 'text',   label: this.translate.instant('label_username'), icon: 'person', required: true, allowEdit: true, value: undefined },
-      { type: 'select', label: this.translate.instant('label_role'), icon: 'badge', required: true, allowEdit: true, value: this.translate.instant('role_student'), options: this.roleSelectOptions } as SelectField,
-    ];
   }
 
   loadMembers() {
@@ -220,45 +175,6 @@ export class BocalStudentsComponent implements OnInit {
   }
 
   // ── Add member ─────────────────────────────────────────────
-  onMemberFieldChanged(f: FieldType) { this.memberChanges.set(f.label, f); }
-
-  private getMemberValue(label: string): any {
-    const c = this.memberChanges.get(label);
-    return c !== undefined ? c.value : this.memberFields.find(f => f.label === label)?.value;
-  }
-
-  onAddMember() {
-    const orgId    = this.orgId;
-    const email    = (this.getMemberValue(this.translate.instant('label_email')) as string)?.trim();
-    const username = (this.getMemberValue(this.translate.instant('label_username')) as string)?.trim();
-    const role     = (this.getMemberValue(this.translate.instant('label_role')) as string) ?? this.translate.instant('role_student');
-
-    if (!email)    { this.memberError.set(this.translate.instant('error_email_required'));    return; }
-    if (!username) { this.memberError.set(this.translate.instant('error_username_required')); return; }
-    if (!orgId)    { this.memberError.set(this.translate.instant('error_no_organization'));   return; }
-
-    this.memberError.set(null);
-    this.loading.show();
-    this.orgService.addMember(orgId, { email, username, role }).subscribe({
-      next: () => {
-        this.loading.hide();
-        this.showAddMember.set(false);
-        this.memberChanges.clear();
-        this.loadMembers();
-      },
-      error: (err) => {
-        this.memberError.set(err?.error?.message ?? this.translate.instant('error_add_member_failed'));
-        this.loading.hide();
-      },
-    });
-  }
-
-  closeMemberModal() {
-    this.showAddMember.set(false);
-    this.memberChanges.clear();
-    this.memberError.set(null);
-  }
-
   // ── Role badge style ───────────────────────────────────────
   roleStyle(role: string) {
     const map: Record<string, { bg: string; color: string; border: string }> = {
@@ -278,10 +194,6 @@ export class BocalStudentsComponent implements OnInit {
   readonly pageStyle       = { display: 'flex', flexDirection: 'column' as const, gap: '0' };
   readonly overlineStyle   = { fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: DS.colors.cyan, marginBottom: '6px' };
   readonly h1Style         = { fontFamily: DS.fonts.display, fontSize: '1.75rem', fontWeight: '700', letterSpacing: '-0.03em', color: DS.colors.fg1 };
-  readonly overlayStyle    = { position: 'fixed', inset: '0', background: 'oklch(0% 0 0 / 0.7)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '100' };
-  readonly modalStyle      = { background: DS.colors.surface, border: `1px solid ${DS.colors.border}`, borderRadius: '16px', padding: '28px', width: '440px', display: 'flex', flexDirection: 'column' as const, gap: '16px', boxShadow: '0 8px 32px oklch(0% 0 0 / 0.8)' };
-  readonly errorStyle      = { fontSize: '0.8125rem', color: DS.colors.red, background: DS.colors.redSubtle, border: `1px solid ${DS.colors.redBorder}`, borderRadius: DS.radius.md, padding: `${DS.space[2]} ${DS.space[3]}` };
   readonly inputStyle      = { width: '100%', boxSizing: 'border-box' as const, padding: '9px 12px', background: DS.colors.bg, border: `1px solid ${DS.colors.border}`, borderRadius: DS.radius.md, color: DS.colors.fg1, fontFamily: DS.fonts.body, fontSize: '0.875rem', outline: 'none' };
-  readonly fieldLabelStyle = { fontSize: '0.75rem', fontWeight: '600', letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: DS.colors.fg3, marginBottom: '4px', display: 'block' };
   readonly filterBarStyle  = { display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap' as const };
 }
