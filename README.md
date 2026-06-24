@@ -95,7 +95,7 @@ Albert served as the Project Manager, coordinating the team's development effort
 * ✔ Documentation and Project Management
 
 **Challenges Faced**
-*The sheer scope of the project — building a complete, production-grade platform from nothing — required constant prioritization and coordination to keep the team aligned and moving forward.*
+*The sheer scope of the project and how much more complicated it was to implement certain features.*
 
 ---
 
@@ -160,7 +160,7 @@ Adam specialized in the authentication and security components of the platform. 
 * ✔ Framework for Frontend & Backend
 
 **Challenges Faced**
-*Building a secure, production-grade auth system from scratch — covering JWT rotation, OAuth flows, email verification, and password reset — while learning the framework simultaneously required a lot of careful research and iteration to get right.*
+*Nothing Really*
 
 ---
 
@@ -188,7 +188,7 @@ Peter contributed across nearly every area of the project, making him one of the
 * ✔ Multi-language Support
 
 **Challenges Faced**
-*The entire project was a challenge — there was no single hard part, just a continuous process of learning unfamiliar technologies, adapting to a large codebase, and contributing meaningfully across both the frontend and backend at the same time.*
+*The entire project was a challenge*
 
 ---
 
