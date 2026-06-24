@@ -1,6 +1,7 @@
 const { prisma } = require('../packages/database');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const { NotFoundError, ConflictError, ForbiddenError } = require('../packages/errors');
 
 const SALT_ROUNDS = parseInt(process.env.BCRYPT_ROUNDS, 10) || 12;
 
@@ -98,7 +99,7 @@ const findOrCreateOAuthUser = async (provider, providerUserId, email, name) => {
 
     if (existing) {
       if (existing.provider === 'local') {
-        throw new Error('Email already registered with password. Please log in using your password.');
+        throw new ConflictError('Email already registered with password. Please log in using your password.');
       }
       // Email registered via a different OAuth provider — link by email, return existing user
       return existing;
@@ -107,7 +108,7 @@ const findOrCreateOAuthUser = async (provider, providerUserId, email, name) => {
     // New user — must be on the invite list
     const allowed = await isEmailAllowed(email);
     if (!allowed) {
-      const err = new Error('Registration not permitted for this email address.');
+      const err = new ForbiddenError('Registration not permitted for this email address.');
       err.code = 'INVITE_REQUIRED';
       throw err;
     }
@@ -225,20 +226,16 @@ const addAllowedEmail = async (email, invitedBy, orgId = null) => {
   if (orgId != null) {
     const org = await prisma.$queryRaw`SELECT id FROM org WHERE id = ${orgId}`;
     if (org.length === 0) {
-      const err = new Error('Organization not found.');
-      err.code = 'ORG_NOT_FOUND';
-      throw err;
+      throw new NotFoundError('Organization not found.');
     }
   }
   const existing = await prisma.$queryRaw`
     SELECT id, used FROM auth_allowed_emails WHERE email = ${email}
   `;
   if (existing.length > 0) {
-    const err = new Error(
+    throw new ConflictError(
       existing[0].used ? 'Email is already registered.' : 'Email has already been invited.'
     );
-    err.code = 'ALREADY_EXISTS';
-    throw err;
   }
   const rows = await prisma.$queryRaw`
     INSERT INTO auth_allowed_emails (email, invited_by, "orgId", created_at)
@@ -273,14 +270,10 @@ const revokeAllowedEmail = async (id) => {
     SELECT id, used FROM auth_allowed_emails WHERE id = ${parseInt(id)}
   `;
   if (!rows[0]) {
-    const err = new Error('Invite not found.');
-    err.code = 'NOT_FOUND';
-    throw err;
+    throw new NotFoundError('Invite not found.');
   }
   if (rows[0].used) {
-    const err = new Error('Cannot revoke an already-used invite.');
-    err.code = 'ALREADY_USED';
-    throw err;
+    throw new ConflictError('Cannot revoke an already-used invite.');
   }
   await prisma.$executeRaw`
     DELETE FROM auth_allowed_emails WHERE id = ${parseInt(id)}

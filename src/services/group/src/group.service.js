@@ -203,7 +203,7 @@ const getInvites = async({userId})=>{
         throw new ValidationError('Invalid request')
     const invites = await prisma.groupInvite.findMany({
         where:{reciverId: parseInt(userId), status: 'Pending'},
-        include:{targetGroup: true, sender: true}
+        include:{targetGroup: true, senderUser: true}
     })
     return invites
 }

@@ -141,59 +141,6 @@
     </div>
   }
 
-  <!-- ── Create Generate all groups modal ──────────────────────────────────── -->
-  @if (showGenerateGroups()) {
-    <div [ngStyle]="overlayStyle" (click)="closeGenerateGroupsModal()">
-      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Generate groups — {{ generateGroupsAssignment()?.name }}
-        </div>
-
-        <div style="display:flex;flex-direction:column;gap:10px">
-          <div>
-            <label [ngStyle]="fieldLabelStyle">Group size</label>
-            <input
-              [ngStyle]="inputStyle"
-              type="number"
-              min="1"
-              [value]="generateGroupSize()"
-              (input)="generateGroupSize.set(+$any($event.target).value)" />
-          </div>
-
-          @if (generateGroupsAssignment(); as a) {
-            <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-              This will create groups from
-              {{ ungroupedStudentsFor(a).length }}
-              ungrouped enrolled student(s).
-            </div>
-          }
-        </div>
-
-        @if (generateGroupsError()) {
-          <div [ngStyle]="errorStyle">{{ generateGroupsError() }}</div>
-        }
-
-        <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn
-            variant="ghost"
-            size="md"
-            (clicked)="closeGenerateGroupsModal()">
-            Cancel
-          </app-btn>
-
-          <app-btn
-            variant="primary"
-            size="md"
-            [disabled]="!generateGroupSize() || generateGroupSize() <= 0"
-            (clicked)="generateAllGroups()">
-            Generate
-          </app-btn>
-        </div>
-      </div>
-    </div>
-  }
-
-
   <!-- ── Edit Group members modal ──────────────────────────────────── -->
   @if (showEditGroupMembers()) {
     <div [ngStyle]="overlayStyle" (click)="closeEditGroupMembersModal()">
@@ -394,7 +341,7 @@
                       variant="secondary"
                       size="sm"
                       [disabled]="groupsFor(a).length > 0 || ungroupedStudentsFor(a).length === 0"
-                      (clicked)="openGenerateGroups(a)">
+                      (clicked)="generateAllGroups(a)">
                       Generate all groups
                     </app-btn>
 

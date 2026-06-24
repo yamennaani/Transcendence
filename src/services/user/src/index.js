@@ -11,9 +11,15 @@ app.get('/health', (req, res) => {
 
 app.use('/user', userRoutes)
 
+const isProd = process.env.NODE_ENV === 'production'
+
 app.use((err, req, res, next) => {
-  logger.error('user-service', err.message)
-  res.status(err.status || 500).json({ error: err.message })
+  const status = err.status || 500
+
+  logger.error('user-service', err.message, { status, stack: err.stack })
+
+  const message = !isProd || status < 500 ? err.message : 'Something went wrong!'
+  res.status(status).json({ error: message })
 })
 
 const PORT = process.env.PORT || 3000

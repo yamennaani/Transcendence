@@ -22,7 +22,7 @@ app.use('/api/auth', limiter);
 
 // CORS – allow your Angular app (adjust origin in production)
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' ? 'https://yourdomain.com' : 'http://localhost:4200',
+    origin:'https://localhost',
     credentials: true
 }));
 
@@ -33,9 +33,21 @@ app.use(express.json());
 app.use('/auth', require('./auth.routes'));
 
 // Global error handler
+const isProd = process.env.NODE_ENV === 'production';
+
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ error: 'Something went wrong!' });
+    const status = err.status || 500;
+
+    // Only log real failures (5xx). Expected client errors (4xx) are already
+    // handled/displayed by the frontend, so they're noise in every environment.
+    if (status >= 500) {
+        logger.error('auth-service', err.message, { status, stack: err.stack });
+    }
+
+    const message = !isProd || status < 500 ? err.message : 'Something went wrong!';
+    const body = { error: message };
+    if (err.suggestions) body.suggestions = err.suggestions;
+    res.status(status).json(body);
 });
 
 

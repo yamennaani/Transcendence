@@ -97,12 +97,6 @@ export class BocalClassesComponent implements OnInit {
   editGroup             = signal<AssignmentGroup | null>(null);
   editGroupAddStudentId = signal<number | null>(null);
   editGroupMembersError = signal<string | null>(null);
-  // ── Generate groups form state ───────────────────────────────
-  showGenerateGroups       = signal(false);
-  generateGroupsAssignment = signal<AssignmentResponse | null>(null);
-  generateGroupSize        = signal(2);
-  generateGroupsError      = signal<string | null>(null);
-
   // ── Container configs ──────────────────────────────────────
   readonly flatConfig: ContainerConfig   = { variant: 'flat',  height: 'auto', scrollable: false };
   readonly insetConfig: ContainerConfig  = { variant: 'inset', height: 'auto', scrollable: false };
@@ -544,29 +538,12 @@ export class BocalClassesComponent implements OnInit {
 
 private generatedGroupName(index: number): string { return `group${index + 1}`; }
 
-  openGenerateGroups(a: AssignmentResponse): void {
-    this.generateGroupsAssignment.set(a);
-    this.generateGroupSize.set(a.groupSize ?? 1);
-    this.generateGroupsError.set(null);
-    this.showGenerateGroups.set(true);
-  }
-
-  closeGenerateGroupsModal(): void {
-    this.showGenerateGroups.set(false);
-    this.generateGroupsAssignment.set(null);
-    this.generateGroupSize.set(2);
-    this.generateGroupsError.set(null);
-  }
-
-  generateAllGroups(): void {
+  generateAllGroups(a: AssignmentResponse): void {
     this.groupActionError.set(null);
-    const a = this.generateGroupsAssignment();
-    const groupSize = this.generateGroupSize();
-    if (!a) return;
-    if (!groupSize || groupSize <= 0) {this.generateGroupsError.set('Please enter a valid group size.'); return; }
+    const groupSize = a.groupSize ?? 1;
 
     const students = this.ungroupedStudentsFor(a);
-    if (students.length === 0) {this.generateGroupsError.set('There are no ungrouped students for this assignment.'); return; }
+    if (students.length === 0) {this.groupActionError.set('There are no ungrouped students for this assignment.'); return; }
 
     const chunks: typeof students[] = [];
     for (let i = 0; i < students.length; i += groupSize) {
@@ -574,7 +551,6 @@ private generatedGroupName(index: number): string { return `group${index + 1}`; 
     }
 
     const existingGroupCount = this.groupsFor(a).length;
-    this.generateGroupsError.set(null);
     this.loading.show();
 
     from(chunks).pipe(
@@ -618,11 +594,10 @@ private generatedGroupName(index: number): string { return `group${index + 1}`; 
           return m;
         });
 
-        this.closeGenerateGroupsModal();
         this.loading.hide();
       },
       error: (err: any) => {
-        this.generateGroupsError.set(
+        this.groupActionError.set(
           err?.error?.message ??
           err?.error?.error ??
           err?.message ??
