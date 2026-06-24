@@ -6,9 +6,11 @@ const { authenticate, requireRole } = require('./auth.middleware');
 
 const limiter = (max, message) => rateLimit({
     windowMs: 15 * 60 * 1000, max,
-    message: { error: message },
     standardHeaders: true,
     legacyHeaders: false,
+    handler: (req, res) => {
+        res.status(200).json({ ok: false, error: message, code: 429 });
+    },
 });
 
 router.post('/register',        limiter(5,  'Too many requests. Please try again in 15 minutes.'),  authController.register);

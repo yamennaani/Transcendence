@@ -15,8 +15,11 @@ const app = express();
 // Security
 app.use(helmet());
 const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    handler: (req, res) => {
+        res.status(200).json({ ok: false, error: 'Too many requests', code: 429 });
+    },
 });
 app.use('/api/auth', limiter);
 
@@ -45,9 +48,9 @@ app.use((err, req, res, next) => {
     }
 
     const message = !isProd || status < 500 ? err.message : 'Something went wrong!';
-    const body = { error: message };
+    const body = { ok: false, error: message, code: status };
     if (err.suggestions) body.suggestions = err.suggestions;
-    res.status(status).json(body);
+    res.status(200).json(body);
 });
 
 

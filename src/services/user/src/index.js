@@ -19,7 +19,7 @@ app.use((err, req, res, next) => {
   logger.error('user-service', err.message, { status, stack: err.stack })
 
   const message = !isProd || status < 500 ? err.message : 'Something went wrong!'
-  res.status(status).json({ error: message })
+  res.status(200).json({ ok: false, error: message, code: status })
 })
 
 const PORT = process.env.PORT || 3000
