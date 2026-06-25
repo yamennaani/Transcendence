@@ -3,34 +3,8 @@
   <!-- ── Header ─────────────────────────────────────────────── -->
   <div style="margin-bottom:20px">
     <div [ngStyle]="overlineStyle">Bocal panel</div>
-    <div style="display:flex;justify-content:space-between;align-items:flex-end">
-      <h1 [ngStyle]="h1Style">Students</h1>
-      <app-btn variant="primary" (clicked)="showAddMember.set(true)">+ Add member</app-btn>
-    </div>
+    <h1 [ngStyle]="h1Style">Students</h1>
   </div>
-
-  <!-- ── Add member modal ───────────────────────────────────── -->
-  @if (showAddMember()) {
-    <div [ngStyle]="overlayStyle" (click)="closeMemberModal()">
-      <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
-        <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Add member
-        </div>
-        <div style="display:flex;flex-direction:column;gap:10px">
-          @for (field of memberFields; track field.label) {
-            <app-field [field]="field" [isEditing]="true" (valueChanged)="onMemberFieldChanged($event)" />
-          }
-        </div>
-        @if (memberError()) {
-          <div [ngStyle]="errorStyle">{{ memberError() }}</div>
-        }
-        <div style="display:flex;justify-content:flex-end;gap:8px">
-          <app-btn variant="ghost"   size="md" (clicked)="closeMemberModal()">Cancel</app-btn>
-          <app-btn variant="primary" size="md" (clicked)="onAddMember()">Add member</app-btn>
-        </div>
-      </div>
-    </div>
-  }
 
   <!-- ── Filters ────────────────────────────────────────────── -->
   <div [ngStyle]="filterBarStyle">

@@ -3,6 +3,7 @@ import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { HttpClient, provideHttpClient, withFetch, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './services/auth-interceptor';
+import { ErrorNormalizerInterceptor } from './services/error-normalizer.interceptor';
 
 
 // ── DEV FLAG ──────────────────────────────────────────────────────────────────
@@ -68,6 +69,11 @@ export const appConfig: ApplicationConfig = {
           {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,
+            multi: true,
+          },
+          {
+            provide: HTTP_INTERCEPTORS,
+            useClass: ErrorNormalizerInterceptor,
             multi: true,
           },
         ]

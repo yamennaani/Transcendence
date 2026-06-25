@@ -12,7 +12,7 @@ app.use('/enroll', route)
 
 app.use((err, req, res, next)=>{
     logger.error('enroll-service', err.message)
-    res.status(err.status || 500).json({error: err.message})
+    res.status(200).json({ ok: false, error: err.message, code: err.status || 500 })
 })
 
 const PORT = process.env.PORT || 3000
