@@ -150,10 +150,10 @@
           @if (mySubmission()?.status === 'Close') {
             <div class="passkey-box">
               <div>
-                <div class="passkey-label">Eval passkey</div>
+                <div class="passkey-label">{{ 'label_eval_passkey' | translate }}</div>
                 <div class="passkey-value">{{ mySubmission()?.passkey }}</div>
               </div>
-              <div class="passkey-hint">Give this number and your leader's email to whoever evaluates your project.</div>
+              <div class="passkey-hint">{{ 'passkey_hint' | translate }}</div>
             </div>
           }
 
@@ -211,28 +211,28 @@
       <app-container [config]="flatConfig">
         <div class="grade-inner">
           <div class="grade-head">
-            <div class="card-title">Grade &amp; feedback</div>
+            <div class="card-title">{{ 'label_grade_feedback' | translate }}</div>
             @if (mySubmission()?.finalScore != null) {
               <app-score-pill [score]="mySubmission()!.finalScore!" [max]="assignment()!.max_score"/>
             } @else {
-              <span class="hint-text">Grade pending — waiting on evaluator feedback.</span>
+              <span class="hint-text">{{ 'grade_pending_hint' | translate }}</span>
             }
           </div>
 
           @if (myResponses().length === 0) {
-            <p class="hint-text">No feedback yet.</p>
+            <p class="hint-text">{{ 'no_feedback_yet' | translate }}</p>
           } @else {
             @for (r of myResponses(); track r.id) {
               <div class="feedback-item">
                 <div class="feedback-head">
-                  <span class="feedback-evaluator">{{ r.user?.username ?? 'Evaluator' }}</span>
+                  <span class="feedback-evaluator">{{ r.user?.username ?? ('label_evaluator_fallback' | translate) }}</span>
                   <span class="feedback-marks">{{ r.givenMarks }} / {{ assignment()!.max_score }}</span>
                 </div>
                 <p class="feedback-comment">{{ r.comment }}</p>
 
                 @if (r.reply) {
                   <div class="feedback-reply">
-                    <div class="feedback-reply-label">Your reply</div>
+                    <div class="feedback-reply-label">{{ 'label_your_reply' | translate }}</div>
                     <p class="feedback-reply-text">{{ r.reply }}</p>
                   </div>
                 } @else if (isLeader()) {
@@ -240,8 +240,8 @@
                     <textarea class="feedback-reply-input"
                               [value]="replyDraft(r.id)"
                               (input)="setReplyDraft(r.id, $any($event.target).value)"
-                              placeholder="Reply to this feedback..."></textarea>
-                    <app-btn variant="secondary" size="sm" (clicked)="submitReply(r)">Reply</app-btn>
+                              [placeholder]="'placeholder_reply_feedback' | translate"></textarea>
+                    <app-btn variant="secondary" size="sm" (clicked)="submitReply(r)">{{ 'btn_reply' | translate }}</app-btn>
                   </div>
                 }
               </div>
@@ -278,13 +278,13 @@
 
         @if (mySubmission()?.status === 'Close') {
           <div class="evaluators-row">
-            <span class="evaluators-label">Evaluators</span>
+            <span class="evaluators-label">{{ 'label_evaluators' | translate }}</span>
             @if (myEvaluators().length === 0) {
-              <span class="hint-text">Not assigned yet — check back soon.</span>
+              <span class="hint-text">{{ 'evaluators_not_assigned' | translate }}</span>
             } @else {
               @for (ea of myEvaluators(); track ea.id) {
                 <span class="evaluator-chip" [class.done]="ea.status === 'Submitted'">
-                  {{ ea.evaluatorUser?.username ?? 'Unknown' }}
+                  {{ ea.evaluatorUser?.username ?? ('label_unknown' | translate) }}
                   @if (ea.status === 'Submitted') { ✓ }
                 </span>
               }

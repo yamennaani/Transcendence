@@ -1,4 +1,5 @@
 import { Component, EventEmitter, inject, Output, signal } from "@angular/core";
+import { TranslateModule, TranslateService } from "@ngx-translate/core";
 import { DS } from "../tokens";
 import { FieldType, SliderField } from "./field.types";
 import { FieldComponent } from "./field.component";
@@ -11,7 +12,7 @@ import { LoadingService } from "../core/services/loading-service/loading.service
 @Component({
     selector: 'app-create-class',
     standalone: true,
-    imports: [FieldComponent, TabListComponent, TabDirective, BtnComponent],
+    imports: [FieldComponent, TabListComponent, TabDirective, BtnComponent, TranslateModule],
     template: `
         <div class="page">
 
@@ -19,8 +20,8 @@ import { LoadingService } from "../core/services/loading-service/loading.service
             <div class="card">
                 <div class="card-body">
                     <app-tab-list (tabChanged)="activeTab.set($event)">
-                        <ng-template appTab label="Info"     icon="info" />
-                        <ng-template appTab label="Settings" icon="tune" />
+                        <ng-template appTab label="tab_info"     icon="info" />
+                        <ng-template appTab label="tab_settings" icon="tune" />
                     </app-tab-list>
 
                     <div class="fields-scroll">
@@ -39,9 +40,9 @@ import { LoadingService } from "../core/services/loading-service/loading.service
                                         (valueChanged)="onFieldChanged($event)" />
                                 }
                                 <div class="threshold-hint">
-                                    Students must complete
-                                    <strong>{{ getValue('Pass Threshold') }}%</strong>
-                                    of assignments to pass this class.
+                                    {{ 'create_class_threshold_prefix' | translate }}
+                                    <strong>{{ getValue('bocal_label_pass_threshold') }}%</strong>
+                                    {{ 'create_class_threshold_suffix' | translate }}
                                 </div>
                             </div>
                         }
@@ -53,8 +54,8 @@ import { LoadingService } from "../core/services/loading-service/loading.service
                 </div>
 
                 <div class="actions">
-                    <app-btn variant="ghost"   size="lg" (clicked)="onCancel()">Cancel</app-btn>
-                    <app-btn variant="primary" size="lg" (clicked)="onSave()">Create class</app-btn>
+                    <app-btn variant="ghost"   size="lg" (clicked)="onCancel()">{{ 'btn_cancel' | translate }}</app-btn>
+                    <app-btn variant="primary" size="lg" (clicked)="onSave()">{{ 'btn_create_class' | translate }}</app-btn>
                 </div>
             </div>
 
@@ -125,9 +126,10 @@ import { LoadingService } from "../core/services/loading-service/loading.service
     `]
 })
 export class CreateClassPage {
-    private auth    = inject(AuthService);
-    private courses = inject(CourseService);
-    private loading = inject(LoadingService);
+    private auth      = inject(AuthService);
+    private courses   = inject(CourseService);
+    private loading   = inject(LoadingService);
+    private translate = inject(TranslateService);
 
     @Output() saved     = new EventEmitter<void>();
     @Output() cancelled = new EventEmitter<void>();
@@ -138,12 +140,12 @@ export class CreateClassPage {
     private changes = new Map<string, FieldType>();
 
     infoFields: FieldType[] = [
-        { type: 'text',      label: 'Class Name',  icon: 'title',       required: true,  allowEdit: true, value: undefined },
-        { type: 'text-area', label: 'Description', icon: 'description', required: true,  allowEdit: true, value: undefined },
+        { type: 'text',      label: 'bocal_label_class_name',     icon: 'title',       required: true,  allowEdit: true, value: undefined },
+        { type: 'text-area', label: 'field_description',          icon: 'description', required: true,  allowEdit: true, value: undefined },
     ];
 
     settingsFields: FieldType[] = [
-        { type: 'slider', label: 'Pass Threshold', icon: 'leaderboard', required: true, allowEdit: true, value: 80, min: 50, max: 100 } as SliderField,
+        { type: 'slider', label: 'bocal_label_pass_threshold', icon: 'leaderboard', required: true, allowEdit: true, value: 80, min: 50, max: 100 } as SliderField,
     ];
 
     onFieldChanged(field: FieldType) {
@@ -157,15 +159,15 @@ export class CreateClassPage {
     }
 
     onSave() {
-        const name      = this.getValue('Class Name') as string | undefined;
-        const desc      = this.getValue('Description') as string | undefined;
-        const threshold = (this.getValue('Pass Threshold') as number | undefined) ?? 80;
+        const name      = this.getValue('bocal_label_class_name') as string | undefined;
+        const desc      = this.getValue('field_description') as string | undefined;
+        const threshold = (this.getValue('bocal_label_pass_threshold') as number | undefined) ?? 80;
 
-        if (!name?.trim()) { this.error.set('Class name is required.'); return; }
-        if (!desc?.trim()) { this.error.set('Description is required.'); return; }
+        if (!name?.trim()) { this.error.set(this.translate.instant('error_class_name_required')); return; }
+        if (!desc?.trim()) { this.error.set(this.translate.instant('error_description_required')); return; }
 
         const user = this.auth.user();
-        if (!user?.orgId) { this.error.set('Your account is not linked to an organization.'); return; }
+        if (!user?.orgId) { this.error.set(this.translate.instant('error_account_not_linked_org')); return; }
 
         this.error.set(null);
         this.loading.show();
@@ -183,7 +185,7 @@ export class CreateClassPage {
             },
             error: (err) => {
                 this.loading.hide();
-                this.error.set(err?.error?.message ?? 'Failed to create class. Please try again.');
+                this.error.set(err?.error?.message ?? this.translate.instant('error_create_class_failed'));
             },
         });
     }

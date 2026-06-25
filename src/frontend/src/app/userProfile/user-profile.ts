@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal, OnInit } from "@angular/core";
 import { Router } from "@angular/router";
 import { forkJoin } from "rxjs";
-import { TranslateModule } from "@ngx-translate/core";
+import { TranslateModule, TranslateService } from "@ngx-translate/core";
 import { AuthService } from "../services/auth.service";
 import { UserService } from "../core/services/user-service/user-service";
 import { LoadingService } from "../core/services/loading-service/loading.service";
@@ -35,11 +35,11 @@ import { DS } from "../tokens";
 
             <div class="actions">
                 @if (isEditing()) {
-                    <app-btn variant="ghost"   size="lg" (clicked)="onCancel()">Cancel</app-btn>
-                    <app-btn variant="primary" size="lg" (clicked)="onSave()">Save changes</app-btn>
+                    <app-btn variant="ghost"   size="lg" (clicked)="onCancel()">{{ 'btn_cancel' | translate }}</app-btn>
+                    <app-btn variant="primary" size="lg" (clicked)="onSave()">{{ 'bocal_btn_save_changes' | translate }}</app-btn>
                 } @else {
                     <app-btn variant="primary" size="lg" (clicked)="startEditing()">
-                        ✏️ Edit profile
+                        {{ 'btn_edit_profile' | translate }}
                     </app-btn>
                 }
             </div>
@@ -93,6 +93,7 @@ export class UserProfileComponent implements OnInit {
     private userService = inject(UserService);
     private loading     = inject(LoadingService);
     private router      = inject(Router);
+    private translate    = inject(TranslateService);
     private user        = this.userAuth.user;
 
     isEditing = signal(false);
@@ -116,7 +117,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:         'icon',
             icon:         'image',
-            label:        'Avatar',
+            label:        'label_avatar',
             value:        this.user()?.profile?.avatar,
             iconSettings: {
                 name:         this.user()?.username,
@@ -130,7 +131,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:      'text',
             icon:      'person',
-            label:     'Username',
+            label:     'label_username',
             value:     this.user()?.username,
             allowEdit: false,
             required:  true,
@@ -138,7 +139,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:      'text',
             icon:      'email',
-            label:     'Email',
+            label:     'label_email',
             value:     this.user()?.email,
             allowEdit: false,
             required:  true,
@@ -146,7 +147,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:      'select',
             icon:      'badge',
-            label:     'Role',
+            label:     'label_role',
             value:     this.user()?.role,
             options:   ['Admin', 'Student', 'Bocal'],
             allowEdit: false,
@@ -155,7 +156,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:      'text-area',
             icon:      'edit_note',
-            label:     'Bio',
+            label:     'label_bio',
             value:     this.user()?.profile?.bio,
             allowEdit: true,
             required:  false,
@@ -163,7 +164,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:      'date',
             icon:      'calendar_today',
-            label:     'Member Since',
+            label:     'label_member_since',
             value:     this.user()?.created_at,
             allowEdit: false,
             required:  false,
@@ -171,7 +172,7 @@ export class UserProfileComponent implements OnInit {
         {
             type:      'date',
             icon:      'update',
-            label:     'Last Updated',
+            label:     'label_last_updated',
             value:     this.user()?.profile?.last_update,
             allowEdit: false,
             required:  false,
@@ -196,16 +197,16 @@ export class UserProfileComponent implements OnInit {
     onSave() {
         const userId = this.user()?.id;
         if (!userId) {
-            this.errorMsg.set('Could not identify user. Please refresh and try again.');
+            this.errorMsg.set(this.translate.instant('error_user_not_identified'));
             return;
         }
 
-        const bioChange     = this.changes.get('Bio');
-        const avatarFile    = this.files.get('Avatar');
+        const bioChange     = this.changes.get('label_bio');
+        const avatarFile    = this.files.get('label_avatar');
         // Local base64 preview (set by FieldComponent via FileReader) — render
         // this immediately instead of the freshly-uploaded remote URL, which
         // would otherwise need a fresh network fetch before it appears.
-        const avatarPreview = this.changes.get('Avatar')?.value as string | undefined;
+        const avatarPreview = this.changes.get('label_avatar')?.value as string | undefined;
 
         const calls: Record<string, any> = {};
         if (bioChange !== undefined) {
@@ -241,7 +242,7 @@ export class UserProfileComponent implements OnInit {
             },
             error: (err) => {
                 this.loading.hide();
-                this.errorMsg.set(err?.error?.error ?? 'Failed to save profile. Please try again.');
+                this.errorMsg.set(err?.error?.error ?? this.translate.instant('error_save_profile_failed'));
             },
         });
     }

@@ -186,12 +186,12 @@ export class DashboardComponent implements OnInit {
     const done = c.done ?? 0;
     const total = c.assignments?.length ?? 0;
     const threshold = c.pass_threshold ?? 0;
-    if (total === 0 || threshold === 0) return `${done} assignments completed`;
+    if (total === 0 || threshold === 0) return this.translate.instant('dashboard_assignments_completed', { done });
     const pct = Math.round((done / total) * 100);
     const needed = Math.ceil(total * threshold / 100) - done;
     return pct >= threshold
-      ? 'Passed — threshold met'
-      : `Threshold: ${threshold}% · ${Math.max(0, needed)} more to pass`;
+      ? this.translate.instant('dashboard_threshold_met')
+      : this.translate.instant('dashboard_threshold_status', { threshold, needed: Math.max(0, needed) });
   }
 
   goToAssignment() { this.router.navigate(['/assignment']); }

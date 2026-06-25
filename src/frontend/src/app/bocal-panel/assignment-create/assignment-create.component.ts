@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DS } from '../../tokens';
 import { BtnComponent } from '../../shared/btn.component';
 import { ContainerComponent, ContainerConfig } from '../../shared/container.component';
@@ -23,7 +24,7 @@ interface PendingSection {
 @Component({
   selector: 'app-assignment-create',
   standalone: true,
-  imports: [NgStyle, BtnComponent, ContainerComponent, TabListComponent, TabDirective],
+  imports: [NgStyle, BtnComponent, ContainerComponent, TabListComponent, TabDirective, TranslateModule],
   templateUrl: './assignment-create.component.html',
 })
 export class AssignmentCreateComponent implements OnInit {
@@ -34,6 +35,7 @@ export class AssignmentCreateComponent implements OnInit {
   private assignService = inject(AssignmentService);
   private evalService    = inject(EvalService);
   private loading       = inject(LoadingService);
+  private translate     = inject(TranslateService);
 
   className = signal<string | null>(null);
   error     = signal<string | null>(null);
@@ -100,7 +102,7 @@ export class AssignmentCreateComponent implements OnInit {
       }
 
       const id = parseInt(params['classId'], 10);
-      if (!id) { this.error.set('Missing class id.'); return; }
+      if (!id) { this.error.set(this.translate.instant('error_missing_class_id')); return; }
       this.classId = id;
       this.courseService.getClass(id).subscribe({
         next: (cls) => this.className.set(cls.name),
@@ -142,7 +144,7 @@ export class AssignmentCreateComponent implements OnInit {
         });
       },
       error: () => {
-        this.error.set('Assignment not found.');
+        this.error.set(this.translate.instant('error_assignment_not_found'));
         this.loading.hide();
       },
     });
@@ -161,12 +163,12 @@ export class AssignmentCreateComponent implements OnInit {
     const desc  = this.sectionDesc().trim();
     const marks = this.sectionMarks();
 
-    if (!maxScore || maxScore <= 0) { this.error.set('Set a valid max score on the Assignment tab first.'); return; }
-    if (!name)  { this.error.set('Section name is required.'); return; }
-    if (!desc)  { this.error.set('Section description is required.'); return; }
-    if (!marks || marks <= 0) { this.error.set('Enter a valid number of marks.'); return; }
+    if (!maxScore || maxScore <= 0) { this.error.set(this.translate.instant('error_set_valid_max_score_first')); return; }
+    if (!name)  { this.error.set(this.translate.instant('error_section_name_required')); return; }
+    if (!desc)  { this.error.set(this.translate.instant('error_section_description_required')); return; }
+    if (!marks || marks <= 0) { this.error.set(this.translate.instant('error_invalid_marks')); return; }
     if (marks > this.remainingMarks()) {
-      this.error.set(`That section would push the total to ${this.totalMarks() + marks}, above the assignment's max score of ${maxScore} (${this.remainingMarks()} remaining).`);
+      this.error.set(this.translate.instant('error_section_exceeds_max', { total: this.totalMarks() + marks, max: maxScore, remaining: this.remainingMarks() }));
       return;
     }
 
@@ -212,11 +214,11 @@ export class AssignmentCreateComponent implements OnInit {
     const marks = this.editMarks();
 
     if (idx === null) return;
-    if (!name) { this.error.set('Section name is required.'); return; }
-    if (!desc) { this.error.set('Section description is required.'); return; }
-    if (!marks || marks <= 0) { this.error.set('Enter a valid number of marks.'); return; }
+    if (!name) { this.error.set(this.translate.instant('error_section_name_required')); return; }
+    if (!desc) { this.error.set(this.translate.instant('error_section_description_required')); return; }
+    if (!marks || marks <= 0) { this.error.set(this.translate.instant('error_invalid_marks')); return; }
     if (marks > this.editRemainingMarks()) {
-      this.error.set(`That would push the total above the assignment's max score of ${this.maxScore() ?? 0} (${this.editRemainingMarks()} available for this section).`);
+      this.error.set(this.translate.instant('error_section_exceeds_max_edit', { max: this.maxScore() ?? 0, available: this.editRemainingMarks() }));
       return;
     }
 
@@ -238,20 +240,20 @@ export class AssignmentCreateComponent implements OnInit {
     const reqEval   = this.reqEval();
     const createdBy = this.auth.user()?.id;
 
-    if (!classId)                          { this.error.set('Missing class id.'); return; }
-    if (!createdBy)                        { this.error.set('Could not identify user. Please refresh and try again.'); return; }
-    if (!name)                             { this.error.set('Name is required.'); return; }
-    if (!desc)                             { this.error.set('Description is required.'); return; }
-    if (!maxScore || maxScore <= 0)        { this.error.set('Enter a valid max score.'); return; }
-    if (!reqEval  || reqEval  <= 0)        { this.error.set('Enter a valid required evals count.'); return; }
+    if (!classId)                          { this.error.set(this.translate.instant('error_missing_class_id')); return; }
+    if (!createdBy)                        { this.error.set(this.translate.instant('error_user_not_identified')); return; }
+    if (!name)                             { this.error.set(this.translate.instant('error_name_required')); return; }
+    if (!desc)                             { this.error.set(this.translate.instant('error_description_required')); return; }
+    if (!maxScore || maxScore <= 0)        { this.error.set(this.translate.instant('error_invalid_max_score')); return; }
+    if (!reqEval  || reqEval  <= 0)        { this.error.set(this.translate.instant('error_invalid_req_eval')); return; }
     if (this.pendingSections().length === 0) {
       this.activeTab.set(1);
-      this.error.set('An eval sheet is required. Add at least one section on the Eval sheet tab.');
+      this.error.set(this.translate.instant('error_eval_sheet_required'));
       return;
     }
     if (this.totalMarks() !== maxScore) {
       this.activeTab.set(1);
-      this.error.set(`The eval sheet must add up to exactly the max score. It currently totals ${this.totalMarks()} / ${maxScore} pts.`);
+      this.error.set(this.translate.instant('error_eval_sheet_total_mismatch', { total: this.totalMarks(), max: maxScore }));
       return;
     }
 
@@ -263,7 +265,7 @@ export class AssignmentCreateComponent implements OnInit {
     }).subscribe({
       next: (assignment) => this.createEvalSheet(assignment, classId),
       error: (err) => {
-        this.error.set(err?.error?.message ?? 'Failed to create assignment.');
+        this.error.set(err?.error?.message ?? this.translate.instant('error_create_assignment_failed'));
         this.loading.hide();
       },
     });
@@ -310,22 +312,22 @@ export class AssignmentCreateComponent implements OnInit {
     const passThreshold   = this.passThreshold();
     const createdBy       = this.auth.user()?.id;
 
-    if (!assId || !classId)                { this.error.set('Missing assignment.'); return; }
-    if (!createdBy)                        { this.error.set('Could not identify user. Please refresh and try again.'); return; }
-    if (!name)                             { this.error.set('Name is required.'); return; }
-    if (!desc)                             { this.error.set('Description is required.'); return; }
-    if (!maxScore || maxScore <= 0)        { this.error.set('Enter a valid max score.'); return; }
-    if (!reqEval  || reqEval  <= 0)        { this.error.set('Enter a valid required evals count.'); return; }
-    if (!groupSize || groupSize <= 0)      { this.error.set('Enter a valid group size.'); return; }
-    if (!passThreshold || passThreshold <= 0) { this.error.set('Enter a valid pass threshold.'); return; }
+    if (!assId || !classId)                { this.error.set(this.translate.instant('error_missing_assignment')); return; }
+    if (!createdBy)                        { this.error.set(this.translate.instant('error_user_not_identified')); return; }
+    if (!name)                             { this.error.set(this.translate.instant('error_name_required')); return; }
+    if (!desc)                             { this.error.set(this.translate.instant('error_description_required')); return; }
+    if (!maxScore || maxScore <= 0)        { this.error.set(this.translate.instant('error_invalid_max_score')); return; }
+    if (!reqEval  || reqEval  <= 0)        { this.error.set(this.translate.instant('error_invalid_req_eval')); return; }
+    if (!groupSize || groupSize <= 0)      { this.error.set(this.translate.instant('error_invalid_group_size')); return; }
+    if (!passThreshold || passThreshold <= 0) { this.error.set(this.translate.instant('error_invalid_pass_threshold')); return; }
     if (this.pendingSections().length === 0) {
       this.activeTab.set(1);
-      this.error.set('An eval sheet is required. Add at least one section on the Eval sheet tab.');
+      this.error.set(this.translate.instant('error_eval_sheet_required'));
       return;
     }
     if (this.totalMarks() !== maxScore) {
       this.activeTab.set(1);
-      this.error.set(`The eval sheet must add up to exactly the max score. It currently totals ${this.totalMarks()} / ${maxScore} pts.`);
+      this.error.set(this.translate.instant('error_eval_sheet_total_mismatch', { total: this.totalMarks(), max: maxScore }));
       return;
     }
 
@@ -337,7 +339,7 @@ export class AssignmentCreateComponent implements OnInit {
     }).subscribe({
       next: () => this.syncEvalSheet(assId, classId),
       error: (err) => {
-        this.error.set(err?.error?.message ?? 'Failed to update assignment.');
+        this.error.set(err?.error?.message ?? this.translate.instant('error_update_assignment_failed'));
         this.loading.hide();
       },
     });

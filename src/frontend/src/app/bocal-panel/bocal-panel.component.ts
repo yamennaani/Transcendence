@@ -6,6 +6,7 @@ import { filter, map, startWith } from 'rxjs';
 import { DS } from '../tokens';
 import { BtnComponent } from '../shared/btn.component';
 import { MatIcon } from '@angular/material/icon';
+import { TranslateModule } from '@ngx-translate/core';
 
 interface BocalTab {
   label: string;
@@ -14,15 +15,15 @@ interface BocalTab {
 }
 
 const TABS: BocalTab[] = [
-  { label: 'Classes',   icon: 'school',     path: 'classes' },
-  { label: 'Students',  icon: 'people',     path: 'students' },
-  { label: 'Analytics', icon: 'bar_chart',  path: 'analytics' },
+  { label: 'tab_classes',   icon: 'school',     path: 'classes' },
+  { label: 'tab_students',  icon: 'people',     path: 'students' },
+  { label: 'tab_analytics', icon: 'bar_chart',  path: 'analytics' },
 ];
 
 @Component({
   selector: 'app-bocal-panel',
   standalone: true,
-  imports: [NgStyle, BtnComponent, MatIcon, RouterOutlet],
+  imports: [NgStyle, BtnComponent, MatIcon, RouterOutlet, TranslateModule],
   templateUrl: './bocal-panel.component.html',
 })
 export class BocalPanelComponent {

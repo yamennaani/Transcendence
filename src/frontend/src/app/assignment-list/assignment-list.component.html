@@ -4,15 +4,15 @@
   <div>
     <div [ngStyle]="overlineStyle">
       @if (filteredClassName()) {
-        <span [ngStyle]="crumbStyle" (click)="clearClassFilter()">← All assignments</span>
+        <span [ngStyle]="crumbStyle" (click)="clearClassFilter()">{{ 'crumb_all_assignments' | translate }}</span>
       }
-      Assignments
+      {{ 'label_assignments' | translate }}
     </div>
     <h1 [ngStyle]="h1Style">
       @if (filteredClassName()) {
         {{ filteredClassName() }}
       } @else {
-        In progress
+        {{ 'status_in_progress' | translate }}
       }
     </h1>
   </div>
@@ -39,10 +39,10 @@
             </p>
 
             <div [ngStyle]="metaStyle">
-              <span>{{ item.assignment.max_score }} pts</span>
-              <span>{{ item.assignment.req_eval }} evals required</span>
-              @if (item.assignment.groupSize) { <span>groups of {{ item.assignment.groupSize }}</span> }
-              @if (item.assignment.pass_threshold) { <span>{{ item.assignment.pass_threshold }}% to pass</span> }
+              <span>{{ 'assignment_pts' | translate:{value: item.assignment.max_score} }}</span>
+              <span>{{ (item.assignment.req_eval === 1 ? 'assignment_evals_required' : 'assignment_evals_required_plural') | translate:{count: item.assignment.req_eval} }}</span>
+              @if (item.assignment.groupSize) { <span>{{ 'assignment_group_of' | translate:{size: item.assignment.groupSize} }}</span> }
+              @if (item.assignment.pass_threshold) { <span>{{ 'assignment_pass_threshold_label' | translate:{threshold: item.assignment.pass_threshold} }}</span> }
               @if (item.assignment.file) {
                 <a [href]="item.assignment.file.url" target="_blank" rel="noopener" (click)="$event.stopPropagation()" style="color:inherit">
                   📎 {{ item.assignment.file.name }}
@@ -52,7 +52,7 @@
 
             <div [ngStyle]="footerStyle">
               <app-badge [variant]="statusMeta(item.status).variant" [customLabel]="statusMeta(item.status).label" />
-              <app-btn variant="secondary" size="sm" (clicked)="open(item)">Open →</app-btn>
+              <app-btn variant="secondary" size="sm" (clicked)="open(item)">{{ 'btn_open' | translate }}</app-btn>
             </div>
           </div>
         </app-container>

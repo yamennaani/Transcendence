@@ -5,10 +5,12 @@ import {
   Output,
   TemplateRef,
   computed,
+  inject,
   input,
   signal,
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { BadgeVariant, DS } from '../tokens';
 import { ContainerComponent, ContainerConfig } from './container.component';
@@ -36,7 +38,7 @@ export interface ListProgressData {
 @Component({
   selector: 'app-list',
   standalone: true,
-  imports: [NgTemplateOutlet, ContainerComponent, BadgeComponent, ProgressBarComponent, BtnComponent],
+  imports: [NgTemplateOutlet, ContainerComponent, BadgeComponent, ProgressBarComponent, BtnComponent, TranslateModule],
   template: `
     <div class="list">
 
@@ -63,7 +65,7 @@ export interface ListProgressData {
 
           <div class="paged-footer">
             <span class="page-info">
-              {{ currentPage() * pageSize() + 1 }}–{{ pageEnd() }} of {{ allItems().length }}
+              {{ 'list_page_info' | translate:{start: currentPage() * pageSize() + 1, end: pageEnd(), total: allItems().length} }}
             </span>
             <div class="page-btns">
               @for (p of pages(); track p) {
@@ -254,12 +256,14 @@ export interface ListProgressData {
   `],
 })
 export class ListComponent<T> {
+  private translate = inject(TranslateService);
+
   items        = input.required<T[] | null>();
   trackBy      = input.required<(item: T) => string | number>();
   columns      = input<ListColumn<T>[]>([]);
   title        = input<string>('');
   overline     = input<string>('');
-  emptyMessage = input<string>('No items found');
+  emptyMessage = input<string>(this.translate.instant('msg_no_items_found'));
   badge        = input<ListBadge<T> | null>(null);
   progressFn   = input<((item: T) => ListProgressData | null) | null>(null);
   /** Items per page. 0 (default) disables pagination. */

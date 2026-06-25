@@ -1,20 +1,20 @@
 <div [ngStyle]="pageStyle">
   <div [ngStyle]="headerRowStyle">
     <div>
-      <div [ngStyle]="overlineStyle">Peer evaluation</div>
-      <h1 [ngStyle]="h1Style">Evaluation pairings</h1>
+      <div [ngStyle]="overlineStyle">{{ 'eval_title' | translate }}</div>
+      <h1 [ngStyle]="h1Style">{{ 'eval_pairings_title' | translate }}</h1>
 
       @if (assignmentName()) {
         <p [ngStyle]="sublineStyle">
-          Assignment: <strong>{{ assignmentName() }}</strong>
+          {{ 'label_assignment_colon' | translate }} <strong>{{ assignmentName() }}</strong>
           @if (courseName()) {
-            · Course: <strong>{{ courseName() }}</strong>
+            · {{ 'label_course_colon' | translate }} <strong>{{ courseName() }}</strong>
           }
         </p>
       } @else if (assignmentId()) {
-        <p [ngStyle]="sublineStyle">Assignment ID: {{ assignmentId() }}</p>
+        <p [ngStyle]="sublineStyle">{{ 'label_assignment_id' | translate:{id: assignmentId()} }}</p>
       } @else {
-        <p [ngStyle]="sublineStyle">No assignment selected.</p>
+        <p [ngStyle]="sublineStyle">{{ 'eval_pairings_no_assignment' | translate }}</p>
       }
     </div>
 
@@ -22,25 +22,25 @@
       <app-btn
         variant="secondary"
         (clicked)="goBackToAssignment()">
-        Back to assignment
+        {{ 'btn_back_to_assignment' | translate }}
       </app-btn>
 
       <app-btn
         variant="primary"
         [disabled]="!assignmentId() || loading()"
         (clicked)="generateSimplePairings()">
-        Generate all pairings
+        {{ 'btn_generate_all_pairings' | translate }}
       </app-btn>
 
       <app-btn
         variant="ghost"
         [disabled]="!assignmentId() || loading() || evalAssignments().length === 0"
         (clicked)="deleteAllEvalAssignments()">
-        Delete all pairings
+        {{ 'btn_delete_all_pairings' | translate }}
       </app-btn>
 
     </div>
-    
+
 
     <div [ngStyle]="actionsStyle">
 
@@ -48,22 +48,22 @@
         variant="ghost"
         [disabled]="loading() || manualPairingEvalueeGroupOptions().length === 0"
         (clicked)="openCreateSinglePairingModal()">
-        Create single pairing
+        {{ 'btn_create_single_pairing' | translate }}
       </app-btn>
 
       <app-btn
         variant="ghost"
         [disabled]="loading() || assignmentGroups().length === 0"
         (clicked)="showEvaluatorWorkload.set(true)">
-        Show evaluator counts
+        {{ 'btn_show_evaluator_counts' | translate }}
       </app-btn>
 
       <app-btn
         variant="ghost"
         [disabled]="loading()"
         (clicked)="showUnmatchedStudents.set(true)">
-        Show unmatched students
-      </app-btn>      
+        {{ 'btn_show_unmatched_students' | translate }}
+      </app-btn>
 
     </div>
   </div>
@@ -78,7 +78,7 @@
 
   @if (loading()) {
     <div [ngStyle]="loadingStyle">
-      Loading evaluation pairings…
+      {{ 'eval_pairings_loading' | translate }}
     </div>
   }
 
@@ -86,13 +86,13 @@
     <div [ngStyle]="overlayStyle" (click)="showEvaluatorWorkload.set(false)">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div [ngStyle]="modalTitleStyle">
-          Evaluator counts
+          {{ 'label_evaluator_counts' | translate }}
         </div>
 
         <div [ngStyle]="modalBodyStyle">
           @if (evaluatorWorkload().length === 0) {
             <div [ngStyle]="emptyStateStyle">
-              No students found for this assignment.
+              {{ 'eval_pairings_no_students' | translate }}
             </div>
           } @else {
             @for (student of evaluatorWorkload(); track student.userId) {
@@ -119,7 +119,7 @@
             variant="primary"
             size="md"
             (clicked)="showEvaluatorWorkload.set(false)">
-            Close
+            {{ 'btn_close' | translate }}
           </app-btn>
         </div>
       </div>
@@ -130,13 +130,13 @@
     <div [ngStyle]="overlayStyle" (click)="showUnmatchedStudents.set(false)">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div [ngStyle]="modalTitleStyle">
-          Unmatched students
+          {{ 'label_unmatched_students' | translate }}
         </div>
 
         <div [ngStyle]="modalBodyStyle">
           @if (unmatchedStudents().length === 0) {
             <div [ngStyle]="emptyStateStyle">
-              All enrolled students have the required number of evaluee pairings.
+              {{ 'eval_pairings_all_matched' | translate }}
             </div>
           } @else {
             @for (student of unmatchedStudents(); track student.userId) {
@@ -155,14 +155,14 @@
                   </div>
 
                   <div [ngStyle]="cardSubtitleStyle">
-                    Evaluee pairings:
+                    {{ 'label_evaluee_pairings_colon' | translate }}
                     {{ student.evalueeAssignments }} /
                     {{ student.requiredRounds }}
                   </div>
                 </div>
 
                 <strong>
-                  missing {{ student.missingRounds }}
+                  {{ 'label_missing_count' | translate:{count: student.missingRounds} }}
                 </strong>
               </div>
             }
@@ -174,30 +174,29 @@
             variant="primary"
             size="md"
             (clicked)="showUnmatchedStudents.set(false)">
-            Close
+            {{ 'btn_close' | translate }}
           </app-btn>
         </div>
       </div>
     </div>
-  }  
+  }
 
   @if (showCreateSinglePairing()) {
     <div [ngStyle]="overlayStyle" (click)="closeCreateSinglePairingModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div [ngStyle]="modalTitleStyle">
-          Create single pairing
+          {{ 'btn_create_single_pairing' | translate }}
         </div>
 
         <div [ngStyle]="modalBodyStyle">
           @if (manualPairingEvalueeGroupOptions().length === 0) {
             <div [ngStyle]="emptyStateStyle">
-              No evaluee group is currently missing a pairing.
-              If an enrolled student has no group yet, create a group for them first.
+              {{ 'eval_pairings_no_missing_groups' | translate }}
             </div>
           } @else {
             <div>
               <label [ngStyle]="fieldLabelStyle">
-                Unmatched evaluee group / round
+                {{ 'label_unmatched_evaluee_group_round' | translate }}
               </label>
 
               <select
@@ -206,9 +205,7 @@
                 (ngModelChange)="onManualPairingEvalueeGroupChanged($event)">
                 @for (option of manualPairingEvalueeGroupOptions(); track option.groupId + '-' + option.round) {
                   <option [ngValue]="option">
-                    Round {{ option.round }} · {{ option.groupName }}:
-                    {{ option.members }}
-                    · currently {{ option.evalueeAssignments }}/{{ option.requiredRounds }}
+                    {{ 'eval_pairings_option_round_group' | translate:{round: option.round, groupName: option.groupName, members: option.members, evalueeAssignments: option.evalueeAssignments, requiredRounds: option.requiredRounds} }}
                   </option>
                 }
               </select>
@@ -216,7 +213,7 @@
 
             @if (createPairingEvalueeGroup()) {
               <div [ngStyle]="readonlyFieldStyle">
-                Evaluee group:
+                {{ 'label_evaluee_group_prefix' | translate }}
                 {{ createPairingEvalueeGroup()?.groupName }}
                 —
                 {{ createPairingEvalueeGroup()?.members }}
@@ -225,7 +222,7 @@
 
             <div>
               <label [ngStyle]="fieldLabelStyle">
-                Evaluator
+                {{ 'label_evaluator' | translate }}
               </label>
 
               <select
@@ -234,9 +231,7 @@
                 (ngModelChange)="createPairingEvaluator.set($event)">
                 @for (candidate of availableManualPairingEvaluators(); track candidate.userId) {
                   <option [ngValue]="candidate">
-                    {{ candidate.username }}
-                    · {{ candidate.groupName }}
-                    · {{ candidate.count }} evaluator assignment(s)
+                    {{ 'eval_pairings_evaluator_option' | translate:{username: candidate.username, groupName: candidate.groupName, count: candidate.count} }}
                   </option>
                 }
               </select>
@@ -255,7 +250,7 @@
             variant="ghost"
             size="md"
             (clicked)="closeCreateSinglePairingModal()">
-            Cancel
+            {{ 'btn_cancel' | translate }}
           </app-btn>
 
           <app-btn
@@ -263,7 +258,7 @@
             size="md"
             [disabled]="loading() || !createPairingEvalueeGroup() || !createPairingEvaluator()"
             (clicked)="saveCreateSinglePairing()">
-            Create pairing
+            {{ 'btn_create_pairing' | translate }}
           </app-btn>
         </div>
       </div>
@@ -275,12 +270,12 @@
     <div [ngStyle]="overlayStyle" (click)="closeEditPairingModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div [ngStyle]="modalTitleStyle">
-          Edit pairing — {{ editingPairing()?.evalueeGroupName }}
+          {{ 'label_edit_pairing_title' | translate }} — {{ editingPairing()?.evalueeGroupName }}
         </div>
 
         <div [ngStyle]="modalBodyStyle">
           <div>
-            <label [ngStyle]="fieldLabelStyle">Evaluee</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_evaluee' | translate }}</label>
             <div [ngStyle]="readonlyFieldStyle">
               {{ editingPairing()?.evalueeGroupName }}:
               {{ editingPairing()?.evalueeMembers }}
@@ -288,7 +283,7 @@
           </div>
 
           <div>
-            <label [ngStyle]="fieldLabelStyle">Evaluator group</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_evaluator_group' | translate }}</label>
             <select
               [ngStyle]="inputStyle"
               [ngModel]="editEvaluatorGroupId()"
@@ -302,14 +297,14 @@
           </div>
 
           <div>
-            <label [ngStyle]="fieldLabelStyle">Evaluator</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_evaluator' | translate }}</label>
             <select
               [ngStyle]="inputStyle"
               [ngModel]="editEvaluatorUserId()"
               (ngModelChange)="editEvaluatorUserId.set($event)">
               @for (member of availableEvaluatorMembers(); track member.id) {
                 <option [ngValue]="member.userId">
-                  {{ member.user?.username ?? ('user #' + member.userId) }}
+                  {{ member.user?.username ?? ('label_user_hash' | translate:{id: member.userId}) }}
                 </option>
               }
             </select>
@@ -327,7 +322,7 @@
             variant="ghost"
             size="md"
             (clicked)="closeEditPairingModal()">
-            Cancel
+            {{ 'btn_cancel' | translate }}
           </app-btn>
 
           <app-btn
@@ -335,7 +330,7 @@
             size="md"
             [disabled]="loading()"
             (clicked)="saveEditPairing()">
-            Save changes
+            {{ 'bocal_btn_save_changes' | translate }}
           </app-btn>
         </div>
       </div>
@@ -345,14 +340,14 @@
   <!-- Display pairings list with container card functionality and buttons in each item -->
   <div [ngStyle]="pairingsListStyle">
     <div>
-      <div [ngStyle]="overlineStyle">Generated pairings</div>
-      <h2 [ngStyle]="sectionHeadingStyle">Scheduled evaluation assignments</h2>
+      <div [ngStyle]="overlineStyle">{{ 'label_generated_pairings' | translate }}</div>
+      <h2 [ngStyle]="sectionHeadingStyle">{{ 'label_scheduled_eval_assignments' | translate }}</h2>
     </div>
 
     @if (evalAssignments().length === 0 && !loading()) {
       <app-container [config]="flatConfig">
         <div [ngStyle]="emptyStateStyle">
-          No evaluation pairings found for this assignment.
+          {{ 'eval_pairings_empty' | translate }}
         </div>
       </app-container>
     } @else {
@@ -363,7 +358,7 @@
               [variant]="selectedRound() === roundGroup.round ? 'primary' : 'ghost'"
               size="sm"
               (clicked)="selectedRound.set(roundGroup.round)">
-              Round {{ roundGroup.round }}
+              {{ 'progress_round' | translate:{round: roundGroup.round} }}
             </app-btn>
           }
         </div>
@@ -372,7 +367,7 @@
       @if (selectedRoundGroup(); as roundGroup) {
         <div [ngStyle]="selectedRoundListStyle">
           <h3 [ngStyle]="roundHeadingStyle">
-            Round {{ roundGroup.round }}
+            {{ 'progress_round' | translate:{round: roundGroup.round} }}
           </h3>
 
           @for (ea of roundGroup.rows; track ea.id) {
@@ -380,12 +375,11 @@
               <div [ngStyle]="cardContentStyle">
                 <div>
                   <div [ngStyle]="cardTitleStyle">
-                    Evaluee: {{ ea.evalueeGroupName }}: {{ ea.evalueeMembers }}
+                    {{ 'eval_pairings_evaluee_row' | translate:{name: ea.evalueeGroupName, members: ea.evalueeMembers} }}
                   </div>
 
                   <div [ngStyle]="cardSubtitleStyle">
-                    Evaluator: {{ ea.evaluatorName }} from {{ ea.evaluatorGroupName }}
-                    · Round: {{ ea.round }}
+                    {{ 'eval_pairings_evaluator_meta' | translate:{name: ea.evaluatorName, group: ea.evaluatorGroupName, round: ea.round} }}
                     · {{ ea.status }}
                   </div>
                 </div>
@@ -396,7 +390,7 @@
                     size="sm"
                     [disabled]="loading()"
                     (clicked)="openEditPairing(ea)">
-                    Edit
+                    {{ 'btn_edit' | translate }}
                   </app-btn>
 
                   <app-btn
@@ -404,7 +398,7 @@
                     size="sm"
                     [disabled]="loading()"
                     (clicked)="deleteEvalAssignment(ea)">
-                    Delete
+                    {{ 'bocal_btn_delete' | translate }}
                   </app-btn>
                 </span>
               </div>

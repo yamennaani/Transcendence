@@ -881,7 +881,7 @@ export class AssignmentDetailComponent implements OnInit {
     const userId = this.currentUserId();
     const reply = this.replyDraft(response.id).trim();
     if (!userId) return;
-    if (!reply) { this.replyError.set('Write a reply before submitting.'); return; }
+    if (!reply) { this.replyError.set(this.translate.instant('error_reply_required')); return; }
 
     this.replyError.set(null);
     this.loading.show();
@@ -1003,7 +1003,7 @@ export class AssignmentDetailComponent implements OnInit {
     const group = this.myGroup();
     const userId = this.currentUserId();
     if (!group || !userId) return;
-    if (!confirm('Are you sure you want to close this submission? You won\'t be able to upload further files afterwards.')) return;
+    if (!confirm(this.translate.instant('confirm_close_submission'))) return;
     this.actionError.set(null);
     this.submissionError.set(null);
     this.loading.show();

@@ -4,6 +4,7 @@ import {
 } from "@angular/core";
 import { BtnComponent } from "./btn.component";
 import { MatIcon } from "@angular/material/icon";
+import { TranslateModule } from "@ngx-translate/core";
 import { DS } from "../tokens";
 
 export interface TabItem {
@@ -24,7 +25,7 @@ export class TabDirective {
 @Component({
     selector: 'app-tab-list',
     standalone: true,
-    imports: [BtnComponent, MatIcon],
+    imports: [BtnComponent, MatIcon, TranslateModule],
     template: `
         <nav class="tab-list">
             @for (tab of tabs; track tab.label(); let i = $index) {
@@ -35,7 +36,7 @@ export class TabDirective {
                     @if (tab.icon()) {
                         <mat-icon>{{ tab.icon() }}</mat-icon>
                     }
-                    {{ tab.label() }}
+                    {{ tab.label() | translate }}
                     @if (tab.count() !== undefined) {
                         <span class="badge">{{ tab.count() }}</span>
                     }

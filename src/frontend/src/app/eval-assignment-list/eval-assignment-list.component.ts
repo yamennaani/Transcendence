@@ -93,7 +93,7 @@ interface ManualPairingEvaluatorOption {
   selector: 'app-eval-assignment-list',
   standalone: true,
   //imports: [ListComponent, BtnComponent],
-  imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule],
+  imports: [ContainerComponent, BtnComponent, NgStyle, FormsModule, TranslateModule],
   templateUrl: './eval-assignment-list.component.html',
 })
 export class EvalAssignmentListComponent implements OnInit {
@@ -404,8 +404,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
 
   // delete one EvalAssignment-pairing 
   deleteEvalAssignment(row: EvalAssignmentDisplayRow): void {
-    const ok = window.confirm(`Are you sure you want to delete this pairing?\n\n` +
-      `${row.evalueeGroupName} evaluated by ${row.evaluatorName}`);
+    const ok = window.confirm(this.translate.instant('confirm_delete_pairing', { evaluee: row.evalueeGroupName, evaluator: row.evaluatorName }));
     if (!ok) return;
 
     this.loading.set(true);
@@ -447,7 +446,7 @@ readonly modalStyle = { background: '#0d0f1a', border: '1px solid #2a2f45', bord
       },
       error: err => {
         this.error.set(
-          err?.error?.message ?? 'Failed to delete evaluation pairings.'
+          err?.error?.message ?? this.translate.instant('error_delete_pairings_failed')
         );
 
         this.loading.set(false);

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
@@ -9,7 +10,7 @@ import { BtnComponent } from '../shared/btn.component';
 @Component({
   selector: 'app-verify-email',
   standalone: true,
-  imports: [NgStyle, LogoComponent, BtnComponent],
+  imports: [NgStyle, LogoComponent, BtnComponent, TranslateModule],
   template: `
     <div [ngStyle]="pageStyle">
       <div [ngStyle]="gridStyle"></div>
@@ -22,11 +23,11 @@ import { BtnComponent } from '../shared/btn.component';
 
         <div [ngStyle]="cardStyle">
           @if (status() === 'loading') {
-            <p [ngStyle]="bodyStyle">Verifying your email…</p>
+            <p [ngStyle]="bodyStyle">{{ 'verify_email_loading' | translate }}</p>
           }
           @if (status() === 'success') {
             <div [ngStyle]="bannerStyle('green')">
-              Your email has been verified. Redirecting to sign in…
+              {{ 'verify_email_success' | translate }}
             </div>
           }
           @if (status() === 'error') {
@@ -34,7 +35,7 @@ import { BtnComponent } from '../shared/btn.component';
               {{ errorMsg() }}
             </div>
             <app-btn variant="ghost" size="md" (clicked)="router.navigate(['/login'])" style="width:100%;margin-top:16px">
-              Back to sign in
+              {{ 'btn_back_to_sign_in' | translate }}
             </app-btn>
           }
         </div>
@@ -46,6 +47,7 @@ export class VerifyEmailComponent implements OnInit {
   router = inject(Router);
   private auth  = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   status   = signal<'loading' | 'success' | 'error'>('loading');
   errorMsg = signal('');
@@ -54,7 +56,7 @@ export class VerifyEmailComponent implements OnInit {
     const token = this.route.snapshot.queryParams['token'];
     if (!token) {
       this.status.set('error');
-      this.errorMsg.set('No verification token found. Please use the link from your email.');
+      this.errorMsg.set(this.translate.instant('error_no_verification_token'));
       return;
     }
 
@@ -67,7 +69,7 @@ export class VerifyEmailComponent implements OnInit {
       },
       error: (err) => {
         this.status.set('error');
-        this.errorMsg.set(err.error?.error || 'Verification failed. The link may have expired.');
+        this.errorMsg.set(err.error?.error || this.translate.instant('error_verification_failed'));
       }
     });
   }

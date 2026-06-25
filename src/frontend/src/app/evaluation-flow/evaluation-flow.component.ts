@@ -12,7 +12,7 @@ import { EvalService, EvalSection, StartEvaluationResponse } from '../core/servi
 @Component({
   selector: 'app-evaluation-flow',
   standalone: true,
-  imports: [NgStyle, AvatarComponent, BtnComponent],
+  imports: [NgStyle, AvatarComponent, BtnComponent, TranslateModule],
   templateUrl: './evaluation-flow.component.html',
   styles: [`
     .section-card {

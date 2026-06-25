@@ -42,9 +42,10 @@ export class AuthService {
   }
 
   logout(): void {
+    this.clearToken();
     this.http.post(`${this.api}/logout`, {}).subscribe({
-      next: () => this.cleanup(),
-      error: () => this.cleanup(),
+      next: () => this.router.navigate(['/login']),
+      error: () => this.router.navigate(['/login']),
     });
   }
 

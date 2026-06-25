@@ -38,7 +38,7 @@
                (click)="goToAssignmentDetail(r.id)">
             <div>
               <div style="font-family:'Space Grotesk',sans-serif;font-size:0.9375rem;font-weight:600;color:oklch(94% 0.005 272)">{{ r.title }}</div>
-              <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:2px">max {{ r.max }}pts</div>
+              <div style="font-size:0.75rem;color:oklch(48% 0.01 272);margin-top:2px">{{ 'label_max_pts' | translate:{value: r.max} }}</div>
             </div>
             <div style="display:flex;align-items:center;gap:8px">
               @if (r.score !== null) {

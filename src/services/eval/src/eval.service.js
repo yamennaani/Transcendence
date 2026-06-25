@@ -495,20 +495,40 @@ const submitEvaluation = async ({evalAssignmentId, evaluatorUserId, comment, sco
 
     const givenMarks = scores.reduce((sum, s) => sum + parseInt(s.score), 0)
 
-    const response = await prisma.evalResponse.create({
-        data: {
-            subId: evalAssignment.submissionId,
-            userId: evaluatorUserIdInt,
-            givenMarks,
-            comment,
-            scores: { create: scores.map(s => ({ sectionId: parseInt(s.sectionId), score: parseInt(s.score) })) }
-        },
-        include: { scores: true }
-    })
+    const response = await prisma.$transaction(async (tx) => {
+        const evalResponse = await tx.evalResponse.upsert({
+            where: { subId_userId: { subId: evalAssignment.submissionId, userId: evaluatorUserIdInt } },
+            create: {
+                subId: evalAssignment.submissionId,
+                userId: evaluatorUserIdInt,
+                givenMarks,
+                comment,
+                scores: { create: scores.map(s => ({ sectionId: parseInt(s.sectionId), score: parseInt(s.score) })) }
+            },
+            update: {
+                givenMarks,
+                comment,
+                scores: {
+                    deleteMany: {},
+                    create: scores.map(s => ({ sectionId: parseInt(s.sectionId), score: parseInt(s.score) }))
+                }
+            },
+            include: { scores: true }
+        })
 
-    await prisma.evalAssignment.update({
-        where: { id: evalAssignment.id },
-        data: { status: 'Submitted', evalResponseId: response.id }
+        // an earlier round's evalAssignment may still hold this response - release it
+        // so the unique evalResponseId constraint doesn't block linking it here
+        await tx.evalAssignment.updateMany({
+            where: { evalResponseId: evalResponse.id, id: { not: evalAssignment.id } },
+            data: { evalResponseId: null }
+        })
+
+        await tx.evalAssignment.update({
+            where: { id: evalAssignment.id },
+            data: { status: 'Submitted', evalResponseId: evalResponse.id }
+        })
+
+        return evalResponse
     })
 
     return response

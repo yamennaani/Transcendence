@@ -1,9 +1,7 @@
-*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Karabitsc.*
+*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Krabitsc.*
 
 # Transcendence: PeerPilot
-
 ---
-
 # Table of Contents
 
 * [Description](#description)
@@ -45,7 +43,7 @@ Developing **PeerPilot** was a collaborative effort involving five team members,
 
 ---
 
-## Product Owner — Katrin Rabitsch (Karabitsc)
+## Product Owner — Katrin Rabitsch (Krabitsc)
 
 As the Product Owner, Katrin was responsible for defining the overall vision and direction of the project. She developed the original concept and continuously refined it by gathering feedback and feature suggestions from prospective users throughout development. One of her most significant contributions was designing and implementing the peer evaluation algorithm, which became a core feature of the platform. She also developed the evaluation system itself, contributed extensively to both the frontend and backend, and created the original `populateDB` script used to seed the database during development and testing. Her work ensured that the project remained focused on delivering a practical and engaging learning experience.
 
@@ -428,8 +426,8 @@ The features below are grouped by functionality and user role.
 | ---------------------------- | :-----: | :---: | :---: |
 | Dashboard                    |    ✓    |   ✓   |   ✓   |
 | Manage Profile               |    ✓    |   ✓   |   ✓   |
-| Join Organizations           |    ✓    |   ✓   |   ✓   |
-| Enroll in Classes            |    ✓    |   ✓   |   ✓   |
+| Join Organizations           |    ✓    |       |       |
+| Enroll in Classes            |    ✓    |       |       |
 | Submit Assignments           |    ✓    |       |       |
 | Create Groups                |    ✓    |       |       |
 | Peer Evaluations             |    ✓    |       |       |
@@ -468,7 +466,7 @@ The table below maps each platform feature to the team member(s) who primarily b
 | — Profile Editing                         |                    |                   |        ✓         |                |               |
 | **Organization Management**               |                    |                   |        ✓         |                |       ✓       |
 | — Org Creation & Profiles                 |                    |                   |        ✓         |                |       ✓       |
-| — Member Management & Invitations         |        ✓           |                   |        ✓         |                |       ✓       |
+| — Member Management & Invitations         |        ✓           |                   |                  |                |       ✓       |
 | — Email Whitelist Management              |                    |                   |                  |       ✓        |               |
 | **Class Management**                      |                    |                   |        ✓         |                |       ✓       |
 | — Create / Edit / Delete Classes          |                    |                   |        ✓         |                |               |
@@ -503,7 +501,7 @@ The table below maps each platform feature to the team member(s) who primarily b
 | **REST API**                              |        ✓           |       ✓           |        ✓         |       ✓        |       ✓       |
 | — User Service (`/api/user/`)             |                    |       ✓           |        ✓         |                |               |
 | — Auth Service (`/api/auth/`)             |                    |                   |                  |       ✓        |               |
-| — Org Service (`/api/org/`)               |        ✓           |                   |        ✓         |                |       ✓       |
+| — Org Service (`/api/org/`)               |        ✓           |                   |                  |                |       ✓       |
 | — Class Service (`/api/class/`)           |                    |                   |        ✓         |                |               |
 | — Enroll Service (`/api/enroll/`)         |                    |                   |        ✓         |                |       ✓       |
 | — Group Service (`/api/group/`)           |                    |       ✓           |        ✓         |                |       ✓       |
@@ -536,7 +534,7 @@ The table below maps each platform feature to the team member(s) who primarily b
 | — Shared Backend Packages                 |                    |                   |        ✓         |                |               |
 | — nginx Reverse Proxy Config              |                    |                   |        ✓         |                |               |
 | **Database**                              |        ✓           |                   |        ✓         |                |       ✓       |
-| — Prisma Schema Design                    |        ✓           |                   |        ✓         |                |       ✓       |
+| — Prisma Schema Design                    |        ✓           |                   |                  |                |       ✓       |
 | — Entity Relationship Diagram             |                    |                   |                  |                |       ✓       |
 | — Database Seeding (populateDB)           |        ✓           |                   |                  |                |       ✓       |
 | **Documentation & Project Management**    |                    |       ✓           |                  |                |               |

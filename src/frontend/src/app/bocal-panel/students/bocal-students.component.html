@@ -2,8 +2,8 @@
 
   <!-- ── Header ─────────────────────────────────────────────── -->
   <div style="margin-bottom:20px">
-    <div [ngStyle]="overlineStyle">Bocal panel</div>
-    <h1 [ngStyle]="h1Style">Students</h1>
+    <div [ngStyle]="overlineStyle">{{ 'bocal_panel' | translate }}</div>
+    <h1 [ngStyle]="h1Style">{{ 'tab_students' | translate }}</h1>
   </div>
 
   <!-- ── Filters ────────────────────────────────────────────── -->
@@ -12,39 +12,39 @@
       [ngStyle]="inputStyle"
       style="max-width:280px"
       type="text"
-      placeholder="Search by username or email…"
+      [placeholder]="'placeholder_search_username_email' | translate"
       [value]="searchQuery()"
       (input)="searchQuery.set($any($event.target).value)" />
 
     <select [ngStyle]="inputStyle" style="max-width:160px" [value]="roleFilter()" (change)="roleFilter.set($any($event.target).value)">
       @for (r of roleOptions; track r) {
-        <option [value]="r">{{ r === 'All' ? 'All roles' : r }}</option>
+        <option [value]="r">{{ r === 'All' ? ('label_all_roles' | translate) : r }}</option>
       }
     </select>
 
     <select [ngStyle]="inputStyle" style="max-width:200px" [value]="classFilter() ?? ''" (change)="onClassFilterChanged($any($event.target).value)">
-      <option value="">All classes</option>
+      <option value="">{{ 'label_all_classes' | translate }}</option>
       @for (c of classes(); track c.id) {
         <option [value]="c.id">{{ c.name }}</option>
       }
     </select>
 
     <select [ngStyle]="inputStyle" style="max-width:200px" [value]="subjectFilter() ?? ''" [disabled]="!classFilter()" (change)="onSubjectFilterChanged($any($event.target).value)">
-      <option value="">All subjects</option>
+      <option value="">{{ 'label_all_subjects' | translate }}</option>
       @for (s of subjects(); track s.id) {
         <option [value]="s.id">{{ s.name }}</option>
       }
     </select>
 
     <span style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-      {{ filteredMembers().length }} of {{ members().length }} member{{ members().length === 1 ? '' : 's' }}
+      {{ (members().length === 1 ? 'bocal_students_count_singular' : 'bocal_students_count_plural') | translate:{shown: filteredMembers().length, total: members().length} }}
     </span>
   </div>
 
   <app-list
     [items]="filteredMembers()"
     [trackBy]="memberTrackFn"
-    emptyMessage="No members match your filters."
+    [emptyMessage]="'bocal_no_members_match_filters' | translate"
     [pageSize]="8">
     <ng-template let-m>
       <div style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
@@ -59,7 +59,7 @@
           <span [ngStyle]="roleStyle(m.role)">{{ m.role }}</span>
           <span style="font-size:0.8125rem;color:oklch(68% 0.01 272)">{{ m.created_at | date:'mediumDate' }}</span>
           @if (classFilter()) {
-            <app-btn variant="ghost" size="sm" (clicked)="removeFromClass(m)">Remove from class</app-btn>
+            <app-btn variant="ghost" size="sm" (clicked)="removeFromClass(m)">{{ 'btn_remove_from_class' | translate }}</app-btn>
           }
         </div>
       </div>

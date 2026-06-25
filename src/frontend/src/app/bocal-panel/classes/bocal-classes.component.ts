@@ -366,9 +366,7 @@ export class BocalClassesComponent implements OnInit {
   deleteAllGroups(a: AssignmentResponse): void {
     const groups = this.groupsFor(a);
     if (groups.length === 0) { return; }
-    const ok = confirm(
-      `Are you sure you want to delete all groups for "${a.name}"?\n\n` +
-      `This will delete ${groups.length} group(s) and may also remove related evaluation pairings.` );
+    const ok = confirm(this.translate.instant('confirm_delete_all_groups', { name: a.name, count: groups.length }));
     if (!ok) { return; }
     this.groupActionError.set(null);
     this.loading.show();
@@ -427,11 +425,11 @@ export class BocalClassesComponent implements OnInit {
     const name = this.createGroupName().trim();
     const studentId = this.createGroupStudentId();
     if (!a) return;
-    if (!name) { this.createGroupError.set('Please enter a group name.'); return; }
+    if (!name) { this.createGroupError.set(this.translate.instant('error_group_name_required')); return; }
     //console.log('trying to create group name:', name, 'existing groups:', this.groupsFor(a).map(group => group.name));
     const nameExists = this.groupsFor(a).some(group => group.name.trim().toLowerCase() === name.toLowerCase());
-    if (nameExists) {this.createGroupError.set('Group name exists already.'); return; }
-    if (!studentId) { this.createGroupError.set('Please select a student.'); return; }
+    if (nameExists) {this.createGroupError.set(this.translate.instant('error_group_name_exists')); return; }
+    if (!studentId) { this.createGroupError.set(this.translate.instant('error_select_student')); return; }
     this.createGroupError.set(null);
     this.loading.show();
     this.groupService.createGroup({
@@ -481,10 +479,10 @@ export class BocalClassesComponent implements OnInit {
     const g = this.editGroup();
     if (!a || !g) return;
     if (g.members.length <= 1) {
-      this.editGroupMembersError.set('Cannot remove the last member of a group. Remove the whole group instead.');
+      this.editGroupMembersError.set(this.translate.instant('error_remove_last_member'));
       return;
     }
-    const ok = confirm('Remove this student from the group?');
+    const ok = confirm(this.translate.instant('confirm_remove_group_member'));
     if (!ok) return;
     this.editGroupMembersError.set(null);
     this.loading.show();
@@ -503,17 +501,17 @@ export class BocalClassesComponent implements OnInit {
           err?.error?.message ??
           err?.error?.error ??
           err?.message ??
-          'Failed to remove group member.' );
+          this.translate.instant('error_remove_group_member_failed') );
         this.loading.hide(); },
     });
-  }  
+  }
 
   addMemberToGroup(): void {
     const a = this.editGroupAssignment();
     const g = this.editGroup();
     const userId = this.editGroupAddStudentId();
     if (!a || !g) return;
-    if (!userId) { this.editGroupMembersError.set('Please select a student to add.'); return; }
+    if (!userId) { this.editGroupMembersError.set(this.translate.instant('error_select_student_to_add')); return; }
     this.editGroupMembersError.set(null);
     this.loading.show();
     this.groupService.addMemberAdmin(g.id, { userId }).subscribe({
@@ -543,7 +541,7 @@ private generatedGroupName(index: number): string { return `group${index + 1}`; 
     const groupSize = a.groupSize ?? 1;
 
     const students = this.ungroupedStudentsFor(a);
-    if (students.length === 0) {this.groupActionError.set('There are no ungrouped students for this assignment.'); return; }
+    if (students.length === 0) {this.groupActionError.set(this.translate.instant('error_no_ungrouped_students')); return; }
 
     const chunks: typeof students[] = [];
     for (let i = 0; i < students.length; i += groupSize) {

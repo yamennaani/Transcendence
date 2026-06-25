@@ -2,21 +2,21 @@
 @if (phase() === 'login') {
   <div [ngStyle]="pageStyle">
     <div [ngStyle]="crumbStyle">
-      <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">dashboard</span>
-      <span>/</span><span style="color:oklch(94% 0.005 272)">evaluate a submission</span>
+      <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">{{ 'breadcrumb_dashboard' | translate }}</span>
+      <span>/</span><span style="color:oklch(94% 0.005 272)">{{ 'breadcrumb_evaluate_submission' | translate }}</span>
     </div>
 
-    <h1 [ngStyle]="h1Style">Start an evaluation " </h1>
-    <p [ngStyle]="subStyle">Ask the team you're evaluating for their leader's email and the passkey they were given when they closed their submission.</p>
+    <h1 [ngStyle]="h1Style">{{ 'eval_login_title' | translate }}</h1>
+    <p [ngStyle]="subStyle">{{ 'eval_login_subtitle' | translate }}</p>
 
     <div [ngStyle]="panelStyle">
       <div>
-        <label [ngStyle]="fieldLabelStyle">Leader email</label>
+        <label [ngStyle]="fieldLabelStyle">{{ 'label_leader_email' | translate }}</label>
         <input [ngStyle]="inputStyle" type="email" placeholder="leader@example.com"
                [value]="leaderEmail()" (input)="leaderEmail.set($any($event.target).value)" />
       </div>
       <div>
-        <label [ngStyle]="fieldLabelStyle">Passkey</label>
+        <label [ngStyle]="fieldLabelStyle">{{ 'label_passkey' | translate }}</label>
         <input [ngStyle]="{...inputStyle, fontFamily:'JetBrains Mono, monospace', fontSize:'1.125rem', letterSpacing:'0.1em'}"
                type="text" inputmode="numeric" maxlength="6" placeholder="482913"
                [value]="passkeyInput()" (input)="passkeyInput.set($any($event.target).value)" />
@@ -27,8 +27,8 @@
       }
 
       <div style="display:flex;gap:10px">
-        <app-btn variant="primary" (clicked)="login()">Continue</app-btn>
-        <app-btn variant="ghost" (clicked)="router.navigate(['/dashboard'])">Cancel</app-btn>
+        <app-btn variant="primary" (clicked)="login()">{{ 'btn_continue' | translate }}</app-btn>
+        <app-btn variant="ghost" (clicked)="router.navigate(['/dashboard'])">{{ 'btn_cancel' | translate }}</app-btn>
       </div>
     </div>
   </div>
@@ -42,10 +42,10 @@
     <div [ngStyle]="donePgStyle">
       <div [ngStyle]="doneCardStyle">
         <div style="font-size:48px;margin-bottom:16px">✓</div>
-        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:oklch(94% 0.005 272);margin-bottom:8px">Evaluation submitted</h2>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.5rem;font-weight:700;color:oklch(94% 0.005 272);margin-bottom:8px">{{ 'eval_done_title' | translate }}</h2>
         <p style="color:oklch(68% 0.01 272);line-height:1.6">
-          A score of <strong [ngStyle]="{color: scoreColor(), fontFamily:'JetBrains Mono, monospace'}">{{ totalScore() }}/{{ maxScore() }}</strong>
-          has been recorded for {{ session()?.group?.name }}.
+          {{ 'eval_done_score_prefix' | translate }} <strong [ngStyle]="{color: scoreColor(), fontFamily:'JetBrains Mono, monospace'}">{{ totalScore() }}/{{ maxScore() }}</strong>
+          {{ 'eval_done_score_suffix' | translate:{group: session()?.group?.name} }}
         </p>
       </div>
     </div>
@@ -54,13 +54,13 @@
     <div [ngStyle]="pageStyle">
       <!-- Breadcrumb -->
       <div [ngStyle]="crumbStyle">
-        <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">dashboard</span>
-        <span>/</span><span style="color:oklch(94% 0.005 272)">evaluate submission</span>
+        <span style="cursor:pointer;color:oklch(64% 0.28 296)" (click)="router.navigate(['/dashboard'])">{{ 'breadcrumb_dashboard' | translate }}</span>
+        <span>/</span><span style="color:oklch(94% 0.005 272)">{{ 'breadcrumb_evaluate_submission' | translate }}</span>
       </div>
 
       <div>
-        <h1 [ngStyle]="h1Style">Peer evaluation</h1>
-        <p [ngStyle]="subStyle">You cannot evaluate your own submission. Be honest and constructive.</p>
+        <h1 [ngStyle]="h1Style">{{ 'eval_title' | translate }}</h1>
+        <p [ngStyle]="subStyle">{{ 'eval_subtitle' | translate }}</p>
       </div>
 
       <!-- Submission file, at the top -->
@@ -68,11 +68,11 @@
         <app-avatar [name]="session()!.group.name" [size]="40"/>
         <div style="flex:1">
           <div style="font-family:'Space Grotesk',sans-serif;font-weight:600;color:oklch(94% 0.005 272);margin-bottom:2px">{{ session()!.assignment.name }}</div>
-          <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">by {{ session()!.group.name }}</div>
+          <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">{{ 'label_by' | translate:{name: session()!.group.name} }}</div>
         </div>
         @if (session()!.submission.file) {
           <a [href]="session()!.submission.file!.url" target="_blank" rel="noopener">
-            <app-btn variant="secondary" size="sm">View submission</app-btn>
+            <app-btn variant="secondary" size="sm">{{ 'btn_view_submission' | translate }}</app-btn>
           </a>
         }
       </div>
@@ -88,17 +88,17 @@
           @if (s.sectionType === 'Toggle') {
             <div class="big-toggle-row">
               <button class="big-toggle-btn yes" [class.selected]="isToggleSelected(s, true)" (click)="setToggle(s, true)">
-                Yes
-                <span class="big-toggle-pts">+{{ s.marks }} pts</span>
+                {{ 'btn_yes' | translate }}
+                <span class="big-toggle-pts">{{ 'pts_with_plus' | translate:{value: s.marks} }}</span>
               </button>
               <button class="big-toggle-btn no" [class.selected]="isToggleSelected(s, false)" (click)="setToggle(s, false)">
-                No
-                <span class="big-toggle-pts">0 pts</span>
+                {{ 'btn_no' | translate }}
+                <span class="big-toggle-pts">{{ 'assignment_pts' | translate:{value: 0} }}</span>
               </button>
             </div>
           } @else {
             <div class="big-slider-wrap">
-              <div class="big-slider-value">{{ scoreFor(s.id) ?? 0 }}<span class="big-slider-max"> / {{ s.marks }} pts</span></div>
+              <div class="big-slider-value">{{ scoreFor(s.id) ?? 0 }}<span class="big-slider-max">{{ 'pts_out_of' | translate:{value: s.marks} }}</span></div>
               <input class="big-slider" type="range" min="0" [max]="s.marks" step="1" [value]="scoreFor(s.id) ?? 0"
                      (input)="setSlider(s, +$any($event.target).value)" />
             </div>
@@ -108,12 +108,12 @@
 
       <!-- Comment -->
       <div [ngStyle]="panelStyle">
-        <div [ngStyle]="sectionHeadStyle">Written feedback</div>
+        <div [ngStyle]="sectionHeadStyle">{{ 'eval_written_feedback' | translate }}</div>
         <textarea [ngStyle]="textareaStyle" [value]="comment()"
                   (input)="comment.set($any($event.target).value)"
-                  placeholder="Describe what was done well and what could be improved..."></textarea>
+                  [placeholder]="'eval_feedback_placeholder' | translate"></textarea>
         @if (comment().length > 0 && !commentOk()) {
-          <span style="font-size:0.75rem;color:oklch(75% 0.18 80)"> Feedback must be at least 20 character.</span>
+          <span style="font-size:0.75rem;color:oklch(75% 0.18 80)"> {{ 'eval_feedback_min_length' | translate }}</span>
         }
       </div>
 
@@ -122,7 +122,7 @@
       }
 
       <!-- One submit button -->
-      <app-btn variant="primary" size="lg" [disabled]="!canSubmit()" (clicked)="submit()">Submit evaluation</app-btn>
+      <app-btn variant="primary" size="lg" [disabled]="!canSubmit()" (clicked)="submit()">{{ 'btn_submit_evaluation' | translate }}</app-btn>
     </div>
   }
 }
