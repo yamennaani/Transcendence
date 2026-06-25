@@ -8,7 +8,7 @@
         size="lg"
         (clicked)="selectTab(tab)">
         <mat-icon>{{ tab.icon }}</mat-icon>
-        {{ tab.label }}
+        {{ tab.label | translate }}
       </app-btn>
     }
   </nav>

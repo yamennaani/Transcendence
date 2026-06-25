@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 
 @Component({
   selector: 'app-oauth-callback',
   standalone: true,
-  template: `<div class="text-center mt-5">Logging in, please wait...</div>`
+  imports: [TranslateModule],
+  template: `<div class="text-center mt-5">{{ 'oauth_logging_in' | translate }}</div>`
 })
 export class OAuthCallbackComponent implements OnInit {
   constructor(private route: ActivatedRoute, private router: Router, private auth: AuthService) {}

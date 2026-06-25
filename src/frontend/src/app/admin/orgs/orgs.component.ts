@@ -5,11 +5,12 @@ import { OrgService } from '../../core/services/org-service/org-service';
 import { Router } from '@angular/router';
 import { DS } from '../../tokens';
 import { BtnComponent } from '../../shared/btn.component';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-admin-orgs',
   standalone: true,
-  imports: [NgStyle, FormsModule, BtnComponent],
+  imports: [NgStyle, FormsModule, BtnComponent, TranslateModule],
   templateUrl: './orgs.component.html',
   styles: [`:host { display: block; flex: 1; min-height: 0; width: 100%; }`],
 })

@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItem[] = [
   standalone: true,
   imports: [NgStyle, LogoComponent, IconComponent, RouterLink, LanguageSwitcherComponent, TranslateModule],
   template: `
-    <button class="sidebar-toggle" (click)="toggleMobile()" aria-label="Toggle menu">
+    <button class="sidebar-toggle" (click)="toggleMobile()" [attr.aria-label]="'aria_toggle_menu' | translate">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
         <line x1="3" y1="6" x2="21" y2="6"/>
         <line x1="3" y1="12" x2="21" y2="12"/>

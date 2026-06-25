@@ -2,32 +2,32 @@
   <div [ngStyle]="shellStyle">
     <section [ngStyle]="heroStyle">
       <div>
-        <div [ngStyle]="eyebrowStyle">Admin panel</div>
-        <h1 [ngStyle]="titleStyle">{{ org()?.name || 'Organization' }}</h1>
+        <div [ngStyle]="eyebrowStyle">{{ 'label_admin_panel' | translate }}</div>
+        <h1 [ngStyle]="titleStyle">{{ org()?.name || ('label_organization' | translate) }}</h1>
         <p [ngStyle]="subtitleStyle">
-          Manage membership here without overcomplicating the flow. Add email addresses to the whitelist and keep the org tidy.
+          {{ 'org_detail_subtitle' | translate }}
         </p>
       </div>
 
-      <app-btn variant="ghost" (clicked)="goBack()">Back to organizations</app-btn>
+      <app-btn variant="ghost" (clicked)="goBack()">{{ 'btn_back_to_organizations' | translate }}</app-btn>
     </section>
 
     <section [ngStyle]="statGridStyle">
       <div [ngStyle]="statCardStyle">
-        <div [ngStyle]="statLabelStyle">Members</div>
+        <div [ngStyle]="statLabelStyle">{{ 'label_members' | translate }}</div>
         <div [ngStyle]="statValueStyle">{{ members().length }}</div>
-        <div [ngStyle]="statHintStyle">Current users in the org</div>
+        <div [ngStyle]="statHintStyle">{{ 'org_detail_members_hint' | translate }}</div>
 	  </div>
     </section>
 
     <section [ngStyle]="cardStyle">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
-          <div [ngStyle]="pillStyle">Members</div>
-          <h2 [ngStyle]="sectionTitleStyle">Roster</h2>
-          <p [ngStyle]="sectionHintStyle">These users already belong to the organization.</p>
+          <div [ngStyle]="pillStyle">{{ 'label_members' | translate }}</div>
+          <h2 [ngStyle]="sectionTitleStyle">{{ 'label_roster' | translate }}</h2>
+          <p [ngStyle]="sectionHintStyle">{{ 'org_detail_roster_hint' | translate }}</p>
         </div>
-        <div [ngStyle]="badgeStyle">{{ members().length }} total</div>
+        <div [ngStyle]="badgeStyle">{{ 'label_count_total' | translate:{count: members().length} }}</div>
       </div>
 
       @if (removeNotice) {
@@ -40,14 +40,14 @@
 
       <section [ngStyle]="tableWrapStyle">
         <div [ngStyle]="tableHeaderStyle">
-          <div>Email</div>
-          <div>Username</div>
-          <div>Role</div>
-          <div>Actions</div>
+          <div>{{ 'label_email' | translate }}</div>
+          <div>{{ 'label_username' | translate }}</div>
+          <div>{{ 'label_role' | translate }}</div>
+          <div>{{ 'label_actions' | translate }}</div>
         </div>
 
         @if (members().length === 0) {
-          <div [ngStyle]="emptyStateStyle">No members yet. Add the first user with their email address below.</div>
+          <div [ngStyle]="emptyStateStyle">{{ 'org_detail_no_members' | translate }}</div>
         } @else {
           @for (m of members(); track m.id) {
             <div [ngStyle]="tableRowStyle">
@@ -70,9 +70,9 @@
                   (clicked)="changeRole(m)"
                 >
                   @if (changingRoleId() === m.id) {
-                    Saving...
+                    {{ 'btn_saving' | translate }}
                   } @else {
-                    Change
+                    {{ 'btn_change' | translate }}
                   }
                 </app-btn>
                 <app-btn
@@ -82,9 +82,9 @@
                   (clicked)="removeMember(m)"
                 >
                   @if (removingId() === m.id) {
-                    Removing...
+                    {{ 'btn_removing' | translate }}
                   } @else {
-                    Remove
+                    {{ 'btn_remove' | translate }}
                   }
                 </app-btn>
               </div>
@@ -97,22 +97,22 @@
     <section [ngStyle]="cardStyle">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
-          <div [ngStyle]="pillStyle">Whitelist by email</div>
-          <h2 [ngStyle]="sectionTitleStyle">Add email addresses</h2>
-          <p [ngStyle]="sectionHintStyle">Add one email or paste a list of addresses. The frontend sends them to the auth whitelist, not to the org members table.</p>
+          <div [ngStyle]="pillStyle">{{ 'label_whitelist_by_email' | translate }}</div>
+          <h2 [ngStyle]="sectionTitleStyle">{{ 'org_detail_add_emails_title' | translate }}</h2>
+          <p [ngStyle]="sectionHintStyle">{{ 'org_detail_add_emails_hint' | translate }}</p>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1.4fr auto;gap:14px;align-items:end">
         <div>
-          <label [ngStyle]="labelStyle">Email</label>
-          <input [ngStyle]="inputStyle" placeholder="name@example.com" [(ngModel)]="email" />
+          <label [ngStyle]="labelStyle">{{ 'label_email' | translate }}</label>
+          <input [ngStyle]="inputStyle" [placeholder]="'placeholder_email_example' | translate" [(ngModel)]="email" />
         </div>
         <app-btn variant="primary" [disabled]="busy()" (clicked)="addOne()">
           @if (busy()) {
-            Adding...
+            {{ 'btn_adding' | translate }}
           } @else {
-            Whitelist email
+            {{ 'btn_whitelist_email' | translate }}
           }
         </app-btn>
       </div>
@@ -125,23 +125,23 @@
     <section [ngStyle]="cardStyle">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
-          <div [ngStyle]="pillStyle">Bulk import</div>
-          <h2 [ngStyle]="sectionTitleStyle">Paste whitelist emails</h2>
-          <p [ngStyle]="sectionHintStyle">One email per line. This bulk-adds entries to AuthAllowedEmail through the auth service.</p>
+          <div [ngStyle]="pillStyle">{{ 'label_bulk_import' | translate }}</div>
+          <h2 [ngStyle]="sectionTitleStyle">{{ 'org_detail_bulk_title' | translate }}</h2>
+          <p [ngStyle]="sectionHintStyle">{{ 'org_detail_bulk_hint' | translate }}</p>
         </div>
       </div>
 
       <div>
-        <label [ngStyle]="labelStyle">Email list</label>
+        <label [ngStyle]="labelStyle">{{ 'label_email_list' | translate }}</label>
         <textarea [ngStyle]="textareaStyle" rows="6" placeholder="student1@example.com&#10;student2@example.com" [(ngModel)]="csvText"></textarea>
       </div>
 
       <div style="display:flex;justify-content:flex-end;margin-top:14px">
         <app-btn variant="secondary" [disabled]="busy()" (clicked)="importCSV()">
           @if (busy()) {
-            Importing...
+            {{ 'btn_importing' | translate }}
           } @else {
-            Whitelist emails
+            {{ 'btn_whitelist_emails' | translate }}
           }
         </app-btn>
       </div>
@@ -155,10 +155,10 @@
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
           <div [ngStyle]="pillStyle">AuthAllowedEmail</div>
-          <h2 [ngStyle]="sectionTitleStyle">Whitelisted emails</h2>
-          <p [ngStyle]="sectionHintStyle">These rows match the database table used by the auth service for registration access.</p>
+          <h2 [ngStyle]="sectionTitleStyle">{{ 'label_whitelisted_emails' | translate }}</h2>
+          <p [ngStyle]="sectionHintStyle">{{ 'org_detail_whitelist_hint' | translate }}</p>
         </div>
-        <div [ngStyle]="badgeStyle">{{ allowedEmails().length }} total</div>
+        <div [ngStyle]="badgeStyle">{{ 'label_count_total' | translate:{count: allowedEmails().length} }}</div>
       </div>
 
       @if (inviteNotice) {
@@ -167,23 +167,23 @@
 
       <section [ngStyle]="tableWrapStyle">
         <div [ngStyle]="inviteTableHeaderStyle">
-          <div>Email</div>
-          <div>Status</div>
-          <div>Invited by</div>
-          <div>Created</div>
-          <div>Action</div>
+          <div>{{ 'label_email' | translate }}</div>
+          <div>{{ 'label_status' | translate }}</div>
+          <div>{{ 'label_invited_by' | translate }}</div>
+          <div>{{ 'label_created' | translate }}</div>
+          <div>{{ 'label_action' | translate }}</div>
         </div>
 
         @if (allowedEmails().length === 0) {
-          <div [ngStyle]="emptyStateStyle">No whitelist entries yet. Add the first email above.</div>
+          <div [ngStyle]="emptyStateStyle">{{ 'org_detail_no_whitelist' | translate }}</div>
         } @else {
           @for (invite of allowedEmails(); track invite.id) {
             <div [ngStyle]="inviteTableRowStyle">
               <div>{{ invite.email }}</div>
               <div>
-                <span [ngStyle]="invite.used ? badgeStyle : pillStyle">{{ invite.used ? 'Used' : 'Pending' }}</span>
+                <span [ngStyle]="invite.used ? badgeStyle : pillStyle">{{ (invite.used ? 'badge_used' : 'badge_pending') | translate }}</span>
               </div>
-              <div>{{ invite.invited_by_username || 'System' }}</div>
+              <div>{{ invite.invited_by_username || ('label_system' | translate) }}</div>
               <div>{{ formatInviteDate(invite.created_at) }}</div>
               <div>
                 <app-btn
@@ -193,9 +193,9 @@
                   (clicked)="revokeInvite(invite)"
                 >
                   @if (removingInviteId() === invite.id) {
-                    Removing...
+                    {{ 'btn_removing' | translate }}
                   } @else {
-                    Revoke
+                    {{ 'btn_revoke' | translate }}
                   }
                 </app-btn>
               </div>

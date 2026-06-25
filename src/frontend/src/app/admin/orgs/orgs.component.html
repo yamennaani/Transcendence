@@ -2,23 +2,23 @@
   <div [ngStyle]="shellStyle">
     <section [ngStyle]="heroStyle">
       <div>
-        <div [ngStyle]="eyebrowStyle">Admin panel</div>
-        <h1 [ngStyle]="titleStyle">Organizations</h1>
+        <div [ngStyle]="eyebrowStyle">{{ 'label_admin_panel' | translate }}</div>
+        <h1 [ngStyle]="titleStyle">{{ 'page_organizations' | translate }}</h1>
         <p [ngStyle]="subtitleStyle">
-          Create orgs, manage members by email, and keep everything scoped without making the platform feel heavy.
+          {{ 'orgs_subtitle' | translate }}
         </p>
       </div>
 
       <app-btn variant="primary" (clicked)="showNew.set(!showNew())">
-        {{ showNew() ? 'Close form' : '+ New org' }}
+        {{ (showNew() ? 'btn_close_form' : 'btn_new_org') | translate }}
       </app-btn>
     </section>
 
     <section [ngStyle]="statGridStyle">
       <div [ngStyle]="statCardStyle">
-        <div [ngStyle]="statLabelStyle">Organizations</div>
+        <div [ngStyle]="statLabelStyle">{{ 'page_organizations' | translate }}</div>
         <div [ngStyle]="statValueStyle">{{ orgs()?.length ?? 0 }}</div>
-        <div [ngStyle]="statHintStyle">Available in the admin list</div>
+        <div [ngStyle]="statHintStyle">{{ 'orgs_stat_hint' | translate }}</div>
       </div>
     </section>
 
@@ -26,35 +26,35 @@
     <section [ngStyle]="cardStyle">
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap">
         <div>
-          <div [ngStyle]="pillStyle">New organization</div>
-          <h2 [ngStyle]="modalTitleStyle">Create an org</h2>
-          <p [ngStyle]="modalHintStyle">Give the org a clear name and a contact email. Tags are optional.</p>
+          <div [ngStyle]="pillStyle">{{ 'orgs_new_pill' | translate }}</div>
+          <h2 [ngStyle]="modalTitleStyle">{{ 'orgs_create_title' | translate }}</h2>
+          <p [ngStyle]="modalHintStyle">{{ 'orgs_create_hint' | translate }}</p>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:end">
         <div>
-          <label [ngStyle]="labelStyle">Organization name</label>
-          <input [ngStyle]="inputStyle" placeholder="e.g. 42 Paris" [(ngModel)]="name" />
+          <label [ngStyle]="labelStyle">{{ 'label_org_name' | translate }}</label>
+          <input [ngStyle]="inputStyle" [placeholder]="'placeholder_org_name' | translate" [(ngModel)]="name" />
         </div>
         <div>
-          <label [ngStyle]="labelStyle">Contact email</label>
-          <input [ngStyle]="inputStyle" placeholder="admin@school.example" [(ngModel)]="email" />
+          <label [ngStyle]="labelStyle">{{ 'label_contact_email' | translate }}</label>
+          <input [ngStyle]="inputStyle" [placeholder]="'placeholder_contact_email' | translate" [(ngModel)]="email" />
         </div>
         <div>
-          <label [ngStyle]="labelStyle">Tag</label>
-          <input [ngStyle]="inputStyle" placeholder="optional" [(ngModel)]="tag" />
+          <label [ngStyle]="labelStyle">{{ 'label_tag' | translate }}</label>
+          <input [ngStyle]="inputStyle" [placeholder]="'placeholder_optional' | translate" [(ngModel)]="tag" />
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px">
         <div>
-          <label [ngStyle]="labelStyle">Short bio</label>
-          <input [ngStyle]="inputStyle" placeholder="Brief description" [(ngModel)]="bio" />
+          <label [ngStyle]="labelStyle">{{ 'label_short_bio' | translate }}</label>
+          <input [ngStyle]="inputStyle" [placeholder]="'placeholder_short_bio' | translate" [(ngModel)]="bio" />
         </div>
         <div>
-          <label [ngStyle]="labelStyle">Phone</label>
-          <input [ngStyle]="inputStyle" placeholder="+33 1 23 45 67 89" [(ngModel)]="tel_num" />
+          <label [ngStyle]="labelStyle">{{ 'label_phone' | translate }}</label>
+          <input [ngStyle]="inputStyle" [placeholder]="'placeholder_phone' | translate" [(ngModel)]="tel_num" />
         </div>
       </div>
 
@@ -63,12 +63,12 @@
       }
 
       <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;flex-wrap:wrap">
-        <app-btn variant="ghost" (clicked)="showNew.set(false)">Cancel</app-btn>
+        <app-btn variant="ghost" (clicked)="showNew.set(false)">{{ 'btn_cancel' | translate }}</app-btn>
         <app-btn variant="primary" [disabled]="busy()" (clicked)="create()">
           @if (busy()) {
-            Creating...
+            {{ 'btn_creating' | translate }}
           } @else {
-            Create organization
+            {{ 'btn_create_organization' | translate }}
           }
         </app-btn>
       </div>
@@ -77,20 +77,20 @@
 
     <section [ngStyle]="tableWrapStyle">
       <div [ngStyle]="tableHeaderStyle">
-        <div>Name</div>
-        <div>Contact</div>
-        <div>Tag</div>
-        <div style="text-align:right">Action</div>
+        <div>{{ 'label_name' | translate }}</div>
+        <div>{{ 'label_contact' | translate }}</div>
+        <div>{{ 'label_tag' | translate }}</div>
+        <div style="text-align:right">{{ 'label_action' | translate }}</div>
       </div>
 
       @if ((orgs()?.length ?? 0) === 0) {
-        <div [ngStyle]="emptyStateStyle">No organizations yet. Create the first one to start grouping users.</div>
+        <div [ngStyle]="emptyStateStyle">{{ 'orgs_empty_state' | translate }}</div>
       } @else {
         @for (o of orgs() || []; track o.id) {
           <div [ngStyle]="tableRowStyle">
             <div [ngStyle]="nameStyle">
               <div [ngStyle]="orgNameStyle">{{ o.name }}</div>
-              <div [ngStyle]="orgMetaStyle">ID {{ o.id }}</div>
+              <div [ngStyle]="orgMetaStyle">{{ 'label_id_prefix' | translate:{id: o.id} }}</div>
             </div>
             <div>{{ o.email }}</div>
             <div>
@@ -101,7 +101,7 @@
               }
             </div>
             <div style="display:flex;justify-content:flex-end">
-              <app-btn variant="secondary" size="sm" (clicked)="openDetail(o.id)">Manage</app-btn>
+              <app-btn variant="secondary" size="sm" (clicked)="openDetail(o.id)">{{ 'label_manage' | translate }}</app-btn>
             </div>
           </div>
         }

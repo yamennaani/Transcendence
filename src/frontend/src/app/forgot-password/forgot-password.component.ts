@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
@@ -9,7 +10,7 @@ import { BtnComponent } from '../shared/btn.component';
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [NgStyle, LogoComponent, BtnComponent],
+  imports: [NgStyle, LogoComponent, BtnComponent, TranslateModule],
   template: `
     <div [ngStyle]="pageStyle">
       <div [ngStyle]="gridStyle"></div>
@@ -23,25 +24,25 @@ import { BtnComponent } from '../shared/btn.component';
         <div [ngStyle]="cardStyle">
           @if (sent()) {
             <div [ngStyle]="bannerStyle">
-              If an account with that email exists, a reset link has been sent. Check your inbox.
+              {{ 'forgot_password_sent_banner' | translate }}
             </div>
             <app-btn variant="ghost" size="md" (clicked)="router.navigate(['/login'])" style="width:100%;margin-top:16px">
-              Back to sign in
+              {{ 'btn_back_to_sign_in' | translate }}
             </app-btn>
           } @else {
-            <h1 [ngStyle]="h1Style">Reset password</h1>
-            <p [ngStyle]="subtitleStyle">Enter your email and we'll send you a reset link.</p>
+            <h1 [ngStyle]="h1Style">{{ 'reset_password_title' | translate }}</h1>
+            <p [ngStyle]="subtitleStyle">{{ 'forgot_password_subtitle' | translate }}</p>
 
             <div style="display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;flex-direction:column;gap:5px">
-                <label [ngStyle]="labelStyle">Email</label>
+                <label [ngStyle]="labelStyle">{{ 'label_email' | translate }}</label>
                 <input [value]="email()" (input)="email.set($any($event.target).value)"
                        [ngStyle]="inputStyle('email')"
                        (focus)="focused.set('email')" (blur)="focused.set('')"
                        placeholder="you@PeerPilot.school"/>
               </div>
               <app-btn variant="primary" size="lg" (clicked)="submit()" [disabled]="submitting()" style="width:100%">
-                {{ submitting() ? 'Sending…' : 'Send reset link' }}
+                {{ (submitting() ? 'btn_sending' : 'btn_send_reset_link') | translate }}
               </app-btn>
             </div>
 
@@ -50,8 +51,8 @@ import { BtnComponent } from '../shared/btn.component';
             }
 
             <p [ngStyle]="footerStyle">
-              Remember your password?
-              <span (click)="router.navigate(['/login'])" [ngStyle]="linkStyle">Sign in</span>
+              {{ 'forgot_password_remember' | translate }}
+              <span (click)="router.navigate(['/login'])" [ngStyle]="linkStyle">{{ 'btn_sign_in' | translate }}</span>
             </p>
           }
         </div>
@@ -62,6 +63,7 @@ import { BtnComponent } from '../shared/btn.component';
 export class ForgotPasswordComponent {
   router = inject(Router);
   private auth = inject(AuthService);
+  private translate = inject(TranslateService);
 
   email      = signal('');
   focused    = signal('');
@@ -70,7 +72,7 @@ export class ForgotPasswordComponent {
   sent       = signal(false);
 
   submit() {
-    if (!this.email()) { this.errorMsg.set('Email is required.'); return; }
+    if (!this.email()) { this.errorMsg.set(this.translate.instant('error_email_required')); return; }
     this.errorMsg.set('');
     this.submitting.set(true);
     this.auth.forgotPassword(this.email()).subscribe({
@@ -80,7 +82,7 @@ export class ForgotPasswordComponent {
       },
       error: (err) => {
         this.submitting.set(false);
-        this.errorMsg.set(err.error?.error || 'Something went wrong. Please try again.');
+        this.errorMsg.set(err.error?.error || this.translate.instant('error_generic_retry'));
       }
     });
   }

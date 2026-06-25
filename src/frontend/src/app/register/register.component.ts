@@ -1,6 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
@@ -9,7 +10,7 @@ import { BtnComponent } from '../shared/btn.component';
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [NgStyle, LogoComponent, BtnComponent],
+  imports: [NgStyle, LogoComponent, BtnComponent, TranslateModule],
   template: `
     <div [ngStyle]="pageStyle">
       <div [ngStyle]="gridStyle"></div>
@@ -23,25 +24,25 @@ import { BtnComponent } from '../shared/btn.component';
         <div [ngStyle]="cardStyle">
           @if (success()) {
             <div [ngStyle]="bannerStyle">
-              Registration successful! Check your email for a verification link before signing in.
+              {{ 'register_success_banner' | translate }}
             </div>
             <app-btn variant="ghost" size="md" (clicked)="router.navigate(['/login'])" style="width:100%;margin-top:8px">
-              Back to sign in
+              {{ 'btn_back_to_sign_in' | translate }}
             </app-btn>
           } @else {
-            <h1 [ngStyle]="h1Style">Create account</h1>
-            <p [ngStyle]="subtitleStyle">You need an invite to register.</p>
+            <h1 [ngStyle]="h1Style">{{ 'register_title' | translate }}</h1>
+            <p [ngStyle]="subtitleStyle">{{ 'register_subtitle' | translate }}</p>
 
             <div style="display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;flex-direction:column;gap:5px">
-                <label [ngStyle]="labelStyle">Email</label>
+                <label [ngStyle]="labelStyle">{{ 'label_email' | translate }}</label>
                 <input [value]="email()" (input)="email.set($any($event.target).value)"
                        [ngStyle]="inputStyle('email')"
                        (focus)="focused.set('email')" (blur)="focused.set('')"
-                       placeholder="your.invited@email.com"/>
+                       [placeholder]="'placeholder_invited_email' | translate"/>
               </div>
               <div style="display:flex;flex-direction:column;gap:5px">
-                <label [ngStyle]="labelStyle">Password</label>
+                <label [ngStyle]="labelStyle">{{ 'label_password' | translate }}</label>
                 <input type="password" [value]="password()"
                        (input)="password.set($any($event.target).value)"
                        [ngStyle]="inputStyle('pw')"
@@ -49,7 +50,7 @@ import { BtnComponent } from '../shared/btn.component';
                        placeholder="••••••••"/>
               </div>
               <div style="display:flex;flex-direction:column;gap:5px">
-                <label [ngStyle]="labelStyle">Confirm password</label>
+                <label [ngStyle]="labelStyle">{{ 'label_confirm_password' | translate }}</label>
                 <input type="password" [value]="confirmPassword()"
                        (input)="confirmPassword.set($any($event.target).value)"
                        [ngStyle]="inputStyle('confirm')"
@@ -57,7 +58,7 @@ import { BtnComponent } from '../shared/btn.component';
                        placeholder="••••••••"/>
               </div>
               <app-btn variant="primary" size="lg" (clicked)="submit()" [disabled]="submitting()" style="width:100%">
-                {{ submitting() ? 'Creating account…' : 'Create account' }}
+                {{ (submitting() ? 'btn_creating_account' : 'register_title') | translate }}
               </app-btn>
             </div>
 
@@ -71,8 +72,8 @@ import { BtnComponent } from '../shared/btn.component';
             }
 
             <p [ngStyle]="footerStyle">
-              Already have an account?
-              <span (click)="router.navigate(['/login'])" [ngStyle]="linkStyle">Sign in</span>
+              {{ 'register_already_have_account' | translate }}
+              <span (click)="router.navigate(['/login'])" [ngStyle]="linkStyle">{{ 'btn_sign_in' | translate }}</span>
             </p>
           }
         </div>
@@ -83,6 +84,7 @@ import { BtnComponent } from '../shared/btn.component';
 export class RegisterComponent {
   router = inject(Router);
   private auth = inject(AuthService);
+  private translate = inject(TranslateService);
 
   email           = signal('');
   password        = signal('');
@@ -98,11 +100,11 @@ export class RegisterComponent {
     this.suggestions.set([]);
 
     if (!this.email() || !this.password()) {
-      this.errorMsg.set('Email and password are required.');
+      this.errorMsg.set(this.translate.instant('error_email_password_required'));
       return;
     }
     if (this.password() !== this.confirmPassword()) {
-      this.errorMsg.set('Passwords do not match.');
+      this.errorMsg.set(this.translate.instant('error_passwords_mismatch'));
       return;
     }
 
@@ -116,14 +118,14 @@ export class RegisterComponent {
         this.submitting.set(false);
         const body = err.error;
         if (err.status === 403) {
-          this.errorMsg.set('This email has not been invited. Contact an administrator.');
+          this.errorMsg.set(this.translate.instant('error_email_not_invited'));
         } else if (err.status === 409) {
-          this.errorMsg.set('An account with this email already exists.');
+          this.errorMsg.set(this.translate.instant('error_account_exists'));
         } else if (err.status === 400 && body?.suggestions?.length) {
-          this.errorMsg.set('Password is too weak.');
+          this.errorMsg.set(this.translate.instant('error_password_weak'));
           this.suggestions.set(body.suggestions);
         } else {
-          this.errorMsg.set(body?.error || 'Registration failed. Please try again.');
+          this.errorMsg.set(body?.error || this.translate.instant('error_registration_failed'));
         }
       }
     });

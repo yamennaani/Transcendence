@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { NgStyle } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../services/auth.service';
 import { DS } from '../tokens';
 import { LogoComponent } from '../shared/logo.component';
@@ -9,7 +10,7 @@ import { BtnComponent } from '../shared/btn.component';
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [NgStyle, LogoComponent, BtnComponent],
+  imports: [NgStyle, LogoComponent, BtnComponent, TranslateModule],
   template: `
     <div [ngStyle]="pageStyle">
       <div [ngStyle]="gridStyle"></div>
@@ -23,25 +24,25 @@ import { BtnComponent } from '../shared/btn.component';
         <div [ngStyle]="cardStyle">
           @if (!token()) {
             <div [ngStyle]="bannerStyle('red')">
-              Invalid reset link. Please request a new one.
+              {{ 'reset_password_invalid_link' | translate }}
             </div>
             <app-btn variant="ghost" size="md" (clicked)="router.navigate(['/forgot-password'])" style="width:100%;margin-top:16px">
-              Request new link
+              {{ 'btn_request_new_link' | translate }}
             </app-btn>
           } @else if (success()) {
             <div [ngStyle]="bannerStyle('green')">
-              Password updated successfully. You can now sign in with your new password.
+              {{ 'reset_password_success' | translate }}
             </div>
             <app-btn variant="primary" size="md" (clicked)="router.navigate(['/login'])" style="width:100%;margin-top:16px">
-              Sign in
+              {{ 'btn_sign_in' | translate }}
             </app-btn>
           } @else {
-            <h1 [ngStyle]="h1Style">Set new password</h1>
-            <p [ngStyle]="subtitleStyle">Choose a strong password for your account.</p>
+            <h1 [ngStyle]="h1Style">{{ 'reset_password_set_title' | translate }}</h1>
+            <p [ngStyle]="subtitleStyle">{{ 'reset_password_set_subtitle' | translate }}</p>
 
             <div style="display:flex;flex-direction:column;gap:14px">
               <div style="display:flex;flex-direction:column;gap:5px">
-                <label [ngStyle]="labelStyle">New password</label>
+                <label [ngStyle]="labelStyle">{{ 'label_new_password' | translate }}</label>
                 <input type="password" [value]="password()"
                        (input)="password.set($any($event.target).value)"
                        [ngStyle]="inputStyle('pw')"
@@ -49,7 +50,7 @@ import { BtnComponent } from '../shared/btn.component';
                        placeholder="••••••••"/>
               </div>
               <div style="display:flex;flex-direction:column;gap:5px">
-                <label [ngStyle]="labelStyle">Confirm new password</label>
+                <label [ngStyle]="labelStyle">{{ 'label_confirm_new_password' | translate }}</label>
                 <input type="password" [value]="confirmPassword()"
                        (input)="confirmPassword.set($any($event.target).value)"
                        [ngStyle]="inputStyle('confirm')"
@@ -57,7 +58,7 @@ import { BtnComponent } from '../shared/btn.component';
                        placeholder="••••••••"/>
               </div>
               <app-btn variant="primary" size="lg" (clicked)="submit()" [disabled]="submitting()" style="width:100%">
-                {{ submitting() ? 'Updating…' : 'Update password' }}
+                {{ (submitting() ? 'btn_updating' : 'btn_update_password') | translate }}
               </app-btn>
             </div>
 
@@ -79,6 +80,7 @@ export class ResetPasswordComponent implements OnInit {
   router = inject(Router);
   private auth  = inject(AuthService);
   private route = inject(ActivatedRoute);
+  private translate = inject(TranslateService);
 
   token           = signal('');
   password        = signal('');
@@ -97,9 +99,9 @@ export class ResetPasswordComponent implements OnInit {
     this.errorMsg.set('');
     this.suggestions.set([]);
 
-    if (!this.password()) { this.errorMsg.set('Password is required.'); return; }
+    if (!this.password()) { this.errorMsg.set(this.translate.instant('error_password_required')); return; }
     if (this.password() !== this.confirmPassword()) {
-      this.errorMsg.set('Passwords do not match.');
+      this.errorMsg.set(this.translate.instant('error_passwords_mismatch'));
       return;
     }
 
@@ -113,10 +115,10 @@ export class ResetPasswordComponent implements OnInit {
         this.submitting.set(false);
         const body = err.error;
         if (err.status === 400 && body?.suggestions?.length) {
-          this.errorMsg.set('Password is too weak.');
+          this.errorMsg.set(this.translate.instant('error_password_weak'));
           this.suggestions.set(body.suggestions);
         } else {
-          this.errorMsg.set(body?.error || 'Failed to reset password. The link may have expired.');
+          this.errorMsg.set(body?.error || this.translate.instant('error_reset_password_failed'));
         }
       }
     });

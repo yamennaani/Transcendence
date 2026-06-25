@@ -2,18 +2,19 @@ import { Component, computed, effect, EventEmitter, input, Output, signal } from
 import { FieldType, FieldValue, FileField, IconField, SelectField, SliderField } from "./field.types";
 import { DS } from "../tokens";
 import { MatIcon } from "@angular/material/icon";
+import { TranslateModule } from "@ngx-translate/core";
 import { IconComponent } from "./icon.component";
 
 @Component({
     selector: "app-field",
     standalone: true,
-    imports:[MatIcon, IconComponent],
+    imports:[MatIcon, IconComponent, TranslateModule],
     template:`
     <div class="field-row">
         <div class="field-meta">
             <mat-icon>{{ field().icon }}</mat-icon>
             <span class="field-label">
-            {{ field().label }}
+            {{ field().label | translate }}
             @if (field().required && canEdit()) { <span class="required">*</span> }
             </span>
         </div>

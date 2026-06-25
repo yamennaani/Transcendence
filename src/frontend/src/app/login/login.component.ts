@@ -135,7 +135,7 @@ export class LoginComponent implements OnInit {
     this.errorMsg.set('');
 
     if (!this.email() || !this.password()) {
-      this.errorMsg.set('Email and password are required.');
+      this.errorMsg.set(this.translate.instant('error_email_password_required'));
       return;
     }
 

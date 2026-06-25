@@ -19,7 +19,7 @@
         <span style="display:flex;gap:8px">
           <app-btn variant="secondary" (clicked)="openEditClass()">{{ 'bocal_btn_edit_class' | translate }}</app-btn>
           <app-btn variant="ghost"     (clicked)="deleteClass(selectedClass()!)">{{ 'bocal_btn_delete_class' | translate }}</app-btn>
-          <app-btn variant="primary" (clicked)="addAssignment()">+ Assignment</app-btn>
+          <app-btn variant="primary" (clicked)="addAssignment()">{{ 'new_assignment' | translate }}</app-btn>
         </span>
       }
     </div>
@@ -80,12 +80,12 @@
     <div [ngStyle]="overlayStyle" (click)="closeCreateGroupModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Create group — {{ createGroupAssignment()?.name }}
+          {{ 'bocal_create_group_title' | translate }} — {{ createGroupAssignment()?.name }}
         </div>
 
         <div style="display:flex;flex-direction:column;gap:10px">
           <div>
-            <label [ngStyle]="fieldLabelStyle">Group name</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_group_name' | translate }}</label>
             <input
               [ngStyle]="inputStyle"
               type="text"
@@ -94,12 +94,12 @@
           </div>
 
           <div>
-            <label [ngStyle]="fieldLabelStyle">Student</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_student' | translate }}</label>
 
             @if (createGroupAssignment(); as a) {
               @if (ungroupedStudentsFor(a).length === 0) {
                 <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                  No ungrouped enrolled students available for this assignment.
+                  {{ 'bocal_no_ungrouped_students' | translate }}
                 </div>
               } @else {
                 <select
@@ -126,7 +126,7 @@
             variant="ghost"
             size="md"
             (clicked)="closeCreateGroupModal()">
-            Cancel
+            {{ 'btn_cancel' | translate }}
           </app-btn>
 
           <app-btn
@@ -134,7 +134,7 @@
             size="md"
             [disabled]="!createGroupStudentId()"
             (clicked)="onCreateGroup()">
-            Create group
+            {{ 'bocal_create_group_title' | translate }}
           </app-btn>
         </div>
       </div>
@@ -146,23 +146,23 @@
     <div [ngStyle]="overlayStyle" (click)="closeEditGroupMembersModal()">
       <div [ngStyle]="modalStyle" (click)="$event.stopPropagation()">
         <div style="font-family:'Space Grotesk',sans-serif;font-size:1.125rem;font-weight:600;color:oklch(94% 0.005 272)">
-          Edit members — {{ editGroup()?.name }}
+          {{ 'bocal_edit_members_title' | translate }} — {{ editGroup()?.name }}
         </div>
 
         <div style="display:flex;flex-direction:column;gap:12px">
           <div>
-            <label [ngStyle]="fieldLabelStyle">Current members</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_current_members' | translate }}</label>
 
             @if (!editGroup() || editGroup()!.members.length === 0) {
               <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                No members in this group.
+                {{ 'bocal_no_members_in_group' | translate }}
               </div>
             } @else {
               @for (member of editGroup()!.members; track member.id) {
                 <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid oklch(22% 0.025 272)">
                   <div>
                     <div style="font-size:0.875rem;font-weight:600;color:oklch(94% 0.005 272)">
-                      {{ member.user?.username ?? ('user #' + member.userId) }}
+                      {{ member.user?.username ?? ('label_user_hash' | translate:{id: member.userId}) }}
                       @if (member.userId === editGroup()?.leaderId) {
                         ({{ 'badge_leader' | translate }})
                       }
@@ -178,7 +178,7 @@
                     size="sm"
                     [disabled]="editGroup()!.members.length <= 1"
                     (clicked)="removeMemberFromGroup(member.userId)">
-                    Remove
+                    {{ 'btn_remove' | translate }}
                   </app-btn>
                 </div>
               }
@@ -186,12 +186,12 @@
           </div>
 
           <div>
-            <label [ngStyle]="fieldLabelStyle">Add enrolled student</label>
+            <label [ngStyle]="fieldLabelStyle">{{ 'label_add_enrolled_student' | translate }}</label>
 
             @if (editGroupAssignment(); as a) {
               @if (ungroupedStudentsFor(a).length === 0) {
                 <div style="font-size:0.8125rem;color:oklch(48% 0.01 272)">
-                  No ungrouped enrolled students available for this assignment.
+                  {{ 'bocal_no_ungrouped_students' | translate }}
                 </div>
               } @else {
                 <div style="display:flex;gap:8px;align-items:center">
@@ -211,7 +211,7 @@
                     size="sm"
                     [disabled]="!editGroupAddStudentId()"
                     (clicked)="addMemberToGroup()">
-                    Add
+                    {{ 'btn_add' | translate }}
                   </app-btn>
                 </div>
               }
@@ -228,7 +228,7 @@
             variant="primary"
             size="md"
             (clicked)="closeEditGroupMembersModal()">
-            Close
+            {{ 'btn_close' | translate }}
           </app-btn>
         </div>
       </div>
@@ -318,7 +318,7 @@
                           variant="ghost"
                           size="sm"
                           (clicked)="openEditGroupMembers(a, g)">
-                          Edit members
+                          {{ 'bocal_edit_members_title' | translate }}
                         </app-btn>
                         <app-btn
                           variant="ghost"
@@ -342,7 +342,7 @@
                       size="sm"
                       [disabled]="groupsFor(a).length > 0 || ungroupedStudentsFor(a).length === 0"
                       (clicked)="generateAllGroups(a)">
-                      Generate all groups
+                      {{ 'bocal_generate_all_groups' | translate }}
                     </app-btn>
 
                   <app-btn
@@ -350,7 +350,7 @@
                     size="sm"
                     [disabled]="ungroupedStudentsFor(a).length === 0"
                     (clicked)="openCreateGroup(a)">
-                    Add single group
+                    {{ 'bocal_add_single_group' | translate }}
                   </app-btn>
 
                     <app-btn
@@ -358,7 +358,7 @@
                       size="sm"
                       [disabled]="groupsFor(a).length === 0"
                       (clicked)="deleteAllGroups(a)">
-                      Delete all groups
+                      {{ 'bocal_delete_all_groups' | translate }}
                     </app-btn>
                 </div>
               </div>
