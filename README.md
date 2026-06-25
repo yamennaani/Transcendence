@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Karabitsc.*
+*This project has been created as part of the 42 curriculum by Yalnaani, Aruckenb, Aghanam, Pvass, and Krabitsc.*
 
 # Transcendence: PeerPilot
 
@@ -45,7 +45,7 @@ Developing **PeerPilot** was a collaborative effort involving five team members,
 
 ---
 
-## Product Owner — Katrin Rabitsch (Karabitsc)
+## Product Owner — Katrin Rabitsch (Krabitsc)
 
 As the Product Owner, Katrin was responsible for defining the overall vision and direction of the project. She developed the original concept and continuously refined it by gathering feedback and feature suggestions from prospective users throughout development. One of her most significant contributions was designing and implementing the peer evaluation algorithm, which became a core feature of the platform. She also developed the evaluation system itself, contributed extensively to both the frontend and backend, and created the original `populateDB` script used to seed the database during development and testing. Her work ensured that the project remained focused on delivering a practical and engaging learning experience.
 
